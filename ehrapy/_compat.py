@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
+from ehrdata.core.constants import FEATURE_TYPE_KEY
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
 
@@ -396,3 +397,15 @@ def _raise_if_3D(X: Any, name: str, array_name: str, *, allow_single_timepoint: 
             f"{name}() only supports 2D data, but {array_name} has shape {X.shape}. "
             "Aggregate the time axis first, e.g. with `ep.pp.summarize_measurements()`."
         )
+
+
+def _ensure_feature_types(edata: EHRData, layer: str | None, name: str) -> None:
+    """Infer missing feature types, which lazy arrays need inferred explicitly because inference reads every value."""
+    if FEATURE_TYPE_KEY in edata.var.columns:
+        return
+    if is_lazy_array(edata.X if layer is None else edata.layers[layer]):
+        raise ValueError(
+            f"{name} needs feature types in `edata.var`. "
+            "Infer them first with `ed.infer_feature_types(edata)`, which reads every value once."
+        )
+    ed.infer_feature_types(edata, layer=layer, output=None)

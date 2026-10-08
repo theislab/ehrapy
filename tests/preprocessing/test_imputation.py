@@ -4,10 +4,11 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
+import dask.array as da
 import numpy as np
 import pytest
 from ehrdata import EHRData
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
 from sklearn import config_context
@@ -18,6 +19,7 @@ from testing.fast_array_utils import Flags
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
+    gradient_boosting_impute,
     knn_impute,
     locf_impute,
     miss_forest_impute,
@@ -934,3 +936,75 @@ def test_knn_impute_defaults_to_numeric_variables(mimic_2_encoded):
     knn_impute(mimic_2_encoded, backend="scikit-learn")
 
     assert not np.isnan(mimic_2_encoded[:, numeric].X.astype(float)).any()
+
+
+def test_missforest_impute_reproducible(impute_num_edata):
+    first = miss_forest_impute(impute_num_edata, n_estimators=5, random_state=1, copy=True)
+    second = miss_forest_impute(impute_num_edata, n_estimators=5, random_state=1, copy=True)
+
+    np.testing.assert_array_equal(first.X, second.X)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+def test_gradient_boosting_impute_array_types(array_type, ndim, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    X = _array_types_data(rng, ndim)
+    expected = gradient_boosting_impute(_numeric_edata(X), max_train_obs=15, copy=True).X
+    edata = _numeric_edata(array_type(X))
+
+    with forbid_dask_compute():
+        result = gradient_boosting_impute(edata, max_train_obs=15, copy=True).X
+
+    assert type(result) is type(edata.X)
+    if array_type.flags & Flags.Dask:
+        assert type(result._meta) is type(edata.X._meta)
+    elif array_type.flags & Flags.Sparse:
+        np.testing.assert_array_equal(result.indices, edata.X.indices)
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
+    observed = ~np.isnan(X)
+    np.testing.assert_array_equal(expected[observed], X[observed])
+    assert np.isnan(expected[:, ALL_NAN_VAR]).all()
+    assert not np.isnan(np.delete(expected, ALL_NAN_VAR, axis=1)).any()
+
+
+def test_gradient_boosting_impute_beats_locf(rng):
+    slopes = rng.normal(size=(300, 1, 1))
+    trend = slopes * np.arange(12)
+    X = np.concatenate([trend, 2 * trend + rng.normal(scale=0.1, size=trend.shape)], axis=1)
+    held_out = rng.random(X.shape) < 0.2
+    X_missing = np.where(held_out, np.nan, X)
+
+    def error(imputed):
+        return np.sqrt(np.mean((imputed[held_out] - X[held_out]) ** 2))
+
+    imputed = gradient_boosting_impute(_numeric_edata(X_missing), copy=True).X
+    locf = locf_impute(_numeric_edata(X_missing), copy=True).X
+    assert error(imputed) < error(locf) / 2
+
+
+def test_gradient_boosting_impute_categorical(rng):
+    X = rng.normal(size=(200, 2))
+    X[:, 1] = X[:, 0] > 0
+    X[rng.random(200) < 0.2, 1] = np.nan
+    edata = EHRData(X=X)
+    edata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, CATEGORICAL_TAG]
+
+    imputed = gradient_boosting_impute(edata, copy=True).X
+
+    assert set(np.unique(imputed[:, 1])) == {0.0, 1.0}
+
+
+def test_gradient_boosting_impute_subset(impute_num_edata):
+    var_names = ("col2", "col3")
+    edata_imputed = gradient_boosting_impute(impute_num_edata, var_names=var_names, copy=True)
+
+    _base_check_imputation(impute_num_edata, edata_imputed, imputed_var_names=var_names)
+
+
+def test_gradient_boosting_impute_lazy_needs_feature_types():
+    edata = EHRData(X=da.from_array(np.array([[1.0, np.nan], [2.0, 3.0]])))
+
+    with forbid_dask_compute(), pytest.raises(ValueError, match="needs feature types"):
+        gradient_boosting_impute(edata)
