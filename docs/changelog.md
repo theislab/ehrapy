@@ -85,7 +85,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
-* {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses scanpy's dask-native `covariance_eigh` solver for dask arrays by default instead of requiring dask-ml @Zethson
+* {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses scanpy's dask-native `covariance_eigh` solver for dask arrays by default instead of requiring dask-ml ([#1163](https://github.com/theislab/ehrapy/pull/1163)) @Zethson
 * The `rapids12` and `rapids13` extras install the CUDA wheels of rapids-singlecell, whose 0.18 release only builds from source under its old name and extras ([#1153](https://github.com/theislab/ehrapy/pull/1153)) @Zethson
 * In {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>`, the `logfoldchanges` of numeric features are the log2 ratio of the group mean to the reference mean instead of scanpy's fold change for log1p-transformed data, and categorical features with `reference="rest"` and a `groups` subset are compared to all other observations like numeric features ([#1148](https://github.com/theislab/ehrapy/pull/1148)) @Zethson
 
