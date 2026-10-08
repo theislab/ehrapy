@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 import array_api_extra as xpx
 import ehrdata as ed
 import numpy as np
+import pandas as pd
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
 from ehrdata.core.constants import FEATURE_TYPE_KEY
