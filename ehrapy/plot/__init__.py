@@ -1,6 +1,6 @@
 from ehrapy.plot._catplot import catplot
 from ehrapy.plot._colormaps import Colormaps
-from ehrapy.plot._missingno import (
+from ehrapy.plot._missing_values import (
     missing_values_barplot,
     missing_values_dendrogram,
     missing_values_heatmap,

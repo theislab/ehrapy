@@ -76,7 +76,6 @@ dependencies = [
     "scverse-misc[settings]>=0.0.7",
     "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines>=0.30.0",
-    "missingno",
     "tableone",
     "fknni[faisscpu]>=1.3.0",
     "numpy>=2.0.0",
