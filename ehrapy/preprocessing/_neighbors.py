@@ -105,8 +105,6 @@ def neighbors(
          **neighbors** : `dict` in `edata.uns['neighbors' | key_added]`.
          The neighbors parameters.
     """
-    import ehrapy as ep
-
     if metric in {"dtw", "soft_dtw", "gak"}:
         if use_rep is None:
             raise ValueError(f"use_rep must be specified if metric is {metric}")

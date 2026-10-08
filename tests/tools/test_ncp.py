@@ -5,8 +5,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 
 @pytest.fixture
@@ -140,3 +142,27 @@ def test_ncp_reproducibility(edata_3d: ed.EHRData) -> None:
     A2 = edata_3d.obsm["X_ncp"]
 
     np.testing.assert_allclose(A1, A2)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_ncp_array_types(array_type, edata_3d: ed.EHRData) -> None:
+    tensor = edata_3d.layers[DEFAULT_TEM_LAYER_NAME]
+    if array_type.flags & Flags.Sparse:
+        edata_3d.layers["flat"] = array_type(tensor[:, :, 0])
+        with pytest.raises(ValueError, match="3D"):
+            ep.tl.ncp(edata_3d, layer="flat")
+        return
+
+    expected = ep.tl.ncp(edata_3d, layer=DEFAULT_TEM_LAYER_NAME, rank=2, n_iter_max=20, copy=True)
+    edata_3d.layers[DEFAULT_TEM_LAYER_NAME] = array_type(tensor)
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.ncp(edata_3d, layer=DEFAULT_TEM_LAYER_NAME, rank=2, n_iter_max=20, copy=True)
+
+    assert isinstance(result.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.layers[DEFAULT_TEM_LAYER_NAME]._meta) is type(edata_3d.layers[DEFAULT_TEM_LAYER_NAME]._meta)
+    assert isinstance(result.obsm["X_ncp"], np.ndarray)
+    np.testing.assert_allclose(result.obsm["X_ncp"], expected.obsm["X_ncp"])
+    np.testing.assert_allclose(result.varm["ncp_loadings"], expected.varm["ncp_loadings"])
+    np.testing.assert_allclose(result.uns["ncp"]["temporal_factors"], expected.uns["ncp"]["temporal_factors"])

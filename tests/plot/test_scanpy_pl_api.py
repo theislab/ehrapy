@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 
@@ -33,7 +34,7 @@ def test_scatter_plot(mimic_2, check_same_image):
 def test_scatter_plot_3D(edata_blob_small):
     ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.scatter(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2")
+        ep.pl.scatter(edata_blob_small, layers=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2")
 
 
 def test_heatmap_plot(edata_mini, check_same_image):
@@ -724,3 +725,75 @@ def test_dpt_timeseries(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/dpt_timeseries",
         tol=35,
     )
+
+
+@pytest.fixture
+def edata_embedded(rng) -> ed.EHRData:
+    X = np.where(rng.random((40, 5)) < 0.3, 0, rng.gamma(2, size=(40, 5)))
+    obs = pd.DataFrame({"group": pd.Categorical(np.repeat(["a", "b"], 20))}, index=[str(i) for i in range(40)])
+    var = pd.DataFrame({FEATURE_TYPE_KEY: NUMERIC_TAG}, index=[f"feature_{i}" for i in range(5)])
+    edata = ed.EHRData(X=X, obs=obs, var=var)
+    ep.pp.pca(edata, n_comps=3)
+    # dpt needs a graph with a branching, which the few observations of X don't have
+    edata.obsm["X_pca"] = rng.standard_normal((40, 3))
+    ep.pp.neighbors(edata, n_neighbors=5, use_rep="X_pca")
+    ep.tl.umap(edata)
+    ep.tl.paga(edata, groups="group")
+    ep.tl.diffmap(edata, n_comps=3)
+    edata.uns["iroot"] = 0
+    ep.tl.dpt(edata, n_dcs=3, n_branchings=1)
+    ep.tl.rank_features_groups(edata, "group")
+    return edata
+
+
+_VAR_NAMES = ["feature_0", "feature_1", "feature_2"]
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize(
+    ("plotter", "kwargs"),
+    [
+        ("dotplot", {"var_names": _VAR_NAMES, "groupby": "group", "return_fig": True}),
+        ("matrixplot", {"var_names": _VAR_NAMES, "groupby": "group", "return_fig": True}),
+        ("stacked_violin", {"var_names": _VAR_NAMES, "groupby": "group", "return_fig": True}),
+        ("heatmap", {"var_names": _VAR_NAMES, "groupby": "group"}),
+        ("tracksplot", {"var_names": _VAR_NAMES, "groupby": "group"}),
+        ("violin", {"keys": _VAR_NAMES, "groupby": "group"}),
+        ("clustermap", {"obs_keys": "group"}),
+        ("scatter", {"x": "feature_0", "y": "feature_1", "color": "group"}),
+        ("pca", {"color": "feature_0"}),
+        ("umap", {"color": "feature_0"}),
+        ("embedding", {"basis": "umap", "color": "feature_0"}),
+        ("paga", {"color": "feature_0"}),
+        ("paga_path", {"nodes": ["a", "b"], "keys": _VAR_NAMES}),
+        ("dpt_timeseries", {}),
+        ("rank_features_groups_violin", {"n_features": 2}),
+        ("rank_features_groups_stacked_violin", {"n_features": 2}),
+        ("rank_features_groups_heatmap", {"n_features": 2}),
+        ("rank_features_groups_dotplot", {"n_features": 2}),
+        ("rank_features_groups_matrixplot", {"n_features": 2}),
+        ("rank_features_groups_tracksplot", {"n_features": 2}),
+    ],
+)
+def test_scanpy_plots_array_types(array_type, plotter, kwargs, edata_embedded, clean_up_plots):
+    plot = getattr(ep.pl, plotter)
+    expected = plot(edata_embedded.copy(), show=False, **kwargs)
+    X = edata_embedded.X = array_type(edata_embedded.X)
+
+    result = plot(edata_embedded, show=False, **kwargs)
+
+    assert edata_embedded.X is X
+    if kwargs.get("return_fig"):
+        pd.testing.assert_frame_equal(result.obs_tidy, expected.obs_tidy)
+
+
+@pytest.mark.parametrize("plotter", ["pca", "umap", "diffmap", "embedding"])
+def test_embedding_plots_3D(plotter, edata_embedded, clean_up_plots):
+    kwargs = {"basis": "umap"} if plotter == "embedding" else {}
+    edata_embedded.layers[DEFAULT_TEM_LAYER_NAME] = np.stack([edata_embedded.X] * 3, axis=2)
+    edata_embedded.X = edata_embedded.layers[DEFAULT_TEM_LAYER_NAME]
+    plot = getattr(ep.pl, plotter)
+
+    plot(edata_embedded, color="group", show=False, **kwargs)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        plot(edata_embedded, color=["group", "feature_0"], show=False, **kwargs)

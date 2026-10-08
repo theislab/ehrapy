@@ -8,14 +8,16 @@ from typing import TYPE_CHECKING
 import ehrdata as ed
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from ehrdata import EHRData
-from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _like_obs, _raise_array_type_not_implemented
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -87,7 +89,7 @@ def encode(
         )
 
     X = edata.X if layer is None else edata.layers[layer]
-    if X.ndim == 3 and X.shape[2] > 1:
+    if X.ndim == 3:
         return _encode_3d(edata, autodetect, encodings, layer=layer)
 
     return _encode_2d(edata, autodetect, encodings, layer=layer)
@@ -105,6 +107,8 @@ def _encode_2d(
     if FEATURE_TYPE_KEY in edata.var.columns:
         feature_types = edata.var[FEATURE_TYPE_KEY]
     else:
+        # inference reads every value, so compute lazy arrays once here and discover the categories from the result
+        X = X.compute() if isinstance(X, DaskArray) else X
         # ed.infer_feature_types writes to var and replaces missing value strings in X, so it must not see the input
         proxy = EHRData(X=X.copy(), var=pd.DataFrame(index=edata.var_names))
         feature_types = ed.infer_feature_types(proxy, output="dataframe")[FEATURE_TYPE_KEY]
@@ -125,9 +129,9 @@ def _encode_2d(
                 return edata
 
         # filter out categorical columns, that are already stored numerically
-        df_edata = ed.io.to_pandas(edata, layer=layer)
+        values = _variable_values(edata, X, categoricals_names)
         categoricals_names = [
-            feat for feat in categoricals_names if not np.all(df_edata[feat].apply(type).isin([int, float]))
+            feat for feat in values.columns if not np.all(values[feat].apply(type).isin([int, float]))
         ]
 
         # no columns were detected, that would require an encoding (e.g. non-numerical columns)
@@ -135,7 +139,7 @@ def _encode_2d(
             logger.warning("Detected no columns that need to be encoded. Leaving passed EHRData object unchanged.")
             return edata
         # update obs with the original categorical values
-        updated_obs = _update_obs(edata, categoricals_names, layer=layer)
+        updated_obs = _update_obs(edata, values[categoricals_names])
 
         encoded_x = None
         encoded_var_names = edata.var_names.to_list()
@@ -204,6 +208,7 @@ def _encode_2d(
         if "encoding_mode" in edata.var.keys():
             encodings = _reorder_encodings(edata, encodings)  # type: ignore
             edata = _undo_encoding(edata, layer=layer)
+            X = edata.X if layer is None else edata.layers[layer]
             original = edata.layers["original"]
             feature_types = edata.var[FEATURE_TYPE_KEY]
 
@@ -229,7 +234,7 @@ def _encode_2d(
                 "to encode numerical columns!"
             )
 
-        updated_obs = _update_obs(edata, categoricals, layer)
+        updated_obs = _update_obs(edata, _variable_values(edata, X, categoricals))
 
         encoding_mode = {}
         encoded_x = None
@@ -406,7 +411,7 @@ def _one_hot_encoding(
     original_values = _initial_encoding(updated_obs, categoricals)
     progress.update(task, description="[bold blue]Running one-hot encoding on passed columns ...")
 
-    encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False).fit(original_values)
+    encoder = OneHotEncoder(handle_unknown="ignore").fit(original_values)
     categorical_prefixes = [
         f"ehrapycat_{category}_{str(suffix).strip()}"
         for idx, category in enumerate(categoricals)
@@ -492,11 +497,33 @@ def _(X: np.ndarray, idx_to_delete) -> np.ndarray:
     return np.delete(X, list(idx_to_delete), 1)
 
 
+@_delete_columns.register(CSBase)
 @_delete_columns.register(DaskArray)
-def _(X: DaskArray, idx_to_delete) -> DaskArray:
+def _(X: CSBase | DaskArray, idx_to_delete) -> CSBase | DaskArray:
     idx_set = set(idx_to_delete)
     keep = [i for i in range(X.shape[1]) if i not in idx_set]
     return X[:, keep]
+
+
+@singledispatch
+def _as_array_type_of(X, values):
+    """Convert ``values``, which has one row per observation of `X`, to the array type of `X`."""
+    _raise_array_type_not_implemented(_as_array_type_of, type(X))
+
+
+@_as_array_type_of.register(np.ndarray)
+def _(X: np.ndarray, values) -> np.ndarray:
+    return to_dense(values)
+
+
+@_as_array_type_of.register(CSBase)
+def _(X: CSBase, values) -> CSBase:
+    return type(X)(values.astype(np.float64))
+
+
+@_as_array_type_of.register(DaskArray)
+def _(X: DaskArray, values) -> DaskArray:
+    return _like_obs(X, _as_array_type_of(X._meta, values))
 
 
 @singledispatch
@@ -507,7 +534,12 @@ def _prepend_columns(X, columns_to_prepend):
 
 @_prepend_columns.register(np.ndarray)
 def _(X: np.ndarray, columns_to_prepend) -> np.ndarray:
-    return np.hstack((np.asarray(columns_to_prepend), X))
+    return np.hstack((_as_array_type_of(X, columns_to_prepend), X))
+
+
+@_prepend_columns.register(CSBase)
+def _(X: CSBase, columns_to_prepend) -> CSBase:
+    return sp.hstack([_as_array_type_of(X, columns_to_prepend), X], format=X.format)
 
 
 @_prepend_columns.register(DaskArray)
@@ -515,7 +547,7 @@ def _(X: DaskArray, columns_to_prepend) -> DaskArray:
     import dask.array as da
 
     if not isinstance(columns_to_prepend, DaskArray):
-        columns_to_prepend = da.from_array(np.asarray(columns_to_prepend), chunks=(X.chunks[0], -1))
+        columns_to_prepend = _as_array_type_of(X, columns_to_prepend)
     return da.concatenate([columns_to_prepend, X], axis=1)
 
 
@@ -530,12 +562,17 @@ def _(X: np.ndarray, columns_to_append) -> np.ndarray:
     return np.hstack((X, np.asarray(columns_to_append)))
 
 
+@_append_columns.register(CSBase)
+def _(X: CSBase, columns_to_append) -> CSBase:
+    return sp.hstack([X, columns_to_append], format=X.format)
+
+
 @_append_columns.register(DaskArray)
 def _(X: DaskArray, columns_to_append) -> DaskArray:
     import dask.array as da
 
     if not isinstance(columns_to_append, DaskArray):
-        columns_to_append = da.from_array(np.asarray(columns_to_append), chunks=(X.chunks[0], -1))
+        columns_to_append = _as_array_type_of(X, columns_to_append)
     return da.concatenate([X, columns_to_append], axis=1)
 
 
@@ -707,9 +744,6 @@ def _delete_all_encodings(edata: EHRData, layer: str | None) -> tuple[np.ndarray
             if not var.startswith("ehrapycat"):
                 break
             idx += 1
-        # case: only encoded columns were found
-        if idx == len(var_names):
-            return None, None
         # don't need to consider case when no encoded columns are there, since undo_encoding would not run anyways in this case
 
         return X[:, idx:].copy(), var_names[idx:]
@@ -780,32 +814,36 @@ def _get_categoricals_old_indices(old_var_names: list[str], encoded_categories: 
     return idx_list
 
 
-def _update_obs(edata: EHRData, categorical_names: list[str], layer: str | None = None) -> pd.DataFrame:
+def _variable_values(edata: EHRData, X: np.ndarray | DaskArray, var_names: Sequence[str]) -> pd.DataFrame:
+    """Values of the variables `var_names` of `X` in the order of `edata.var_names`, computing dask arrays once."""
+    selected = set(var_names)
+    var_names = [var_name for var_name in edata.var_names if var_name in selected]
+    return pd.DataFrame(to_dense(X[:, edata.var_names.get_indexer(var_names)], to_cpu_memory=True), columns=var_names)
+
+
+def _update_obs(edata: EHRData, values: pd.DataFrame) -> pd.DataFrame:
     """Add the original categorical values to obs.
 
     Args:
         edata: Central data object.
-        categorical_names: Name of each categorical column
-        layer: The layer to operate on.
+        values: The original values of the categorical variables, one column per variable.
 
     Returns:
         Updated obs with the original categorical values added
     """
-    X = edata.X if layer is None else edata.layers[layer]
     updated_obs = edata.obs.copy()
-    for idx, var_name in enumerate(edata.var_names):
+    for var_name in values.columns:
         if var_name in updated_obs.columns:
             continue
-        elif var_name in categorical_names:
-            updated_obs[var_name] = X[::, idx : idx + 1].flatten()
-            # note: this will count binary columns (0 and 1 only) as well
-            # needed for writing to .h5ed files
-            if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):
-                updated_obs[var_name] = updated_obs[var_name].astype("bool")
+        updated_obs[var_name] = values[var_name].to_numpy()
+        # note: this will count binary columns (0 and 1 only) as well
+        # needed for writing to .h5ed files
+        if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):
+            updated_obs[var_name] = updated_obs[var_name].astype("bool")
     # get all non bool object columns and cast them to category dtype
     object_columns = list(updated_obs.select_dtypes(include="object").columns)
     updated_obs[object_columns] = updated_obs[object_columns].astype("category")
-    logger.info(f"The original categorical values `{categorical_names}` were added to obs.")
+    logger.info(f"The original categorical values `{values.columns.tolist()}` were added to obs.")
 
     return updated_obs
 

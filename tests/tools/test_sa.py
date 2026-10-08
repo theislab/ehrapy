@@ -12,8 +12,10 @@ from lifelines import (
     WeibullAFTFitter,
     WeibullFitter,
 )
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
@@ -311,3 +313,65 @@ def test_kaplan_meier_entry_and_weights(survival_obs_edata):
 def test_kaplan_meier_without_event_col(survival_obs_edata):
     kmf = ep.tl.kaplan_meier(survival_obs_edata, "duration")
     assert kmf.event_observed.all()
+
+
+def _survival_edata(X) -> ed.EHRData:
+    return ed.EHRData(X=X, var=pd.DataFrame(index=["duration", "event", "a", "b"]))
+
+
+def _survival_data(rng: np.random.Generator) -> np.ndarray:
+    return np.column_stack(
+        [rng.integers(1, 50, 60), rng.integers(0, 2, 60), rng.standard_normal(60), np.where(rng.random(60) < 0.5, 0, 1)]
+    ).astype(float)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize(
+    "sa_function",
+    [ep.tl.kaplan_meier, ep.tl.cox_ph, ep.tl.nelson_aalen, ep.tl.weibull, ep.tl.weibull_aft, ep.tl.log_logistic_aft],
+)
+def test_survival_models_array_types(array_type, sa_function, rng):
+    X = _survival_data(rng)
+    expected = _survival_edata(X)
+    sa_function(expected, duration_col="duration", event_col="event", key_added="test")
+    edata = _survival_edata(array_type(X))
+
+    with forbid_dask_compute(allowed=1):
+        sa_function(edata, duration_col="duration", event_col="event", key_added="test")
+
+    pd.testing.assert_frame_equal(edata.uns["test"], expected.uns["test"])
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("model", [ep.tl.ols, ep.tl.glm])
+def test_ols_glm_array_types(array_type, model, rng):
+    X = _survival_data(rng)
+    kwargs = {"var_names": ["a", "duration"], "formula": "a ~ duration"}
+    expected = model(_survival_edata(X), **kwargs).fit().params
+
+    with forbid_dask_compute(allowed=1):
+        result = model(_survival_edata(array_type(X)), **kwargs)
+
+    pd.testing.assert_series_equal(result.fit().params, expected)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_cox_ph_adjusted_curves_array_types(array_type, rng):
+    X = _survival_data(rng)
+    expected = _survival_edata(X)
+    cph = ep.tl.cox_ph(expected, duration_col="duration", event_col="event", formula="a + b")
+    kwargs = {"cph": cph, "strata": "b", "duration_col": "duration", "event_col": "event", "method": "conditional"}
+    ep.tl.cox_ph_adjusted_curves(expected, **kwargs)
+    edata = _survival_edata(array_type(X))
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.cox_ph_adjusted_curves(edata, copy=True, **kwargs)
+
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.X._meta)
+    for group in ("0.0", "1.0"):
+        np.testing.assert_allclose(
+            result.uns["cox_ph_adjusted_curves"][group]["survival"],
+            expected.uns["cox_ph_adjusted_curves"][group]["survival"],
+        )

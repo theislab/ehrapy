@@ -1,10 +1,16 @@
 import ehrdata as ed
 import numpy as np
+import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from fast_array_utils.conv import to_dense
 from pandas import DataFrame
+from testing.fast_array_utils import Flags
 
 from ehrapy.preprocessing import summarize_measurements
+from tests.conftest import forbid_dask_compute
+
+STATISTICS = ["min", "max", "mean", "median", "first", "last"]
 
 
 @pytest.fixture
@@ -52,7 +58,66 @@ def test_statistics_subset(edata_to_expand):
     assert transformed_edata.shape == (3, 3, 1)  # (3 patients, 3 measurements * 1 statistics)
 
 
-def test_summarize_measurements_3D_edata(edata_blob_small):
-    summarize_measurements(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        summarize_measurements(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+def _non_missing_at(x: np.ndarray, position: int) -> float:
+    x = x[~np.isnan(x)]
+    return x[position] if len(x) else np.nan
+
+
+@pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+def test_summarize_measurements_3D(rng):
+    X = rng.normal(size=(5, 3, 4))
+    X[rng.random(X.shape) < 0.3] = np.nan
+    X[0, 0] = np.nan
+    obs = pd.DataFrame({"group": list("aabbc")}, index=[f"pat{i}" for i in range(5)])
+    edata = ed.EHRData(shape=(5, 3), obs=obs, layers={DEFAULT_TEM_LAYER_NAME: X})
+
+    summary = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
+
+    expected = {
+        "min": np.nanmin(X, axis=2),
+        "max": np.nanmax(X, axis=2),
+        "mean": np.nanmean(X, axis=2),
+        "median": np.nanmedian(X, axis=2),
+        "first": np.apply_along_axis(_non_missing_at, 2, X, 0),
+        "last": np.apply_along_axis(_non_missing_at, 2, X, -1),
+    }
+    assert summary.shape == (5, 3 * len(STATISTICS), 1)
+    assert summary.var_names.tolist() == [f"{var}_{stat}" for var in edata.var_names for stat in STATISTICS]
+    pd.testing.assert_frame_equal(summary.obs, edata.obs)
+    for stat, values in expected.items():
+        np.testing.assert_allclose(summary[:, [f"{var}_{stat}" for var in edata.var_names]].X, values)
+
+
+def test_summarize_measurements_unknown_var(edata_blob_small):
+    with pytest.raises(KeyError, match="Variables not found"):
+        summarize_measurements(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, var_names=["unknown"])
+
+
+@pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+def test_summarize_measurements_array_types(array_type, ndim, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    shape = (12, 3) if ndim == 2 else (6, 3, 4)
+    X = np.where(rng.random(shape) < 0.5, 0, rng.normal(size=shape))
+    X[rng.random(shape) < 0.2] = np.nan
+    X[:, 1] = 2.0
+    X[:, 2] = np.nan
+    obs = pd.DataFrame(index=list("bacbabccabda") if ndim == 2 else list("abcdef"))
+
+    def make_edata(X):
+        return ed.EHRData(shape=shape[:2], obs=obs, layers={DEFAULT_TEM_LAYER_NAME: X})
+
+    expected = summarize_measurements(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
+    edata = make_edata(array_type(X))
+
+    with forbid_dask_compute():
+        result = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
+
+    assert type(result.X) is type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.layers[DEFAULT_TEM_LAYER_NAME]._meta)
+    pd.testing.assert_index_equal(result.obs_names, expected.obs_names)
+    pd.testing.assert_index_equal(result.var_names, expected.var_names)
+    np.testing.assert_allclose(to_dense(result.X, to_cpu_memory=True), expected.X, equal_nan=True)

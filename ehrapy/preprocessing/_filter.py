@@ -1,39 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from functools import singledispatch
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from ehrdata._logger import logger
-from ehrdata.core.constants import MISSING_VALUES
-from scipy import sparse
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import _materialize
 from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
+from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
-
-
-@singledispatch
-def _filtering_function(arr, *, function: Callable[..., Any]) -> None:
-    _raise_array_type_not_implemented(function, type(arr))
-
-
-@_filtering_function.register
-def _(arr: np.ndarray, *, function: Callable[..., Any]) -> None:
-    return None
-
-
-@_filtering_function.register
-def _(arr: DaskArray, *, function: Callable[..., Any]) -> None:
-    _raise_array_type_not_implemented(function, type(arr))
-
-
-@_filtering_function.register
-def _(arr: sparse.coo_array, *, function: Callable[..., Any]) -> None:
-    _raise_array_type_not_implemented(function, type(arr))
+    from fast_array_utils.types import CSBase, DaskArray
 
 
 def filter_features(
@@ -52,6 +30,7 @@ def filter_features(
     An observation is considered non-missing if it contains a valid (non-NaN / non-null) value.
 
     When a longitudinal `EHRData` is passed, filtering can be done across time points according to the specific `time_mode`.
+    For 3D data, the non-missing values of a feature are counted over observations at every timepoint, and `time_mode` combines the timepoints.
 
     Only provide one of `min_obs` and/or `max_obs`.
 
@@ -99,7 +78,7 @@ def filter_features(
     is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     features_passing_filtering_mask, nonmissing_counts_per_feature = _compute_mask(
-        arr, axis=0, min_count=min_obs, max_count=max_obs, time_mode=time_mode, prop=prop, caller=filter_features
+        arr, axis=0, min_count=min_obs, max_count=max_obs, time_mode=time_mode, prop=prop
     )
 
     n_features_filtered = int((~features_passing_filtering_mask).sum())
@@ -139,6 +118,7 @@ def filter_observations(
     Keep only observations which have at least `min_vars` variables and/or at most `max_vars` variables.
     An observation is considered non-missing if it contains a valid (non-NaN / non-null) value.
     When a longitudinal `EHRData` is passed, filtering can be done across time points.
+    For 3D data, the non-missing values of an observation are counted over variables at every timepoint, and `time_mode` combines the timepoints.
 
     Only provide one of `min_vars` and/or `max_vars`.
 
@@ -181,11 +161,10 @@ def filter_observations(
         raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
 
     arr = edata.X if layer is None else edata.layers[layer]
-
     is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     observations_passing_filtering_mask, nonmissing_counts_per_observation = _compute_mask(
-        arr, axis=1, min_count=min_vars, max_count=max_vars, time_mode=time_mode, prop=prop, caller=filter_observations
+        arr, axis=1, min_count=min_vars, max_count=max_vars, time_mode=time_mode, prop=prop
     )
 
     n_observations_filtered = int((~observations_passing_filtering_mask).sum())
@@ -212,7 +191,13 @@ def filter_observations(
 
 
 def _compute_mask(
-    arr: np.ndarray, *, min_count: int, max_count: int, time_mode: str, prop: float, axis: int, caller
+    arr: np.ndarray | CSBase | DaskArray,
+    *,
+    min_count: int | None,
+    max_count: int | None,
+    time_mode: str,
+    prop: float | None,
+    axis: Literal[0, 1],
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute mask for filtering based on missing data thresholds.
 
@@ -220,16 +205,8 @@ def _compute_mask(
         mask: boolean array indicating which features/observations pass the filtering criteria
         totals: total counts per feature/observation
     """
-    _filtering_function(arr, function=caller)
-    if arr.ndim == 2:
-        arr3 = arr[:, :, None]
-    elif arr.ndim == 3:
-        arr3 = arr
-    else:
-        raise ValueError(f"expected 2D or 3D array, got {arr.shape}")
-
-    present_mask = ~(np.isin(arr3, MISSING_VALUES) | np.isnan(arr3))
-    present_counts = present_mask.sum(axis=axis)
+    (missing_counts,) = _materialize(_compute_missing_values(arr, axis=axis))
+    present_counts = (arr.shape[axis] - missing_counts).reshape(missing_counts.shape[0], -1)
 
     if min_count is not None and max_count is not None:
         pass_threshold_mask = (present_counts >= float(min_count)) & (present_counts <= float(max_count))

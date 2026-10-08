@@ -7,7 +7,6 @@ import pandas as pd
 from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from ehrdata.io import to_pandas
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -15,6 +14,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
 from ehrapy._compat import function_2D_only
+from ehrapy.get import obs_df
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -96,7 +96,10 @@ def rank_features_supervised(
         )
 
     edata = edata.copy() if copy else edata
-    data = to_pandas(edata, layer=layer)
+    if var_names == "all":
+        var_names = [var_name for var_name in edata.var_names if var_name != predicted_feature]
+    columns = list(dict.fromkeys([*var_names, predicted_feature]))
+    data = obs_df(edata, keys=columns, layer=layer)
 
     prediction_type = edata.var[FEATURE_TYPE_KEY].loc[predicted_feature]
 
@@ -125,10 +128,6 @@ def rank_features_supervised(
             predictor = SVC(kernel="linear", **kwargs)
         elif model == "rf":
             predictor = RandomForestClassifier(**kwargs)
-
-    if var_names == "all":
-        var_names = list(edata.var_names)
-        var_names.remove(predicted_feature)
 
     input_data = data[list(var_names)]
     labels = data[predicted_feature]

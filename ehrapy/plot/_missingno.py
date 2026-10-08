@@ -2,13 +2,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import ehrdata as ed
 import missingno as msno
+import numpy as np
+import pandas as pd
+from fast_array_utils.conv import to_dense
 
 from ehrapy._compat import function_2D_only
+from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
+
+
+def _nullity_df(edata: EHRData, *, layer: str | None, categoricals: bool) -> pd.DataFrame:
+    """The plotted variables as a DataFrame that is NaN where values are missing, because missingno only reads nullity."""
+    X = edata.X if layer is None else edata.layers[layer]
+    columns = edata.var_names if categoricals else edata.var_names[~edata.var_names.str.startswith("ehrapycat")]
+    missing = to_dense(_missing_mask(X[:, edata.var_names.get_indexer(columns)]), to_cpu_memory=True)
+    return pd.DataFrame(np.where(missing, np.float32(np.nan), np.float32(0)), index=edata.obs_names, columns=columns)
 
 
 @function_2D_only()
@@ -59,39 +70,21 @@ def missing_values_matrix(
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
     """
-    df = ed.io.to_pandas(edata, layer=layer)
-
-    if not categoricals:
-        non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.matrix(
-            df[non_categorical_columns],
-            filter,
-            max_cols,
-            max_percentage,
-            sort,
-            figsize,
-            width_ratios,
-            color,
-            fontsize,
-            labels,
-            label_rotation,
-            sparkline,
-        )
-    else:
-        return msno.matrix(
-            df,
-            filter,
-            max_cols,
-            max_percentage,
-            sort,
-            figsize,
-            width_ratios,
-            color,
-            fontsize,
-            labels,
-            label_rotation,
-            sparkline,
-        )
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
+    return msno.matrix(
+        df,
+        filter,
+        max_cols,
+        max_percentage,
+        sort,
+        figsize,
+        width_ratios,
+        color,
+        fontsize,
+        labels,
+        label_rotation,
+        sparkline,
+    )
 
 
 @function_2D_only()
@@ -142,39 +135,21 @@ def missing_values_barplot(
     Preview:
         .. image:: /_static/docstring_previews/missingno_barplot.png
     """
-    df = ed.io.to_pandas(edata, layer=layer)
-
-    if not categoricals:
-        non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.bar(
-            df[non_categorical_columns],
-            figsize,
-            fontsize,
-            labels,
-            label_rotation,
-            log,
-            color,
-            filter,
-            max_cols,
-            max_percentage,
-            sort,
-            orientation,
-        )
-    else:
-        return msno.bar(
-            df,
-            figsize,
-            fontsize,
-            labels,
-            label_rotation,
-            log,
-            color,
-            filter,
-            max_cols,
-            max_percentage,
-            sort,
-            orientation,
-        )
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
+    return msno.bar(
+        df,
+        figsize,
+        fontsize,
+        labels,
+        label_rotation,
+        log,
+        color,
+        filter,
+        max_cols,
+        max_percentage,
+        sort,
+        orientation,
+    )
 
 
 @function_2D_only()
@@ -229,41 +204,22 @@ def missing_values_heatmap(
     Preview:
         .. image:: /_static/docstring_previews/missingno_heatmap.png
     """
-    df = ed.io.to_pandas(edata, layer=layer)
-
-    if not categoricals:
-        non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.heatmap(
-            df[non_categorical_columns],
-            filter,
-            max_cols,
-            max_percentage,
-            sort,
-            figsize,
-            fontsize,
-            labels,
-            label_rotation,
-            cmap,
-            vmin,
-            vmax,
-            cbar,
-        )
-    else:
-        return msno.heatmap(
-            df,
-            filter,
-            max_cols,
-            max_percentage,
-            sort,
-            figsize,
-            fontsize,
-            labels,
-            label_rotation,
-            cmap,
-            vmin,
-            vmax,
-            cbar,
-        )
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
+    return msno.heatmap(
+        df,
+        filter,
+        max_cols,
+        max_percentage,
+        sort,
+        figsize,
+        fontsize,
+        labels,
+        label_rotation,
+        cmap,
+        vmin,
+        vmax,
+        cbar,
+    )
 
 
 @function_2D_only()
@@ -311,22 +267,5 @@ def missing_values_dendrogram(
     Preview:
         .. image:: /_static/docstring_previews/missingno_dendrogram.png
     """
-    df = ed.io.to_pandas(edata, layer=layer)
-
-    if not categoricals:
-        non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.dendrogram(
-            df[non_categorical_columns],
-            method,
-            filter,
-            max_cols,
-            max_percentage,
-            orientation,
-            figsize,
-            fontsize,
-            label_rotation,
-        )
-    else:
-        return msno.dendrogram(
-            df, method, filter, max_cols, max_percentage, orientation, figsize, fontsize, label_rotation
-        )
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
+    return msno.dendrogram(df, method, filter, max_cols, max_percentage, orientation, figsize, fontsize, label_rotation)

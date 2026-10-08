@@ -9,9 +9,11 @@ import scanpy as sc
 from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
+from fast_array_utils.types import DaskArray
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import _materialize, function_2D_only
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -72,7 +74,7 @@ def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> N
         edata: Central data object after running :func:`~ehrapy.tools.rank_features_groups`
         key_added: The key in `edata.uns` information is saved to.
     """
-    if key_added not in edata.uns:
+    if "pvals_adj" not in edata.uns.get(key_added, {}):
         return
 
     pvals_adj = edata.uns[key_added]["pvals_adj"]
@@ -265,16 +267,28 @@ def _evaluate_categorical_features(
 
 
 def _nonzero_fractions(
-    edata: EHRData, features: Sequence[str], *, groupby: str, reference: str
+    edata: EHRData, features: Sequence[str], *, groupby: str, groups_order: Sequence[str], reference: str
 ) -> dict[str, pd.DataFrame]:
     """Fractions of observations with non-zero values per feature (rows) and group (columns), as `pts` of :func:`scanpy.tl.rank_genes_groups`."""
-    nonzero = pd.DataFrame(to_dense(edata[:, features].X, to_cpu_memory=True) != 0, columns=features)
-    grouped = nonzero.groupby(edata.obs[groupby].astype(str).to_numpy())
-    fractions = {"pts": grouped.mean().T}
+    X = edata.X[:, edata.var_names.get_indexer(features)]
+    groups = edata.obs[groupby].astype(str).to_numpy()
+    masks = [groups == group for group in groups_order]
+    *n_nonzero, n_nonzero_all = _materialize(
+        *(stats.sum(X[mask] != 0, axis=0) for mask in masks), stats.sum(X != 0, axis=0)
+    )
+    n_nonzero = np.stack(n_nonzero)
+    n_obs = np.array([mask.sum() for mask in masks])[:, None]
+    fractions = {"pts": pd.DataFrame((n_nonzero / n_obs).T, index=features, columns=groups_order)}
     if reference == "rest":
-        n_nonzero, n_obs = grouped.sum(), grouped.size()
-        fractions["pts_rest"] = (n_nonzero.sum() - n_nonzero).div(len(nonzero) - n_obs, axis=0).T
+        fractions["pts_rest"] = pd.DataFrame(
+            ((n_nonzero_all - n_nonzero) / (len(groups) - n_obs)).T, index=features, columns=groups_order
+        )
     return fractions
+
+
+def _ranked_features(result: Mapping) -> list[str]:
+    """Names of all features in a :func:`~ehrapy.tools.rank_features_groups` result."""
+    return list(dict.fromkeys(pd.DataFrame(result["names"]).iloc[:, 0]))
 
 
 def _check_no_datetime_columns(df):
@@ -475,6 +489,10 @@ def rank_features_groups(
         else:
             X_to_keep = edata.X if layer is None else edata.layers[layer]
             var_to_keep = edata.var
+        if X_to_keep.ndim == 3:
+            X_to_keep = X_to_keep[:, :, 0]
+        if isinstance(X_to_keep, DaskArray):
+            X_to_keep = X_to_keep.compute()
 
     else:
         # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards
@@ -559,7 +577,6 @@ def rank_features_groups(
             groups=groups,
             reference=reference,
             rankby_abs=rankby_abs,
-            pts=pts,
             key_added=key_added,
             copy=False,
             method=num_cols_method,
@@ -575,16 +592,18 @@ def rank_features_groups(
             key_added,
             names=numerical_edata.uns[key_added]["names"],
             scores=numerical_edata.uns[key_added]["scores"],
-            pvals=numerical_edata.uns[key_added]["pvals"],
-            pvals_adj=numerical_edata.uns[key_added].get("pvals_adj", None),
-            logfoldchanges=numerical_edata.uns[key_added].get("logfoldchanges", None),
+            pvals=numerical_edata.uns[key_added].get("pvals"),
+            pvals_adj=numerical_edata.uns[key_added].get("pvals_adj"),
+            logfoldchanges=numerical_edata.uns[key_added].get("logfoldchanges"),
             groups_order=group_names,
         )
-        for fraction_key in ("pts", "pts_rest"):
-            if fraction_key in numerical_edata.uns[key_added]:
-                edata.uns[key_added][fraction_key] = numerical_edata.uns[key_added][fraction_key]
 
     if list(edata.var_names[edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]):
+        if num_cols_method == "logreg" and "names" in edata.uns[key_added]:
+            raise ValueError(
+                "num_cols_method='logreg' cannot be combined with categorical features, "
+                "because logistic regression yields no p-values to rank them by."
+            )
         (
             categorical_names,
             categorical_scores,
@@ -610,11 +629,17 @@ def rank_features_groups(
             logfoldchanges=categorical_logfoldchanges,
             groups_order=group_names,
         )
-        if pts and len(categorical_names):
-            for fraction_key, fractions in _nonzero_fractions(
-                edata, categorical_names[:, 0], groupby=groupby, reference=reference
-            ).items():
-                edata.uns[key_added][fraction_key] = pd.concat([edata.uns[key_added].get(fraction_key), fractions])
+
+    if pts and "names" in edata.uns[key_added]:
+        edata.uns[key_added].update(
+            _nonzero_fractions(
+                edata,
+                _ranked_features(edata.uns[key_added]),
+                groupby=groupby,
+                groups_order=_get_groups_order(groups_subset=groups, group_names=group_names, reference=reference),
+                reference=reference,
+            )
+        )
 
     # if field_to_rank was obs or layer_and_obs, the edata object we have been working with is edata_minimal
     edata_orig.uns[key_added] = edata.uns[key_added]
@@ -678,15 +703,34 @@ def filter_rank_features_groups(
         >>> ep.tl.filter_rank_features_groups(edata)
     """
     edata = edata.copy() if copy else edata
-    sc.tl.filter_rank_genes_groups(
-        adata=edata,
-        key=key,
-        groupby=groupby,
-        use_raw=False,
-        key_added=key_added,
-        min_in_group_fraction=min_in_group_fraction,
-        min_fold_change=min_fold_change,
-        max_out_group_fraction=max_out_group_fraction,
-        compare_abs=compare_abs,
-    )
+    result = edata.uns[key]
+    params = result["params"]
+    features = _ranked_features(result)
+    if (
+        "pts_rest" not in result
+        and params["reference"] == "rest"
+        and groupby in (None, params["groupby"])
+        and pd.Index(features).isin(edata.var_names).all()
+    ):
+        edata.uns[key] = result | _nonzero_fractions(
+            edata,
+            features,
+            groupby=params["groupby"],
+            groups_order=list(pd.DataFrame(result["names"]).columns),
+            reference="rest",
+        )
+    try:
+        sc.tl.filter_rank_genes_groups(
+            adata=edata,
+            key=key,
+            groupby=groupby,
+            use_raw=False,
+            key_added=key_added,
+            min_in_group_fraction=min_in_group_fraction,
+            min_fold_change=min_fold_change,
+            max_out_group_fraction=max_out_group_fraction,
+            compare_abs=compare_abs,
+        )
+    finally:
+        edata.uns[key] = result
     return edata if copy else None
