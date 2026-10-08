@@ -3,14 +3,20 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 
 
 def test_detect_bias_all_sensitive_features(edata_small_bias):
-    results = ep.pp.detect_bias(
-        edata_small_bias, "all", run_feature_importances=True, corr_method="spearman", feature_importance_threshold=0.4
+    ep.pp.detect_bias(
+        edata_small_bias,
+        sensitive_features="all",
+        run_feature_importances=True,
+        corr_method="spearman",
+        feature_importance_threshold=0.4,
     )
+    results = edata_small_bias.uns["bias"]
 
     assert "feature_correlations" in results.keys()
     df = results["feature_correlations"]
@@ -46,25 +52,26 @@ def test_detect_bias_all_sensitive_features(edata_small_bias):
     assert len(df) >= 7  # 6 for the pairwise correlating features and one/two for contin1, which predicts cat1
 
 
-def test_explicit_impute_3D_edata(edata_blob_small):
+def test_detect_bias_3D_edata(edata_blob_small):
     ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_detect_bias_specified_sensitive_features(edata_small_bias):
-    results, result_adata = ep.pp.detect_bias(
+    result_edata = ep.pp.detect_bias(
         edata_small_bias,
-        ["contin1", "cat1"],
+        sensitive_features=["contin1", "cat1"],
         run_feature_importances=True,
         corr_method="spearman",
         feature_importance_threshold=0.5,
         prediction_confidence_threshold=0.4,
         copy=True,
     )
+    results = result_edata.uns["bias"]
 
     assert "smd" not in edata_small_bias.uns.keys()
-    assert "smd" in result_adata.uns.keys()
+    assert "smd" in result_edata.uns.keys()
 
     assert "feature_correlations" in results.keys()
     df = results["feature_correlations"]
@@ -96,4 +103,56 @@ def test_unencoded_data():
     edata.var[FEATURE_TYPE_KEY] = [CATEGORICAL_TAG] * 2
 
     with pytest.raises(ValueError):
-        ep.pp.detect_bias(edata, "all")
+        ep.pp.detect_bias(edata, sensitive_features="all")
+
+
+@pytest.mark.parametrize("copy", [False, True])
+def test_detect_bias_copy(edata_small_bias, copy):
+    result = ep.pp.detect_bias(
+        edata_small_bias, sensitive_features=["cat1"], run_feature_importances=False, key_added="cat1_bias", copy=copy
+    )
+
+    if copy:
+        assert "cat1_bias" not in edata_small_bias.uns
+        assert "feature_correlations" not in edata_small_bias.varp
+        edata_small_bias = result
+    else:
+        assert result is None
+    assert set(edata_small_bias.uns["cat1_bias"]) == {
+        "feature_correlations",
+        "standardized_mean_differences",
+        "categorical_value_counts",
+    }
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("corr_method", ["spearman", "pearson"])
+def test_detect_bias_array_types(edata_small_bias, array_type, corr_method, rng):
+    complete = edata_small_bias.copy()
+    complete.X = complete.X.astype(np.float64)
+    importance_kwargs = {"sensitive_features": ["cat1"], "run_feature_importances": True}
+    expected_importances = ep.pp.detect_bias(complete, copy=True, **importance_kwargs).uns["bias"]
+    X = edata_small_bias.X.astype(np.float64)
+    numeric = X[:, :4]
+    numeric[rng.random(numeric.shape) < 0.2] = 0
+    numeric[rng.random(numeric.shape) < 0.1] = np.nan
+    edata_small_bias.X = X
+    kwargs = {"sensitive_features": "all", "run_feature_importances": False, "corr_method": corr_method}
+    expected = ep.pp.detect_bias(edata_small_bias, copy=True, **kwargs)
+    edata_small_bias.X = array_type(X)
+    complete.X = array_type(complete.X)
+
+    if array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError, match="dask arrays"):
+            ep.pp.detect_bias(edata_small_bias, **kwargs)
+        return
+
+    result = ep.pp.detect_bias(edata_small_bias, copy=True, **kwargs)
+    importances = ep.pp.detect_bias(complete, copy=True, **importance_kwargs).uns["bias"]
+
+    assert list(importances["feature_importances"].columns) == list(expected_importances["feature_importances"].columns)
+    np.testing.assert_allclose(result.varp["feature_correlations"], expected.varp["feature_correlations"], rtol=1e-10)
+    for key, frame in expected.uns["bias"].items():
+        pd.testing.assert_frame_equal(result.uns["bias"][key], frame, rtol=1e-10)
+    for feature, frame in expected.uns["smd"].items():
+        pd.testing.assert_frame_equal(result.uns["smd"][feature], frame, rtol=1e-10)

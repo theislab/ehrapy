@@ -10,7 +10,7 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR.parent}/_images"
 
 @pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
 def test_CohortTracker_init_vanilla(columns, edata_mini):
-    ct = ep.tl.CohortTracker(edata_mini, columns)
+    ct = ep.tl.CohortTracker(edata_mini, columns=columns)
     assert ct._tracked_steps == 0
     assert ct.tracked_steps == 0
     assert ct._tracked_text == []
@@ -18,7 +18,7 @@ def test_CohortTracker_init_vanilla(columns, edata_mini):
 
 
 def test_CohortTracker_type_detection(edata_mini):
-    ct = ep.tl.CohortTracker(edata_mini, ["glucose", "weight", "disease", "station"])
+    ct = ep.tl.CohortTracker(edata_mini, columns=["glucose", "weight", "disease", "station"])
     assert set(ct.categorical) == {"disease", "station"}
 
 

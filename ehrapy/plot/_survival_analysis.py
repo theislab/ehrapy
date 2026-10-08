@@ -8,32 +8,38 @@ import pandas as pd
 from bokeh.palettes import Category10
 from numpy import ndarray
 
+from ehrapy._compat import function_2D_only
+from ehrapy.get import obs_df
+from ehrapy.plot._holoviews import load_hv_extensions
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from typing import Any
-    from xmlrpc.client import Boolean
 
     from ehrdata import EHRData
     from lifelines import KaplanMeierFitter
     from statsmodels.regression.linear_model import RegressionResults
 
 
+@function_2D_only()
+@load_hv_extensions()
 def ols(
     edata: EHRData | None = None,
     *,
     x: str | None = None,
     y: str | None = None,
-    scatter_plot: Boolean | None = True,
-    ols_results: list[RegressionResults] | None = None,
-    ols_color: list[str | None] | None = None,
+    layer: str | None = None,
+    scatter_plot: bool = True,
+    ols_results: Sequence[RegressionResults] | None = None,
+    ols_color: Sequence[str | None] | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
     width: int | None = 600,
     height: int | None = 400,
-    lines: list[tuple[ndarray | float, ndarray | float]] | None = None,
-    lines_color: list[str | None] | None = None,
-    lines_style: list[str | None] | None = None,
-    lines_label: list[str | None] | None = None,
+    lines: Sequence[tuple[ndarray | float, ndarray | float]] | None = None,
+    lines_color: Sequence[str | None] | None = None,
+    lines_style: Sequence[str | None] | None = None,
+    lines_label: Sequence[str | None] | None = None,
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
     title: str | None = None,
@@ -45,6 +51,8 @@ def ols(
         edata: Central data object.
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
+        layer: The layer to take `x` and `y` from.
+            If `None`, `edata.X` is used.
         scatter_plot: Whether to show a scatter plot.
         ols_results: List of RegressionResults from ehrapy.tl.ols.
         ols_color: List of colors for each ols_results.
@@ -93,8 +101,9 @@ def ols(
     plot = None
 
     if edata is not None and x is not None and y is not None:
-        x_data = np.array(edata[:, x].X).flatten().astype(float)
-        y_data = np.array(edata[:, y].X).flatten().astype(float)
+        values = obs_df(edata, keys=[x, y], layer=layer)
+        x_data = values[x].to_numpy(dtype=float)
+        y_data = values[y].to_numpy(dtype=float)
 
         mask = ~(np.isnan(x_data) | np.isnan(y_data))
         x_clean = x_data[mask]
@@ -165,17 +174,18 @@ def ols(
     return plot
 
 
+@load_hv_extensions()
 def kaplan_meier(
     kmfs: Sequence[KaplanMeierFitter],
     *,
     display_survival_statistics: bool = False,
-    ci_alpha: list[float] | None = None,
-    ci_force_lines: list[Boolean] | None = None,
-    ci_show: list[Boolean] | None = None,
-    ci_legend: list[Boolean] | None = None,
-    at_risk_counts: list[Boolean] | None = None,
-    color: list[str | None] | None = None,
-    grid: Boolean | None = False,
+    ci_alpha: Sequence[float] | None = None,
+    ci_force_lines: Sequence[bool] | None = None,
+    ci_show: Sequence[bool] | None = None,
+    ci_legend: Sequence[bool] | None = None,
+    at_risk_counts: Sequence[bool] | None = None,
+    color: Sequence[str | None] | None = None,
+    grid: bool = False,
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
     xlabel: str | None = None,
@@ -216,9 +226,9 @@ def kaplan_meier(
         >>> edata[:, ["censor_flg"]].X = np.where(
         ...     edata[:, ["censor_flg"]].X == 0, 1, 0
         ... )  # MIMIC-II uses 0=death while KaplanMeierFitter expects True=death
-        >>> kmf = ep.tl.kaplan_meier(edata, "mort_day_censored", "censor_flg")
+        >>> kmf = ep.tl.kaplan_meier(edata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> ep.pl.kaplan_meier(
-        ...     [kmf], color=["r"], xlim=(0, 700), ylim=(0, 1), xlabel="Days", ylabel="Proportion Survived", show=True
+        ...     [kmf], color=["r"], xlim=(0, 700), ylim=(0, 1), xlabel="Days", ylabel="Proportion Survived"
         ... )
 
         .. image:: /_static/docstring_previews/kaplan_meier.png
@@ -318,10 +328,11 @@ def kaplan_meier(
     return plot
 
 
+@load_hv_extensions()
 def cox_ph_forestplot(
     edata: EHRData,
     *,
-    uns_key: str = "cox_ph",
+    key: str = "cox_ph",
     labels: Iterable[str] | None = None,
     width: int = 1200,
     height: int = 600,
@@ -342,7 +353,7 @@ def cox_ph_forestplot(
 
     Args:
         edata: Data object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tools.cox_ph`.
-        uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `uns_key` in :func:`~ehrapy.tools.cox_ph`.
+        key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `key_added` in :func:`~ehrapy.tools.cox_ph`.
         labels: List of labels for each coefficient, default uses the index of the summary table.
         width: Plot width in pixels.
         height: Plot height in pixels.
@@ -368,10 +379,10 @@ def cox_ph_forestplot(
 
         .. image:: /_static/docstring_previews/coxph_forestplot.png
     """
-    if uns_key not in edata.uns:
-        raise ValueError(f"Key {uns_key} not found in edata.uns. Please provide a valid key.")
+    if key not in edata.uns:
+        raise ValueError(f"Key {key} not found in edata.uns. Please provide a valid key.")
 
-    coxph_fitting_summary = edata.uns[uns_key]
+    coxph_fitting_summary = edata.uns[key]
     auc_col = "coef"
 
     if labels is None:
@@ -462,10 +473,11 @@ def cox_ph_forestplot(
     return forest_plot
 
 
+@load_hv_extensions()
 def cox_ph_adjusted_curves(
     edata: EHRData,
     *,
-    uns_key: str = "cox_ph_adjusted_curves",
+    key: str = "cox_ph_adjusted_curves",
     groups: Sequence[str] | None = None,
     palette: Sequence[str] | None = None,
     show_ci: bool = True,
@@ -487,7 +499,7 @@ def cox_ph_adjusted_curves(
 
     Args:
         edata: Data object containing the adjusted survival curves in `uns` after having run :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
-        uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph_adjusted_curves` stored its output.
+        key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph_adjusted_curves` stored its output.
             See argument `key_added` in :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
         groups: Subset of group labels to plot.
             If None, all groups are plotted.
@@ -511,11 +523,14 @@ def cox_ph_adjusted_curves(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> cph = ep.tl.cox_ph(
-        ...     edata, "mort_day_censored", "censor_flg", formula="gender_num + afib_flg + day_icu_intime_num"
+        ...     edata,
+        ...     duration_col="mort_day_censored",
+        ...     event_col="censor_flg",
+        ...     formula="gender_num + afib_flg + day_icu_intime_num",
         ... )
         >>> ep.tl.cox_ph_adjusted_curves(
         ...     edata,
-        ...     cph,
+        ...     cph=cph,
         ...     strata="aline_flg",
         ...     duration_col="mort_day_censored",
         ...     event_col="censor_flg",
@@ -524,10 +539,10 @@ def cox_ph_adjusted_curves(
 
         .. image:: /_static/docstring_previews/cox_ph_adjusted_curves.png
     """
-    if uns_key not in edata.uns:
-        raise KeyError(f"No adjusted curves found at edata.uns['{uns_key}']. Run ep.tl.cox_ph_adjusted_curves() first.")
+    if key not in edata.uns:
+        raise KeyError(f"No adjusted curves found at edata.uns['{key}']. Run ep.tl.cox_ph_adjusted_curves() first.")
 
-    data = edata.uns[uns_key]
+    data = edata.uns[key]
     meta = data.get("_meta", {})
     strata_label = meta.get("strata", "group")
     method = meta.get("method", "average")

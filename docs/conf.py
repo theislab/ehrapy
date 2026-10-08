@@ -7,14 +7,14 @@ from importlib.metadata import metadata
 from pathlib import Path
 
 HERE = Path(__file__).parent
-sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
+sys.path.insert(0, str(HERE.parent))
 
 needs_sphinx = "8.0"
 
 info = metadata("ehrapy")
-project_name = info["Name"]
+project = info["Name"]
 author = info["Author"]
-copyright = f"{datetime.now():%Y}, {author}."
+copyright = f"{datetime.now():%Y}, {author}"
 version = info["Version"]
 urls = dict(pu.split(", ") for pu in info.get_all("Project-URL"))
 repository_url = urls["Source"]
@@ -42,10 +42,11 @@ extensions = [
     "sphinx_issues",
     "sphinxcontrib.bibtex",
     "IPython.sphinxext.ipython_console_highlighting",
+    "sphinxext.opengraph",
 ]
 
 ogp_site_url = "https://ehrapy.readthedocs.io/en/latest/"
-ogp_image = "https://ehrapy.readthedocs.io/en/latest//_static/logo.png"
+ogp_image = "https://ehrapy.readthedocs.io/en/latest/_static/ehrapy_logos/ehrapy_pure.png"
 
 # nbsphinx specific settings
 exclude_patterns = [
@@ -111,12 +112,14 @@ intersphinx_mapping = {
     "networkx": ("https://networkx.org/documentation/stable", None),
     "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
     "holoviews": ("https://holoviews.org/", None),
+    "dask": ("https://docs.dask.org/en/stable/", None),
+    "igraph": ("https://python.igraph.org/en/stable/api/", None),
 }
 nitpick_ignore = [
     ("py:class", "matplotlib.axes.Axes"),
+    ("py:class", "seaborn.matrix.ClusterGrid"),
+    ("py:class", "ehrapy._types.Empty"),
     ("py:class", "cycler.Cycler"),
-    ("py:class", "CAT"),
-    ("py:class", "ehrapy.tools.annotate_text.CAT"),
     ("py:class", "tableone.TableOne"),
     ("py:class", "DotPlot"),
     ("py:class", "MatrixPlot"),
@@ -132,17 +135,13 @@ nitpick_ignore = [
     ("py:class", "matplotlib.colorbar.ColorbarBase"),
     ("py:class", "scanpy.neighbors._types.KnnTransformerLike"),
     ("py:class", "statsmodels.genmod.generalized_linear_model.GLMResultsWrapper"),
-    ("py:class", "dask_ml.preprocessing.MinMaxScaler"),
-    ("py:class", "dask_ml.preprocessing.QuantileTransformer"),
-    ("py:class", "dask_ml.preprocessing.RobustScaler"),
-    ("py:class", "dask_ml.preprocessing.StandardScaler"),
     ("py:class", "pathlib._local.Path"),
     ("py:data", "typing.Union"),
     ("py:class", "pandas.core.frame.DataFrame"),
 ]
-autodoc_type_aliases = {"CAT": "Any"}
 
 typehints_defaults = "comma"
+always_use_bars_union = True
 
 pygments_style = "sphinx"
 pygments_dark_style = "native"

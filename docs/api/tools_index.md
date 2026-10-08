@@ -20,6 +20,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.draw_graph
     tools.diffmap
     tools.embedding_density
+    tools.famd
 ```
 
 ## Clustering and trajectory inference
@@ -69,6 +70,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.kaplan_meier
     tools.test_kmf_logrank
     tools.test_nested_f_statistic
+    tools.anova_glm
     tools.cox_ph
     tools.cox_ph_adjusted_curves
     tools.weibull_aft
@@ -102,7 +104,9 @@ Two diagnostics — covariate balance and positivity — round out the toolkit.
     tools.CausalEstimate
 ```
 
-## Normalized Complexity Profile
+## Patterns across patients, variables and time
+
+Finds groups of patients whose variables follow a similar course over time.
 
 ```{eval-rst}
 .. autosummary::

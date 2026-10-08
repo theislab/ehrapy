@@ -11,6 +11,11 @@ def test_neighbors_simple(edata_blob_small):
     ep.pp.neighbors(edata_blob_small, n_neighbors=5)
 
 
+def test_neighbors_jaccard(edata_blob_small):
+    ep.pp.neighbors(edata_blob_small, n_neighbors=5, method="jaccard")
+    assert edata_blob_small.uns["neighbors"]["params"]["method"] == "jaccard"
+
+
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
 def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
     """Test neighbors computation with timeseries metrics."""
@@ -31,6 +36,22 @@ def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw
     ep.pp.neighbors(edata, n_neighbors=5, metric="dtw", use_rep=DEFAULT_TEM_LAYER_NAME)
 
     assert np.allclose(edata.obsp["distances"].toarray(), distances)
+
+
+@pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
+def test_neighbors_with_timeseries_sparse_patient(rng, metric):
+    layer = rng.standard_normal((12, 2, 10))
+    layer[0, :, 2:] = np.nan
+    edata = ed.EHRData(shape=(12, 2), layers={DEFAULT_TEM_LAYER_NAME: layer})
+
+    ep.pp.neighbors(edata, n_neighbors=4, metric=metric, use_rep=DEFAULT_TEM_LAYER_NAME)
+
+    distances, connectivities = edata.obsp["distances"], edata.obsp["connectivities"]
+    assert np.isfinite(distances.data).all()
+    assert np.isfinite(connectivities.data).all()
+    assert distances[0].nnz == distances[:, 0].nnz == 0
+    assert connectivities[0].nnz == connectivities[:, 0].nnz == 0
+    assert (distances[1:].getnnz(axis=1) == 3).all()
 
 
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])

@@ -13,13 +13,16 @@ defaults:
   run:
     shell: bash -euo pipefail {0}
 
+permissions:
+  contents: read
+
 jobs:
   check:
     name: "Triage: Check if GPU tests are allowed to run"
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-gpu-ci') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: flying-sheep/check@v1
+      - uses: flying-sheep/check@e10bb11109d1434ab16729bd988d78d65d47e163 # v1.0.5
         with:
           success: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'run-gpu-ci') }}
 
@@ -29,12 +32,13 @@ jobs:
     outputs:
       envs: ${{ steps.get-envs.outputs.envs }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: blob:none
           fetch-depth: 0
+          persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Get GPU test environments
         id: get-envs
         run: |
@@ -54,22 +58,26 @@ jobs:
     needs: get-environments
     runs-on: "cirun-aws-gpu--${{ github.run_id }}"
     timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
         env: ${{ fromJSON(needs.get-environments.outputs.envs) }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: blob:none
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
 
       - name: Nvidia SMI sanity check
         run: nvidia-smi
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: ${{ matrix.env.python }}
           cache-dependency-glob: pyproject.toml
@@ -82,9 +90,9 @@ jobs:
         env:
           MPLBACKEND: agg
         run: uvx hatch run ${{ matrix.env.name }}:run -- -v --color=yes
-      - name: Remove 'run-gpu-ci' label
+      - name: Remove 'run-gpu-ci' label # zizmor: ignore[superfluous-actions]
         if: always()
-        uses: actions-ecosystem/action-remove-labels@v1
+        uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0 # v1.3.0
         with:
           labels: "run-gpu-ci"
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -95,7 +103,7 @@ jobs:
     needs: [check, get-environments, test]
     runs-on: ubuntu-latest
     steps:
-      - uses: re-actors/alls-green@release/v1
+      - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           allowed-skips: check, get-environments, test
           jobs: ${{ toJSON(needs) }}

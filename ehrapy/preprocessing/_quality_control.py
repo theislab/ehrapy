@@ -1,59 +1,76 @@
 from __future__ import annotations
 
-import copy
-import warnings
-from functools import singledispatch
-from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+import itertools
+import math
+from functools import partial, singledispatch
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
-import array_api_compat
+import array_api_extra as xpx
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
+from array_api_compat import array_namespace, is_lazy_array
+from ehrdata import EHRData
 from ehrdata._logger import logger
-from scipy.stats import chi2, ttest_ind_from_stats
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase, DaskArray
+from scipy.stats import chi2, rankdata, ttest_ind_from_stats
 
 from ehrapy._compat import (
-    DaskArray,
-    _apply_over_time_axis,
-    _raise_array_type_not_implemented,
+    _broadcast_var_stat,
+    _by_group,
+    _columnwise,
+    _has_sparse_chunks,
+    _like_obs,
+    _map_observation_blocks,
+    _map_reduction,
+    _map_variable_blocks,
+    _materialize,
+    _obs_axes,
+    _sparse_columns,
+    _sparse_rows,
+    _var_axes,
     function_2D_only,
-    nanmax_array_api,
-    nanmean_array_api,
-    nanmedian_array_api,
-    nanmin_array_api,
-    nanstd_array_api,
+    nanquantile,
+    nanstd,
+    sparse_nan_min_max,
+    sparse_nan_moments,
+    sparse_nanquantile,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
+from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-
-import ehrdata as ed
-from ehrdata import EHRData
+    type Array = np.ndarray | DaskArray
 
 
 def qc_metrics(
     edata: EHRData,
-    qc_vars: Collection[str] = (),
     *,
+    qc_vars: Collection[str] = (),
     layer: str | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    copy: bool = False,
+) -> EHRData | None:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
     Look at the return type for a more in depth description of the default and extended metrics.
     If :func:`~ehrdata.infer_feature_types` is run first, then extended metrics that require feature type information are calculated in addition to default metrics.
-
+    Numeric statistics ignore non-numeric values such as unencoded categories.
+    For 3D data, variable metrics are computed across observations and timepoints, and observation metrics across variables and timepoints.
 
     Args:
         edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
+        copy: Whether to return a copy of `edata` or modify it in place.
 
     Returns:
-        Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
+        The calculated QC metrics are added to `obs` and `var` respectively.
 
         Default observation level metrics include:
 
@@ -91,140 +108,339 @@ def qc_metrics(
     Examples:
             >>> import ehrapy as ep
             >>> edata = ed.dt.mimic_2()
-            >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
-            >>> obs_qc.head()
-            >>> var_qc.head()
+            >>> ep.pp.qc_metrics(edata)
+            >>> edata.obs.head()
+            >>> edata.var.head()
     """
     if not isinstance(edata, EHRData):
         raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
 
-    feature_type = edata.var.get("feature_type", None)
-    extended = True
-    if feature_type is None:
-        extended = False
+    if copy:
+        edata = edata.copy()
 
     mtx = edata.X if layer is None else edata.layers[layer]
+    if mtx.dtype == object and not is_lazy_array(mtx):
+        _raise_error_when_heterogeneous(mtx)
 
-    _raise_error_when_heterogeneous(mtx)
-
-    var_metrics = _compute_var_metrics(mtx, edata, extended=extended)
-    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, extended=extended)
+    var_metrics, obs_metrics = _compute_qc_metrics(mtx, edata, qc_vars=qc_vars, extended=FEATURE_TYPE_KEY in edata.var)
 
     edata.var[var_metrics.columns] = var_metrics
     edata.obs[obs_metrics.columns] = obs_metrics
 
-    return obs_metrics, var_metrics
+    return edata if copy else None
+
+
+def _kept_index(X: CSBase, axis: int | tuple[int, ...]) -> tuple[np.ndarray, int]:
+    """Position along the kept axis of every stored element when reducing `X` over `axis`, and that axis' length."""
+    if axis in (0, (0,)):
+        return _sparse_columns(X), X.shape[1]
+    return _sparse_rows(X), X.shape[0]
 
 
 @singledispatch
-def _compute_missing_values(mtx, axis):
-    _raise_array_type_not_implemented(_compute_missing_values, type(mtx))
+def _compute_missing_values(mtx: Array, axis: int | tuple[int, ...]) -> Array:
+    """Number of missing values along `axis`."""
+    xp = array_namespace(mtx)
+    return xp.sum(_missing_mask(mtx), axis=axis, dtype=xp.int64)
 
 
-@_compute_missing_values.register(np.ndarray)
-def _(mtx: np.ndarray, axis) -> np.ndarray:
-    return pd.isnull(mtx).sum(axis)
+@_compute_missing_values.register(CSBase)
+def _(mtx: CSBase, axis: int | tuple[int, ...]) -> np.ndarray:
+    index, n = _kept_index(mtx, axis)
+    return np.bincount(index[np.isnan(mtx.data)], minlength=n)
 
 
 @_compute_missing_values.register(DaskArray)
-def _(mtx: DaskArray, axis) -> np.ndarray:
-    import dask.array as da
+def _(mtx: DaskArray, axis: int | tuple[int, ...]) -> DaskArray:
+    if _has_sparse_chunks(mtx):
+        return _map_reduction(mtx, _compute_missing_values, (axis,) if isinstance(axis, int) else axis, np.int64)
+    return _compute_missing_values.dispatch(object)(mtx, axis)
 
-    return da.isnull(mtx).sum(axis).compute()
+
+def _count_distinct(index: np.ndarray, values: np.ndarray, n: int) -> np.ndarray:
+    """Number of distinct non-missing `values` at every position of `index` in `range(n)`."""
+    codes, uniques = pd.factorize(values)
+    present = codes >= 0
+    n_codes = max(len(uniques), 1)
+    keys = np.unique(index[present].astype(np.int64) * n_codes + codes[present])
+    return np.bincount(keys // n_codes, minlength=n)
 
 
-@_compute_missing_values.register(sp.csr_array)
-@_compute_missing_values.register(sp.csc_array)
-def _(mtx, axis) -> np.ndarray:
-    mtx_csc = mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
-    n_nan_per_col = np.array(
-        [np.sum(np.isnan(mtx_csc.data[mtx_csc.indptr[i] : mtx_csc.indptr[i + 1]])) for i in range(mtx.shape[1])]
+@singledispatch
+def _nunique(mtx: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
+    """Number of distinct non-missing values along `axis`."""
+    (kept,) = (i for i in range(mtx.ndim) if i not in axis)
+    values = np.moveaxis(mtx, kept, 0).reshape(mtx.shape[kept], -1)
+    index = np.repeat(np.arange(values.shape[0]), values.shape[1])
+    return _count_distinct(index, values.ravel(), values.shape[0])
+
+
+@_nunique.register(DaskArray)
+def _(mtx: DaskArray, axis: tuple[int, ...]) -> DaskArray:
+    return _map_reduction(mtx, _nunique, axis, np.int64)
+
+
+@_nunique.register(CSBase)
+def _(mtx: CSBase, axis: tuple[int, ...]) -> np.ndarray:
+    index, n = _kept_index(mtx, axis)
+    implicit_zeros = np.flatnonzero(np.bincount(index, minlength=n) < mtx.shape[axis[0]])
+    values = np.concatenate([mtx.data, np.zeros(len(implicit_zeros), dtype=mtx.dtype)])
+    return _count_distinct(np.concatenate([index, implicit_zeros]), values, n)
+
+
+@singledispatch
+def _as_float(mtx: np.ndarray) -> np.ndarray:
+    """Values as float64, with non-numeric values of object arrays, such as unencoded categories, as NaN."""
+    if mtx.dtype != object:
+        return mtx.astype(np.float64)
+    return pd.to_numeric(mtx.ravel(), errors="coerce").astype(np.float64).reshape(mtx.shape)
+
+
+@_as_float.register(DaskArray)
+def _(mtx: DaskArray) -> DaskArray:
+    return mtx.map_blocks(_as_float, dtype=np.float64)
+
+
+def _tukey_fences(q1: Array, q3: Array) -> tuple[Array, Array]:
+    """Limits beyond which values are outliers by the interquartile range method."""
+    iqr = q3 - q1
+    return q1 - 1.5 * iqr, q3 + 1.5 * iqr
+
+
+_VAR_STATS = ("mean", "median", "standard_deviation", "min", "max", "iqr_outliers")
+
+
+@singledispatch
+def _var_stats(mtx: Array) -> dict[str, Array]:
+    """Mean, median, standard deviation, minimum and maximum of every variable, and whether it has IQR outliers."""
+    mtx = _as_float(mtx)
+    xp = array_namespace(mtx)
+    axes = _obs_axes(mtx)
+    quartiles = nanquantile(mtx, [0.25, 0.5, 0.75], axis=axes)
+    lower, upper = (_broadcast_var_stat(fence, mtx) for fence in _tukey_fences(quartiles[0], quartiles[2]))
+    return {
+        "mean": xpx.nanmean(mtx, axis=axes),
+        "median": quartiles[1],
+        "standard_deviation": nanstd(mtx, axis=axes),
+        "min": xpx.nanmin(mtx, axis=axes),
+        "max": xpx.nanmax(mtx, axis=axes),
+        "iqr_outliers": xp.any((mtx < lower) | (mtx > upper), axis=axes),
+    }
+
+
+@_var_stats.register(DaskArray)
+def _(mtx: DaskArray) -> dict[str, DaskArray]:
+    if not _has_sparse_chunks(mtx):
+        return _var_stats.dispatch(object)(mtx)
+    stacked = _map_variable_blocks(
+        mtx,
+        lambda block: np.stack(list(_var_stats(block).values())).astype(np.float64),
+        chunks=((len(_VAR_STATS),), mtx.chunks[1]),
+        meta=np.array((), dtype=np.float64),
     )
-    if axis == 0:
-        return n_nan_per_col
-    else:
-        # per row
-        mtx_csr = mtx.tocsr() if isinstance(mtx, sp.csc_array) else mtx
-        return np.array(
-            [np.sum(np.isnan(mtx_csr.data[mtx_csr.indptr[i] : mtx_csr.indptr[i + 1]])) for i in range(mtx.shape[0])]
-        )
+    stats = dict(zip(_VAR_STATS, stacked, strict=True))
+    stats["iqr_outliers"] = stats["iqr_outliers"].astype(bool)
+    return stats
+
+
+@_var_stats.register(CSBase)
+def _(mtx: CSBase) -> dict[str, np.ndarray]:
+    _, mean, var = sparse_nan_moments(mtx)
+    minimum, maximum = sparse_nan_min_max(mtx)
+    q1, median, q3 = sparse_nanquantile(mtx, [0.25, 0.5, 0.75])
+    lower, upper = _tukey_fences(q1, q3)
+    columns = _sparse_columns(mtx)
+    outside = (mtx.data < lower[columns]) | (mtx.data > upper[columns])
+    implicit_zeros = np.bincount(columns, minlength=mtx.shape[1]) < mtx.shape[0]
+    return {
+        "mean": mean,
+        "median": median,
+        "standard_deviation": np.sqrt(var),
+        "min": minimum,
+        "max": maximum,
+        "iqr_outliers": (np.bincount(columns[outside], minlength=mtx.shape[1]) > 0)
+        | (implicit_zeros & ((lower > 0) | (upper < 0))),
+    }
 
 
 @singledispatch
-def _compute_unique_values(mtx, axis):
-    _raise_array_type_not_implemented(_compute_unique_values, type(mtx))
+def _total(mtx: Array) -> Array:
+    """Sum of the values of every observation across variables and timepoints."""
+    return array_namespace(mtx).sum(_as_float(mtx), axis=_var_axes(mtx))
 
 
-@_compute_unique_values.register(np.ndarray)
-def _(mtx: np.ndarray, axis) -> np.ndarray:
-    return pd.DataFrame(mtx).nunique(axis=axis, dropna=True).to_numpy()
+@_total.register(CSBase)
+def _(mtx: CSBase) -> np.ndarray:
+    return np.asarray(mtx.sum(axis=1)).ravel()
 
 
-@_compute_unique_values.register(DaskArray)
-def _(mtx: DaskArray, axis) -> np.ndarray:
+@_total.register(DaskArray)
+def _(mtx: DaskArray) -> DaskArray:
+    if _has_sparse_chunks(mtx):
+        return _map_reduction(mtx, lambda block, axis: _total(block), (1,), np.float64)
+    return _total.dispatch(object)(mtx)
+
+
+@singledispatch
+def _with_original_values(mtx: np.ndarray, original: np.ndarray) -> np.ndarray:
+    """Variables of `mtx` followed by the original values of encoded features."""
+    return np.concatenate([mtx.astype(object), original], axis=1)
+
+
+@_with_original_values.register(DaskArray)
+def _(mtx: DaskArray, original: np.ndarray) -> DaskArray:
     import dask.array as da
 
-    def nunique_block(block, axis):
-        return pd.DataFrame(block).nunique(axis=axis, dropna=True).to_numpy()
+    if _has_sparse_chunks(mtx):
+        return _map_observation_blocks(
+            mtx,
+            _with_original_values,
+            _like_obs(mtx, original),
+            chunks=(mtx.chunks[0], (mtx.shape[1] + original.shape[1],)),
+            meta=mtx._meta.astype(np.float64),
+        )
+    return da.concatenate([mtx.astype(object), _like_obs(mtx, original)], axis=1)
 
-    return da.map_blocks(nunique_block, mtx, axis=axis, dtype=int).compute()
+
+@_with_original_values.register(CSBase)
+def _(mtx: CSBase, original: np.ndarray) -> CSBase:
+    # sparse matrices cannot hold the original objects, so all values become codes that keep zero at zero
+    codes = pd.factorize(np.concatenate([[0.0], mtx.data, original.ravel()]).astype(object))[0].astype(np.float64)
+    codes[codes < 0] = np.nan
+    coded = mtx.astype(np.float64)
+    coded.data = codes[1 : 1 + mtx.nnz]
+    return sp.hstack([coded, codes[1 + mtx.nnz :].reshape(original.shape)], format=mtx.format)
 
 
-@singledispatch
-def _compute_entropy_of_missingness(mtx, axis):
-    _raise_array_type_not_implemented(_compute_entropy_of_missingness, type(mtx))
+def _original_values(edata: EHRData, mtx: Array | CSBase) -> tuple[np.ndarray, np.ndarray]:
+    """Index of every variable's encoded feature (-1 if not encoded), and the features' original values broadcast over timepoints."""
+    features = sorted(_get_encoded_features(edata)) if "encoding_mode" in edata.var else []
+    if missing := [feature for feature in features if feature not in edata.obs]:
+        raise KeyError(f"Original values for {missing} not found in edata.obs.")
+    if features:
+        encoded = edata.var["encoding_mode"].notna()
+        feature_index = pd.Index(features).get_indexer(edata.var["unencoded_var_names"].where(encoded))
+    else:
+        feature_index = np.full(edata.n_vars, -1)
+    original = edata.obs[features].to_numpy(dtype=object)
+    original = np.where(original == "nan", np.nan, original)
+    if mtx.ndim == 3:
+        original = np.broadcast_to(original[:, :, None], (*original.shape, mtx.shape[2]))
+    return feature_index, original
 
 
-@_compute_entropy_of_missingness.register(np.ndarray)
-def _(mtx: np.ndarray, axis) -> np.ndarray:
-    missing_mask = pd.isnull(mtx)
-    p_miss = missing_mask.mean(axis=axis)
-    p = np.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
+def _entropy(p_missing: np.ndarray) -> np.ndarray:
+    """Binary entropy of the missingness of every variable or observation."""
+    p = np.clip(p_missing, 1e-10, 1 - 1e-10)  # avoid log(0)
     return -(p * np.log2(p) + (1 - p) * np.log2(1 - p))
 
 
-@_compute_entropy_of_missingness.register(DaskArray)
-def _(mtx: DaskArray, axis) -> np.ndarray:
-    import dask.array as da
-
-    missing_mask = da.isnull(mtx)
-    p_miss = missing_mask.mean(axis=axis)
-    p = da.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
-    return -(p * da.log2(p) + (1 - p) * da.log2(1 - p)).compute()
+def _percentage(part: np.ndarray, total: np.ndarray | int) -> np.ndarray:
+    return part / np.where(total > 0, total, np.nan) * 100
 
 
-@_apply_over_time_axis
-def _row_unique(arr_2d: np.ndarray, axis) -> np.ndarray:
-    uniques = _compute_unique_values(arr_2d, axis=axis)
-    return np.broadcast_to(uniques[:, None], arr_2d.shape)
+def _compute_qc_metrics(
+    mtx: Array | CSBase, edata: EHRData, *, qc_vars: Collection[str], extended: bool
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Calculate the variable and observation metrics of :func:`qc_metrics`, computing dask arrays once.
 
-
-@_apply_over_time_axis
-def _row_valid(arr_2d: np.ndarray, axis) -> np.ndarray:
-    missing = _compute_missing_values(arr_2d, axis=axis)
-    valid = arr_2d.shape[axis] - missing
-    return np.broadcast_to(valid[:, None], arr_2d.shape)
-
-
-@singledispatch
-def _raise_error_when_heterogeneous(mtx):
-    _raise_array_type_not_implemented(_raise_error_when_heterogeneous, type(mtx))
-
-
-@_raise_error_when_heterogeneous.register(np.ndarray)
-@_raise_error_when_heterogeneous.register(DaskArray)
-def _(mtx: np.ndarray | DaskArray):
-    if mtx.ndim == 3:
-        mtx_check = mtx[:, :, 0]
+    Encoded variables are described by the original values of their feature in `edata.obs`.
+    """
+    obs_axes, var_axes = _obs_axes(mtx), _var_axes(mtx)
+    feature_index, original = _original_values(edata, mtx)
+    encoded = feature_index >= 0
+    obs_mtx = mtx[:, ~encoded] if encoded.any() else mtx
+    if extended:
+        categorical = (edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG).to_numpy()
     else:
-        mtx_check = mtx
-    try:
-        mtx_check = mtx_check.compute()
-    except AttributeError:
-        # numpy arrays don't have .compute()
-        pass
+        categorical = np.zeros(edata.n_vars, dtype=bool)
+    plain_categorical = categorical & ~encoded
 
-    mtx_df = pd.DataFrame(mtx_check)
+    lazy = {
+        "var_missing": _compute_missing_values(mtx, axis=obs_axes),
+        "obs_missing": _compute_missing_values(obs_mtx, axis=var_axes),
+        **_var_stats(mtx),
+    }
+    if plain_categorical.any():
+        lazy["var_unique"] = _nunique(mtx[:, plain_categorical], axis=obs_axes)
+    if categorical.any():
+        obs_categorical = mtx[:, plain_categorical]
+        if encoded.any():
+            obs_categorical = _with_original_values(obs_categorical, original)
+        lazy["obs_unique"] = _nunique(obs_categorical, axis=var_axes)
+        lazy["obs_categorical_missing"] = _compute_missing_values(obs_categorical, axis=var_axes)
+    if qc_vars:
+        lazy["total_features"] = _total(mtx)
+        for qc_var in qc_vars:
+            lazy[f"total_features_{qc_var}"] = _total(mtx[:, edata.var[qc_var].to_numpy(dtype=bool)])
+    metrics = dict(zip(lazy, _materialize(*lazy.values()), strict=True))
+
+    n_var_values = math.prod(mtx.shape[axis] for axis in obs_axes)
+    var_missing = metrics["var_missing"]
+    if encoded.any():
+        var_missing[encoded] = _compute_missing_values(original, axis=obs_axes)[feature_index[encoded]]
+    stats = {
+        name: np.where(encoded, np.nan, metrics[name])
+        for name in ("mean", "median", "standard_deviation", "min", "max")
+    }
+
+    var_metrics = pd.DataFrame(index=edata.var_names)
+    var_metrics["missing_values_abs"] = var_missing
+    var_metrics["missing_values_pct"] = var_missing / n_var_values * 100
+    var_metrics["entropy_of_missingness"] = _entropy(var_missing / n_var_values)
+    if extended:
+        unique = np.full(edata.n_vars, np.nan)
+        if plain_categorical.any():
+            unique[plain_categorical] = metrics["var_unique"]
+        if (encoded_categorical := categorical & encoded).any():
+            original_unique = _nunique(original, axis=obs_axes)
+            unique[encoded_categorical] = original_unique[feature_index[encoded_categorical]]
+        var_metrics["unique_values_abs"] = unique
+        var_metrics["unique_values_ratio"] = _percentage(unique, n_var_values - var_missing)
+
+        numeric = (edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG).to_numpy()
+        mean, std, minimum, maximum = stats["mean"], stats["standard_deviation"], stats["min"], stats["max"]
+        constant = (std == 0) | (maximum == minimum)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            coefficient_of_variation = std / mean
+            range_ratio = (maximum - minimum) / mean * 100
+        var_metrics["coefficient_of_variation"] = np.where(
+            numeric & np.isfinite(coefficient_of_variation), coefficient_of_variation, np.nan
+        )
+        var_metrics["is_constant"] = np.where(numeric, constant, np.nan)
+        var_metrics["constant_variable_ratio"] = constant[numeric].mean() * 100 if numeric.any() else np.nan
+        var_metrics["range_ratio"] = np.where(numeric & np.isfinite(range_ratio), range_ratio, np.nan)
+    for name, values in stats.items():
+        var_metrics[name] = values
+    var_metrics["iqr_outliers"] = metrics["iqr_outliers"] & ~encoded
+
+    obs_missing = metrics["obs_missing"] + _compute_missing_values(original, axis=var_axes)
+    n_obs_values = math.prod(obs_mtx.shape[1:]) + math.prod(original.shape[1:])
+    obs_metrics = pd.DataFrame(index=edata.obs_names)
+    obs_metrics["missing_values_abs"] = obs_missing
+    obs_metrics["missing_values_pct"] = obs_missing / n_obs_values * 100
+    obs_metrics["entropy_of_missingness"] = _entropy(obs_missing / n_obs_values)
+    if extended and categorical.any():
+        n_categorical_values = math.prod(obs_categorical.shape[1:])
+        obs_metrics["unique_values_abs"] = metrics["obs_unique"]
+        obs_metrics["unique_values_ratio"] = _percentage(
+            metrics["obs_unique"], n_categorical_values - metrics["obs_categorical_missing"]
+        )
+    elif extended:
+        obs_metrics["unique_values_abs"] = np.nan
+        obs_metrics["unique_values_ratio"] = np.nan
+    for qc_var in qc_vars:
+        total = metrics[f"total_features_{qc_var}"]
+        obs_metrics[f"total_features_{qc_var}"] = total
+        obs_metrics[f"log1p_total_features_{qc_var}"] = np.log1p(total)
+        obs_metrics["total_features"] = metrics["total_features"]
+        obs_metrics[f"pct_features_{qc_var}"] = total / metrics["total_features"] * 100
+
+    return var_metrics, obs_metrics
+
+
+def _raise_error_when_heterogeneous(mtx: np.ndarray) -> None:
+    mtx_df = pd.DataFrame(mtx[:, :, 0] if mtx.ndim == 3 else mtx)
     mixed = []
     for col in mtx_df.columns:
         s = mtx_df[col].dropna()
@@ -242,266 +458,6 @@ def _(mtx: np.ndarray | DaskArray):
         raise ValueError(f"Mixed or unsupported types are found in columns {mixed}. Columns must be homogeneous")
 
 
-def _compute_obs_metrics(
-    mtx,
-    edata: EHRData,
-    *,
-    qc_vars: Collection[str] = (),
-    log1p: bool = True,
-    extended: bool = False,
-):
-    """Calculates quality control metrics for observations.
-
-    See :func:`~ehrapy.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
-
-    Args:
-        mtx: Data array.
-        edata: Central data object.
-        qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
-        log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
-        extended: Whether to calculate further metrics that require feature type information.
-
-    Returns:
-        A Pandas DataFrame with the calculated metrics.
-    """
-    obs_metrics = pd.DataFrame(index=edata.obs_names)
-    var_metrics = pd.DataFrame(index=edata.var_names)
-
-    original_mtx = mtx
-
-    if "encoding_mode" in edata.var:
-        for original_values_categorical in _get_encoded_features(edata):
-            mtx = mtx.astype(object)
-            index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
-
-            if original_values_categorical not in edata.obs.keys():
-                raise KeyError(f"Original values for {original_values_categorical} not found in edata.obs.")
-            mtx[:, index[0]] = np.squeeze(
-                np.where(
-                    edata.obs[original_values_categorical].astype(object) == "nan",
-                    np.nan,
-                    edata.obs[original_values_categorical].astype(object),
-                )
-            )
-
-    if mtx.ndim == 3:
-        n_obs, n_vars, n_time = mtx.shape
-        flat_mtx = mtx.reshape(n_obs, n_vars * n_time)
-    if mtx.ndim == 2:
-        flat_mtx = mtx
-
-    obs_metrics["missing_values_abs"] = _compute_missing_values(flat_mtx, axis=1)
-    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / flat_mtx.shape[1]) * 100
-    obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(flat_mtx, axis=1)
-
-    if extended and "feature_type" not in edata.var:
-        raise ValueError(
-            "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
-        )
-
-    if extended:
-        feature_type = edata.var["feature_type"]
-        categorical_mask = feature_type == "categorical"
-
-        if np.any(categorical_mask):
-            cat_mask_np = np.asarray(categorical_mask)
-
-            if original_mtx.ndim == 2:
-                mtx_cat = mtx[:, cat_mask_np]  # (n_obs, n_cat_var)
-            else:  # ndim == 3
-                mtx_cat = original_mtx[:, cat_mask_np, :]  # (n_obs, n_cat_var, n_time)
-
-            unique_arr = _row_unique(mtx_cat, axis=1)
-            valid_arr = _row_valid(mtx_cat, axis=1)
-
-            if unique_arr.ndim == 2:
-                unique_val_abs = unique_arr[:, 0]
-                valid_counts = valid_arr[:, 0]
-            else:
-                unique_per_time = unique_arr[:, 0, :]
-                valid_per_time = valid_arr[:, 0, :]
-
-                unique_val_abs = unique_per_time.sum(axis=1)
-                valid_counts = valid_per_time.sum(axis=1)
-
-            unique_val_ratio = np.where(
-                valid_counts > 0,
-                unique_val_abs / valid_counts * 100,
-                np.nan,
-            )
-        else:
-            n_obs = mtx.shape[0]
-            unique_val_abs = np.full(n_obs, np.nan)
-            unique_val_ratio = np.full(n_obs, np.nan)
-
-        obs_metrics["unique_values_abs"] = unique_val_abs
-        obs_metrics["unique_values_ratio"] = unique_val_ratio
-
-    # Specific QC metrics
-    for qc_var in qc_vars:
-        if mtx.ndim == 3:
-            raise ValueError("Only 2D matrices are supported for qc_vars argument")
-
-        obs_metrics[f"total_features_{qc_var}"] = np.ravel(mtx[:, edata.var[qc_var].values].sum(axis=1))
-        if log1p:
-            obs_metrics[f"log1p_total_features_{qc_var}"] = np.log1p(obs_metrics[f"total_features_{qc_var}"])
-        obs_metrics["total_features"] = np.ravel(mtx.sum(axis=1))
-        obs_metrics[f"pct_features_{qc_var}"] = (
-            obs_metrics[f"total_features_{qc_var}"] / obs_metrics["total_features"] * 100
-        )
-
-    return obs_metrics
-
-
-def _compute_var_metrics(
-    mtx,
-    edata: EHRData,
-    extended: bool = False,
-):
-    """Compute variable metrics for quality control.
-
-    Args:
-        mtx: Data array.
-        edata: Central data object.
-        extended: Whether to calculate further metrics that require feature type information.
-    """
-    categorical_indices = np.ndarray([0], dtype=int)
-    var_metrics = pd.DataFrame(index=edata.var_names)
-
-    if mtx.ndim == 3:
-        n_obs, n_vars, n_time = mtx.shape
-        mtx = np.moveaxis(mtx, 1, 2).reshape(-1, n_vars)
-
-    if "encoding_mode" in edata.var.keys():
-        for original_values_categorical in _get_encoded_features(edata):
-            mtx = copy.deepcopy(mtx.astype(object))
-            index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
-
-            if original_values_categorical not in edata.obs.keys():
-                raise KeyError(f"Original values for {original_values_categorical} not found in edata.obs.")
-            mtx[:, index] = np.tile(
-                np.where(
-                    edata.obs[original_values_categorical].astype(object) == "nan",
-                    np.nan,
-                    edata.obs[original_values_categorical].astype(object),
-                ).reshape(-1, 1),
-                mtx[:, index].shape[1],
-            )
-            categorical_indices = np.concatenate([categorical_indices, index])
-
-    non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
-    non_categorical_indices[categorical_indices] = False
-
-    var_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=0)
-    var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
-    var_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=0)
-
-    if extended and "feature_type" not in edata.var:
-        raise ValueError(
-            "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
-        )
-
-    if extended:
-        feature_type = edata.var["feature_type"]
-        categorical_mask = feature_type == "categorical"
-
-        n_vars = mtx.shape[1]
-        unique_val_abs_full = np.full(n_vars, np.nan)
-        unique_val_ratio_full = np.full(n_vars, np.nan)
-
-        if np.any(categorical_mask):
-            cat_mask_np = np.asarray(categorical_mask)
-
-            mtx_cat = mtx[:, cat_mask_np]
-
-            unique_val_abs = _compute_unique_values(mtx_cat, axis=0)
-            missing_cat = _compute_missing_values(mtx_cat, axis=0)
-            valid_counts = mtx_cat.shape[0] - missing_cat
-
-            unique_val_ratio = np.where(
-                valid_counts > 0,
-                unique_val_abs / valid_counts * 100,
-                np.nan,
-            )
-
-            unique_val_abs_full[cat_mask_np] = unique_val_abs
-            unique_val_ratio_full[cat_mask_np] = unique_val_ratio
-
-        var_metrics["unique_values_abs"] = unique_val_abs_full
-        var_metrics["unique_values_ratio"] = unique_val_ratio_full
-
-        var_metrics["coefficient_of_variation"] = np.nan
-        var_metrics["is_constant"] = np.nan
-        var_metrics["constant_variable_ratio"] = np.nan
-        var_metrics["range_ratio"] = np.nan
-
-    var_metrics["mean"] = np.nan
-    var_metrics["median"] = np.nan
-    var_metrics["standard_deviation"] = np.nan
-    var_metrics["min"] = np.nan
-    var_metrics["max"] = np.nan
-    var_metrics["iqr_outliers"] = np.nan
-
-    try:
-        # Calculate statistics for non-categorical variables
-        xp = array_api_compat.array_namespace(mtx)
-        sub = xp.astype(mtx[:, non_categorical_indices], xp.float64)
-
-        var_metrics.loc[non_categorical_indices, "mean"] = np.asarray(nanmean_array_api(xp, sub, axes=0))
-        var_metrics.loc[non_categorical_indices, "median"] = np.asarray(nanmedian_array_api(xp, sub))
-        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.asarray(nanstd_array_api(xp, sub, axes=0))
-        var_metrics.loc[non_categorical_indices, "min"] = np.asarray(nanmin_array_api(xp, sub, axis=0))
-        var_metrics.loc[non_categorical_indices, "max"] = np.asarray(nanmax_array_api(xp, sub, axis=0))
-
-        # Calculate IQR and define IQR outliers
-        q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
-        q3 = np.nanpercentile(mtx[:, non_categorical_indices], 75, axis=0)
-        iqr = q3 - q1
-        lower_bound = q1 - 1.5 * iqr
-        upper_bound = q3 + 1.5 * iqr
-        var_metrics.loc[non_categorical_indices, "iqr_outliers"] = (
-            ((mtx[:, non_categorical_indices] < lower_bound) | (mtx[:, non_categorical_indices] > upper_bound))
-            .any(axis=0)
-            .astype(float)
-        )
-        # Fill all non_categoricals with False because else we have a dtype object Series which h5py cannot save
-        var_metrics["iqr_outliers"] = var_metrics["iqr_outliers"].astype(bool).fillna(False)
-
-        if extended:
-            feature_type = edata.var["feature_type"]
-            numeric_mask = feature_type == "numeric"
-
-            numeric_indices = np.asarray(numeric_mask)
-
-            if np.any(numeric_indices):
-                var_metrics.loc[non_categorical_indices, "coefficient_of_variation"] = (
-                    var_metrics.loc[numeric_indices, "standard_deviation"] / var_metrics.loc[numeric_indices, "mean"]
-                ).replace([np.inf, -np.inf], np.nan)
-
-                # Constant column detection
-                constant_mask = (var_metrics.loc[numeric_indices, "standard_deviation"] == 0) | (
-                    var_metrics.loc[numeric_indices, "max"] == var_metrics.loc[numeric_indices, "min"]
-                )
-
-                var_metrics.loc[numeric_indices, "is_constant"] = constant_mask.astype(float)
-
-                var_metrics["constant_variable_ratio"] = constant_mask.mean() * 100
-
-                # Calculate range ratio
-                var_metrics.loc[numeric_indices, "range_ratio"] = (
-                    (var_metrics.loc[numeric_indices, "max"] - var_metrics.loc[numeric_indices, "min"])
-                    / var_metrics.loc[numeric_indices, "mean"]
-                ).replace([np.inf, -np.inf], np.nan) * 100
-
-        var_metrics = var_metrics.infer_objects()
-    except (TypeError, ValueError):
-        # We assume that the data just hasn't been encoded yet
-        pass
-
-    return var_metrics
-
-
-@function_2D_only()
 def qc_lab_measurements(
     edata: EHRData,
     *,
@@ -521,6 +477,8 @@ def qc_lab_measurements(
 
     * ``{var}_outlier`` – boolean flag (``True`` = outlier).
     * ``{var}_score``   – continuous anomaly score.
+
+    For 3D data, the reference range and score statistics of a variable are computed across observations and timepoints, an observation is flagged if any of its timepoints is out of range, and its score is the mean score over its timepoints.
 
     Args:
         edata: Central data object.
@@ -542,6 +500,7 @@ def qc_lab_measurements(
         add_score: Whether to add the ``{var}_score`` column.
         groupby: Column in ``edata.obs`` used to stratify the computation so
             that statistics are calculated within each group independently.
+            Must not contain missing values.
         copy: If ``True``, return a modified copy; otherwise modify in place.
 
     Returns:
@@ -555,8 +514,6 @@ def qc_lab_measurements(
     if copy:
         edata = edata.copy()
 
-    mtx = edata.X if layer is None else edata.layers[layer]
-
     if var_names is None:
         var_names = list(edata.var_names)
 
@@ -567,93 +524,95 @@ def qc_lab_measurements(
     if groupby is not None:
         if groupby not in edata.obs.columns:
             raise ValueError(f"groupby columns not found in edata.obs: {groupby!r}")
+        if edata.obs[groupby].isna().any():
+            raise ValueError(f"groupby key '{groupby}' contains missing values.")
 
-    var_idx = {name: i for i, name in enumerate(edata.var_names)}
+    mtx = edata.X if layer is None else edata.layers[layer]
+    mtx = to_dense(mtx[:, edata.var_names.get_indexer(var_names)])
+    xp = array_namespace(mtx)
+    mtx = xp.astype(mtx, xp.float64)
+    groups = None if groupby is None else pd.factorize(edata.obs[groupby])[0]
 
-    for var in var_names:
-        col = np.asarray(mtx[:, var_idx[var]], dtype=float).ravel()
+    results = {}
+    if add_flag:
+        results["outlier"] = _outlier_flags(mtx, groups, method)
+    if add_score:
+        results["score"] = _anomaly_scores(mtx, groups, score_type)
+    results = dict(zip(results, _materialize(*results.values()), strict=True))
 
-        if groupby is None:
-            flags, scores = _outlier_flags_and_scores(col, method, score_type)
-        else:
-            flags = np.zeros(len(col), dtype=bool)
-            scores = np.full(len(col), np.nan)
-            groups = edata.obs[groupby]
-            for group_val in groups.unique():
-                mask = (groups == group_val).values
-                g_flags, g_scores = _outlier_flags_and_scores(col[mask], method, score_type)
-                flags[mask] = g_flags
-                scores[mask] = g_scores
-
-        if add_flag:
-            edata.obs[f"{var}_outlier"] = flags
-        if add_score:
-            edata.obs[f"{var}_score"] = scores
+    for i, var in enumerate(var_names):
+        for suffix, values in results.items():
+            edata.obs[f"{var}_{suffix}"] = values[:, i]
 
     return edata if copy else None
 
 
-def _outlier_flags_and_scores(
-    values: np.ndarray,
-    method: str,
-    score_type: str,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute outlier flags and scores for a single 1-D numeric array."""
-    nan_mask = np.isnan(values)
-    valid = values[~nan_mask]
-    n = len(valid)
-
-    flags = np.zeros(len(values), dtype=bool)
-    scores = np.full(len(values), np.nan)
-
-    if n < 2:
-        return flags, scores
-
-    # --- outlier flags ---
-    if method == "iqr":
-        q1, q3 = np.percentile(valid, [25, 75])
-        iqr = q3 - q1
-        flags = (values < q1 - 1.5 * iqr) | (values > q3 + 1.5 * iqr)
-    elif method == "quantile":
-        lo, hi = np.percentile(valid, [2.5, 97.5])
-        flags = (values < lo) | (values > hi)
-    elif method == "zscore":
-        mean, std = valid.mean(), valid.std()
-        if std > 0:
-            flags = np.abs((values - mean) / std) > 3
-    elif method == "modified_zscore":
-        median = np.median(valid)
-        mad = np.median(np.abs(valid - median))
-        if mad > 0:
-            flags = np.abs(0.6745 * (values - median) / mad) > 3.5
-
-    flags[nan_mask] = False
-
-    # --- scores ---
-    if score_type == "zscore":
-        mean, std = valid.mean(), valid.std()
-        if std > 0:
-            scores[~nan_mask] = (values[~nan_mask] - mean) / std
-    elif score_type == "iqr_distance":
-        q1, q3 = np.percentile(valid, [25, 75])
-        iqr = q3 - q1
-        median = np.median(valid)
-        if iqr > 0:
-            scores[~nan_mask] = (values[~nan_mask] - median) / iqr
-    elif score_type == "percentile":
-        from scipy.stats import rankdata
-
-        ranked = rankdata(values[~nan_mask])
-        scores[~nan_mask] = ranked / n * 100
-
-    return flags, scores
+def _reference_range(X: Array, method: str) -> tuple[Array, Array]:
+    """Lower and upper limit of the normal values of every variable."""
+    xp = array_namespace(X)
+    axes = _obs_axes(X)
+    match method:
+        case "iqr":
+            quartiles = nanquantile(X, [0.25, 0.75], axis=axes)
+            return _tukey_fences(quartiles[0], quartiles[1])
+        case "quantile":
+            limits = nanquantile(X, [0.025, 0.975], axis=axes)
+            return limits[0], limits[1]
+        case "zscore":
+            mean, std = xpx.nanmean(X, axis=axes), nanstd(X, axis=axes)
+            return mean - 3 * std, mean + 3 * std
+        case "modified_zscore":
+            median = nanquantile(X, 0.5, axis=axes)
+            mad = nanquantile(xp.abs(X - _broadcast_var_stat(median, X)), 0.5, axis=axes)
+            spread = xp.where(mad > 0, 3.5 / 0.6745 * mad, xp.nan)
+            return median - spread, median + spread
+    raise ValueError(f"Unknown method {method!r}.")
 
 
-@function_2D_only()
+def _score_location_scale(X: Array, score_type: str) -> tuple[Array, Array]:
+    """Center and scale of the anomaly score of every variable, with a NaN scale where it is not positive."""
+    xp = array_namespace(X)
+    axes = _obs_axes(X)
+    match score_type:
+        case "zscore":
+            center, scale = xpx.nanmean(X, axis=axes), nanstd(X, axis=axes)
+        case "iqr_distance":
+            quartiles = nanquantile(X, [0.25, 0.5, 0.75], axis=axes)
+            center, scale = quartiles[1], quartiles[2] - quartiles[0]
+        case _:
+            raise ValueError(f"Unknown score_type {score_type!r}.")
+    return center, xp.where(scale > 0, scale, xp.nan)
+
+
+def _percentile_ranks(X: np.ndarray) -> np.ndarray:
+    """Percentile rank of every value within its variable, NaN for variables with fewer than two values."""
+    n_valid = np.sum(~np.isnan(X), axis=0)
+    ranks = rankdata(X, axis=0, nan_policy="omit")
+    return np.where(n_valid >= 2, ranks / np.maximum(n_valid, 1) * 100, np.nan)
+
+
+def _outlier_flags(X: Array, groups: np.ndarray | None, method: str) -> Array:
+    """Whether every value lies outside its variable's reference range, for 3D data at any timepoint."""
+    lower, upper = _by_group(X, groups, partial(_reference_range, method=method))
+    flags = (X < lower) | (X > upper)
+    return array_namespace(X).any(flags, axis=2) if X.ndim == 3 else flags
+
+
+def _anomaly_scores(X: Array, groups: np.ndarray | None, score_type: str) -> Array:
+    """Anomaly score of every value, for 3D data averaged over timepoints."""
+    if score_type == "percentile":
+        scores = _columnwise(X, groups, _percentile_ranks)
+    else:
+        center, scale = _by_group(X, groups, partial(_score_location_scale, score_type=score_type))
+        scores = (X - center) / scale
+    return xpx.nanmean(scores, axis=2) if X.ndim == 3 else scores
+
+
+@function_2D_only(allow_single_timepoint=True)
 def mcar_test(
     edata: EHRData,
-    method: Literal["little", "ttest"] = "little",
     *,
+    method: Literal["little", "ttest"] = "little",
     layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
@@ -667,6 +626,8 @@ def mcar_test(
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
+
+    3D data is only supported with a single timepoint, which is treated as 2D data.
 
     Args:
         edata: Central data object.
@@ -689,10 +650,6 @@ def mcar_test(
     if mtx.ndim == 3:
         mtx = mtx[:, :, 0]
 
-    # sequeeze the array if input is inherently 2D (only 1 timepoint of shape (x,y,1)), 3D already checked by @function_2D_only()
-    if mtx.ndim == 3:
-        mtx = mtx[:, :, 0]
-
     # float64 required: covariance estimation and linear solves need stable floating-point math
     if mtx.dtype != np.float64:
         logger.warning(
@@ -702,44 +659,107 @@ def mcar_test(
 
     var_names = np.asarray(edata.var_names)
     if method == "little":
-        return _little_mcar_test(mtx)
+        return _little_mcar_test(_missingness_patterns(mtx))
     if method == "ttest":
-        return _mcar_t_tests(mtx, var_names)
+        return _mcar_t_tests(_missingness_patterns(mtx), var_names)
     raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
 
 
+class _MissingnessPatterns(NamedTuple):
+    """Sufficient statistics of the observed values for every missingness pattern.
+
+    `patterns` is True where values are missing, `counts`, `sums` and `squares` hold the number of observations and the per-variable sums and sums of squares of each pattern, and `cross_products` holds the cross-products of all variables with missing values as 0.
+    """
+
+    patterns: np.ndarray
+    counts: np.ndarray
+    sums: np.ndarray
+    squares: np.ndarray
+    cross_products: np.ndarray
+
+
+def _group_by_pattern(
+    patterns: np.ndarray,
+    inverse: np.ndarray,
+    counts: np.ndarray,
+    sums: np.ndarray | CSBase,
+    squares: np.ndarray | CSBase,
+    cross_products: np.ndarray | CSBase,
+) -> _MissingnessPatterns:
+    """Sum the statistics of all rows that share a pattern, where `inverse` maps every row to its row of `patterns`."""
+    indicator = sp.csr_array(
+        (np.ones(len(inverse)), (inverse, np.arange(len(inverse)))), shape=(len(patterns), len(inverse))
+    )
+    return _MissingnessPatterns(
+        patterns,
+        indicator @ counts,
+        to_dense(indicator @ sums),
+        to_dense(indicator @ squares),
+        to_dense(cross_products),
+    )
+
+
 @singledispatch
-def _little_mcar_test(X) -> float:
-    _raise_array_type_not_implemented(_little_mcar_test, type(X))
-    raise TypeError(f"Unsupported input type: {type(X)!r}")
+def _missingness_patterns(X: np.ndarray) -> _MissingnessPatterns:
+    """Sufficient statistics of every missingness pattern of `X`."""
+    missing = np.isnan(X)
+    observed = np.where(missing, 0.0, X)
+    patterns, inverse = np.unique(missing, axis=0, return_inverse=True)
+    return _group_by_pattern(patterns, inverse, np.ones(X.shape[0]), observed, observed**2, observed.T @ observed)
 
 
-@_little_mcar_test.register(np.ndarray)
-def _(X: np.ndarray) -> float:
+@_missingness_patterns.register(CSBase)
+def _(X: CSBase) -> _MissingnessPatterns:
+    missing = np.isnan(X.data)
+    mask = sp.csr_array((missing[missing], (_sparse_rows(X)[missing], _sparse_columns(X)[missing])), shape=X.shape)
+    keys = np.array(
+        [mask.indices[start:stop].tobytes() for start, stop in itertools.pairwise(mask.indptr)], dtype=object
+    )
+    _, first, inverse = np.unique(keys, return_index=True, return_inverse=True)
+    observed = X.copy()
+    observed.data[missing] = 0
+    return _group_by_pattern(
+        mask[first].toarray(),
+        inverse,
+        np.ones(X.shape[0]),
+        observed,
+        observed.multiply(observed),
+        observed.T @ observed,
+    )
+
+
+@_missingness_patterns.register(DaskArray)
+def _(X: DaskArray) -> _MissingnessPatterns:
+    import dask
+
+    blocks = dask.compute(*map(dask.delayed(_missingness_patterns), X.rechunk({1: -1}).to_delayed().ravel()))
+    patterns, counts, sums, squares, cross_products = zip(*blocks, strict=True)
+    unique, inverse = np.unique(np.concatenate(patterns), axis=0, return_inverse=True)
+    return _group_by_pattern(
+        unique, inverse, np.concatenate(counts), np.concatenate(sums), np.concatenate(squares), sum(cross_products)
+    )
+
+
+def _little_mcar_test(statistics: _MissingnessPatterns) -> float:
     # Implements equation (4) from:
     # Li, C. (2013). Little's test of missing completely at random. Stata Journal, 13(4), 795-809.
     # Freely accessible preprint: https://cpb-us-w2.wpmucdn.com/blog.nus.edu.sg/dist/4/6502/files/2018/06/mcartest-zlxtj7.pdf
     # Original reference: Little, R.J.A. (1988). JASA 83(404), 1198-1202. https://doi.org/10.2307/2290157
-    n, p = X.shape
-    mask = np.isnan(X)
+    patterns, counts, sums, _, S = statistics
+    p = patterns.shape[1]
 
-    if not mask.any():
+    if not patterns.any():
         return 1.0
 
-    mu = np.nanmean(X, axis=0)
+    valid_f = (~patterns).astype(np.float64)
+    mu = sums.sum(axis=0) / (counts @ valid_f)
 
-    valid = ~mask
-    valid_f = valid.astype(np.float64)
-    denom = valid_f.T @ valid_f
+    denom = valid_f.T @ (counts[:, None] * valid_f)
     np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
 
-    X_filled = np.where(valid, X, 0.0)
-    S = X_filled.T @ X_filled
-    M = X_filled.T @ valid_f
+    M = sums.T @ valid_f
     cov_global = (S - (M * M.T) / denom) / (denom - 1)
     np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
-
-    patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
 
     d2 = 0.0
     kj = 0
@@ -750,9 +770,7 @@ def _(X: np.ndarray) -> float:
             continue
         kj += k
 
-        rows = inverse == j
-        X_sub = X[np.ix_(rows, obs_cols)]
-        delta = np.nanmean(X_sub, axis=0) - mu[obs_cols]
+        delta = sums[j, obs_cols] / counts[j] - mu[obs_cols]
         sigma_j = cov_global[np.ix_(obs_cols, obs_cols)]
 
         try:
@@ -769,37 +787,30 @@ def _(X: np.ndarray) -> float:
     return float(chi2.sf(d2, df))
 
 
-@singledispatch
-def _mcar_t_tests(X, var_names: np.ndarray) -> pd.DataFrame:
-    _raise_array_type_not_implemented(_mcar_t_tests, type(X))
-    raise TypeError(f"Unsupported input type: {type(X)!r}")
+def _observed_moments(
+    statistics: _MissingnessPatterns, selected: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Number of observed values, mean and sample standard deviation of every variable over the selected patterns."""
+    n = statistics.counts[selected] @ ~statistics.patterns[selected]
+    sums, squares = statistics.sums[selected].sum(axis=0), statistics.squares[selected].sum(axis=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mean = np.where(n > 0, sums / n, np.nan)
+        # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
+        std = np.where(n > 1, np.sqrt(np.maximum(squares - n * mean**2, 0) / (n - 1)), np.nan)
+    return n, mean, std
 
 
-@_mcar_t_tests.register(np.ndarray)
-def _(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
-    _, m = X.shape
+def _mcar_t_tests(statistics: _MissingnessPatterns, var_names: np.ndarray) -> pd.DataFrame:
+    m = statistics.patterns.shape[1]
     result = np.full((m, m), np.nan)
 
     for i in range(m):
-        miss = np.isnan(X[:, i])
+        miss = statistics.patterns[:, i]
         if miss.all() or (~miss).all():
             continue
 
-        X_miss = X[miss]
-        X_pres = X[~miss]
-
-        n1 = (~np.isnan(X_miss)).sum(axis=0).astype(float)
-        n2 = (~np.isnan(X_pres)).sum(axis=0).astype(float)
-
-        # nanmean/nanstd are evaluated eagerly for all columns before the np.where guard
-        # filters out all-NaN or single-observation columns, causing spurious RuntimeWarnings.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            mu1 = np.where(n1 > 0, np.nanmean(X_miss, axis=0), np.nan)
-            mu2 = np.where(n2 > 0, np.nanmean(X_pres, axis=0), np.nan)
-            # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
-            std1 = np.where(n1 > 1, np.nanstd(X_miss, axis=0, ddof=1), np.nan)
-            std2 = np.where(n2 > 1, np.nanstd(X_pres, axis=0, ddof=1), np.nan)
+        n1, mu1, std1 = _observed_moments(statistics, miss)
+        n2, mu2, std2 = _observed_moments(statistics, ~miss)
 
         computable = (n1 >= 1) & (n2 >= 1)
         result[i, computable] = ttest_ind_from_stats(

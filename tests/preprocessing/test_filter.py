@@ -1,11 +1,16 @@
 from pathlib import Path
 
 import ehrdata as ed
+import numpy as np
+import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from fast_array_utils.conv import to_dense
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
+from tests.conftest import forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -117,7 +122,7 @@ def test_filter_obs_min_max(request, fixture, layer, kwargs):
 def test_filter_obs_layers(ehr_3d_blobs):
     edata = ehr_3d_blobs
     with pytest.raises(KeyError):
-        ep.pp.filter_features(edata, layer="invalid_layer", min_obs=185, time_mode="all", copy=False)
+        ep.pp.filter_observations(edata, layer="invalid_layer", min_vars=10, time_mode="all", copy=False)
 
     layer_before = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
     n_obs_before = layer_before.shape[0]
@@ -128,3 +133,34 @@ def test_filter_obs_layers(ehr_3d_blobs):
     n_obs_after = layer_after.shape[0]
 
     assert n_obs_after < n_obs_before
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+@pytest.mark.parametrize("time_mode", ["all", "proportion"])
+@pytest.mark.parametrize(
+    ("filter_func", "kwargs", "annotated"),
+    [
+        pytest.param(ep.pp.filter_features, {"min_obs": 12}, "var", id="features-min"),
+        pytest.param(ep.pp.filter_features, {"max_obs": 15}, "var", id="features-max"),
+        pytest.param(ep.pp.filter_observations, {"min_vars": 3, "max_vars": 4}, "obs", id="observations-min-max"),
+    ],
+)
+def test_filter_array_types(array_type, ndim, time_mode, filter_func, kwargs, annotated, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    shape = (20, 6) if ndim == 2 else (20, 6, 3)
+    X = np.where(rng.random(shape) < 0.5, 0.0, rng.gamma(2, size=shape))
+    X[rng.random(shape) < np.linspace(0, 0.8, 6).reshape(1, 6, *(1,) * (ndim - 2))] = np.nan
+    X[:, 0] = np.nan
+    X[:, 1] = 2.0
+    kwargs = {**kwargs, "time_mode": time_mode, "prop": 0.5 if time_mode == "proportion" else None}
+    expected = filter_func(ed.EHRData(X=X), copy=True, **kwargs)
+    edata = ed.EHRData(X=array_type(X))
+
+    with forbid_dask_compute(allowed=1):
+        result = filter_func(edata, copy=True, **kwargs)
+
+    assert isinstance(result.X, array_type.cls)
+    np.testing.assert_allclose(to_dense(result.X, to_cpu_memory=True), expected.X, equal_nan=True)
+    pd.testing.assert_frame_equal(getattr(result, annotated), getattr(expected, annotated))

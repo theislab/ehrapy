@@ -8,10 +8,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 hv.extension("bokeh")
 
 import ehrapy as ep
+from tests.conftest import curve_values, forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
@@ -84,7 +86,7 @@ def test_pl_ncp_cluster_trajectories_returns_layout(edata_with_ncp: ed.EHRData) 
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
     )
     assert plot is not None
     assert isinstance(plot, hv.Layout)
@@ -95,7 +97,7 @@ def test_pl_ncp_cluster_trajectories_panel_per_cluster(edata_with_ncp: ed.EHRDat
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
     )
     assert len(plot) == n_clusters
 
@@ -104,18 +106,18 @@ def test_pl_ncp_cluster_trajectories_sigmoid(edata_with_ncp: ed.EHRData) -> None
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
         sigmoid_transform=True,
     )
     assert isinstance(plot, hv.Layout)
 
 
-def test_pl_ncp_cluster_trajectories_missing_cluster_key_raises(edata_with_ncp: ed.EHRData) -> None:
+def test_pl_ncp_cluster_trajectories_missing_groupby_raises(edata_with_ncp: ed.EHRData) -> None:
     with pytest.raises(KeyError, match="not found in edata.obs"):
         ep.pl.ncp_cluster_trajectories(
             edata_with_ncp,
             layer=DEFAULT_TEM_LAYER_NAME,
-            cluster_key="no_such_column",
+            groupby="no_such_column",
         )
 
 
@@ -124,7 +126,7 @@ def test_pl_ncp_cluster_trajectories_missing_layer_raises(edata_with_ncp: ed.EHR
         ep.pl.ncp_cluster_trajectories(
             edata_with_ncp,
             layer="no_such_layer",
-            cluster_key="cluster",
+            groupby="cluster",
         )
 
 
@@ -133,7 +135,7 @@ def test_pl_ncp_cluster_trajectories_missing_ncp_raises(edata_with_ncp: ed.EHRDa
         ep.pl.ncp_cluster_trajectories(
             edata_with_ncp,
             layer=DEFAULT_TEM_LAYER_NAME,
-            cluster_key="cluster",
+            groupby="cluster",
             key="ghost_key",
         )
 
@@ -142,7 +144,7 @@ def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_sam
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
         n_top_diseases=5,
     )
     fig = hv.render(plot, backend="matplotlib")
@@ -154,3 +156,24 @@ def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_sam
         base_path=f"{_TEST_IMAGE_PATH}/ncp_cluster_trajectories",
         tol=35,
     )
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("sigmoid_transform", [False, True])
+def test_pl_ncp_cluster_trajectories_array_types(array_type, sigmoid_transform, edata_with_ncp: ed.EHRData) -> None:
+    tensor = edata_with_ncp.layers[DEFAULT_TEM_LAYER_NAME]
+    kwargs = {"groupby": "cluster", "layer": DEFAULT_TEM_LAYER_NAME, "sigmoid_transform": sigmoid_transform}
+    if array_type.flags & Flags.Sparse:
+        edata_with_ncp.layers[DEFAULT_TEM_LAYER_NAME] = array_type(tensor[:, :, 0])
+        with pytest.raises(ValueError, match="must be 3D"):
+            ep.pl.ncp_cluster_trajectories(edata_with_ncp, **kwargs)
+        return
+
+    expected = ep.pl.ncp_cluster_trajectories(edata_with_ncp, **kwargs)
+    edata_with_ncp.layers[DEFAULT_TEM_LAYER_NAME] = array_type(tensor)
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pl.ncp_cluster_trajectories(edata_with_ncp, **kwargs)
+
+    for values, expected_values in zip(curve_values(result), curve_values(expected), strict=True):
+        np.testing.assert_allclose(values, expected_values)

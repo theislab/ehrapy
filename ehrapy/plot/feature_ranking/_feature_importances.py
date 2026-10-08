@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 def rank_features_supervised(
     edata: EHRData,
+    *,
     key: str = "feature_importances",
     n_features: int = 10,
     ax: Axes | None = None,
@@ -43,7 +44,7 @@ def rank_features_supervised(
         >>> input_features = [
         ...     feat for feat in edata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
         ... ]
-        >>> ep.tl.rank_features_supervised(edata, "tco2_first", "rf", input_features=input_features)
+        >>> ep.tl.rank_features_supervised(edata, predicted_feature="tco2_first", model="rf", var_names=input_features)
         >>> ep.pl.rank_features_supervised(edata)
 
         .. image:: /_static/docstring_previews/feature_importances.png

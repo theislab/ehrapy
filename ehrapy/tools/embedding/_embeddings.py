@@ -8,10 +8,12 @@ import pandas as pd
 import scanpy as sc
 from ehrdata import EHRData
 from ehrdata._feature_types import _detect_feature_type
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase, DaskArray
 from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
-from ehrapy._compat import _raise_array_type_not_implemented, function_2D_only
+from ehrapy._compat import _as_scanpy_input, _materialize, _raise_array_type_not_implemented, function_2D_only
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
@@ -21,72 +23,79 @@ if TYPE_CHECKING:
     from ehrapy._types import AnyRandom
 
 
-# No need for testing 3D; tSNE does not not support layers, and
-# and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
+@function_2D_only()
 def tsne(
     edata: EHRData,
     *,
     n_pcs: int | None = None,
+    n_components: int = 2,
     use_rep: str | None = None,
-    perplexity: float | int = 30,
-    early_exaggeration: float | int = 12,
-    learning_rate: float | int = 1000,
+    perplexity: float = 30,
+    metric: str = "euclidean",
+    early_exaggeration: float = 12,
+    learning_rate: float = 1000,
     random_state: AnyRandom = 0,
     n_jobs: int | None = None,
+    key_added: str | None = None,
     copy: bool = False,
-    metric: str = "euclidean",
 ) -> EHRData | None:  # pragma: no cover
     """Calculates t-SNE :cite:p:`vanDerMaaten2008`, :cite:p:`Amir2013`, and :cite:p:`Pedregosa2011`.
 
-    t-distributed stochastic neighborhood embedding (tSNE) :cite:p:`vanDerMaaten2008` has been
-    proposed for visualizing complex by :cite:p:`Amir2013`.
+    t-distributed stochastic neighborhood embedding (tSNE) :cite:p:`vanDerMaaten2008` has been proposed for visualizing complex data by :cite:p:`Amir2013`.
+    Here, we use the implementation of *scikit-learn* :cite:p:`Pedregosa2011`.
 
     Args:
         edata: Central data object.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
+        n_components: The number of dimensions of the embedding.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
-                 If 'X_pca' is not present, it's computed with default parameters.
-        perplexity: The perplexity is related to the number of nearest neighbors that
-                    is used in other manifold learning algorithms. Larger datasets usually require a larger perplexity.
-                    Consider selecting a value between 5 and 50. The choice is not extremely critical since t-SNE
-                    is quite insensitive to this parameter.
-        early_exaggeration: Controls how tight natural clusters in the original space are in the
-                            embedded space and how much space will be between them. For larger
-                            values, the space between natural clusters will be larger in the
-                            embedded space. Again, the choice of this parameter is not very
-                            critical. If the cost function increases during initial optimization,
-                            the early exaggeration factor or the learning rate might be too high.
+                 If 'X_pca' is not present, it's computed with default parameters or `n_pcs` if present.
+        perplexity: The perplexity is related to the number of nearest neighbors that is used in other manifold learning algorithms.
+                    Larger datasets usually require a larger perplexity.
+                    Consider selecting a value between 5 and 50.
+                    The choice is not extremely critical since t-SNE is quite insensitive to this parameter.
+        metric: Distance metric to calculate neighbors on.
+        early_exaggeration: Controls how tight natural clusters in the original space are in the embedded space and how much space will be between them.
+                            For larger values, the space between natural clusters will be larger in the embedded space.
+                            Again, the choice of this parameter is not very critical.
+                            If the cost function increases during initial optimization, the early exaggeration factor or the learning rate might be too high.
         learning_rate: Note that the R-package "Rtsne" uses a default of 200.
-                       The learning rate can be a critical parameter. It should be
-                       between 100 and 1000. If the cost function increases during initial
-                       optimization, the early exaggeration factor or the learning rate
-                       might be too high. If the cost function gets stuck in a bad local
-                       minimum increasing the learning rate helps sometimes.
+                       The learning rate can be a critical parameter.
+                       It should be between 100 and 1000.
+                       If the cost function increases during initial optimization, the early exaggeration factor or the learning rate might be too high.
+                       If the cost function gets stuck in a bad local minimum increasing the learning rate helps sometimes.
         random_state: Change this to use different intial states for the optimization.
                       If `None`, the initial state is not reproducible.
         n_jobs: Number of jobs for parallel computation.
-        copy: Return a copy instead of writing to `adata`.
-        metric: Distance metric to calculate neighbors on.
+                `None` means using :attr:`scanpy.settings.n_jobs`.
+        key_added: If not specified, the embedding is stored in `obsm['X_tsne']` and the parameters in `uns['tsne']`.
+                   If specified, the embedding is stored in `obsm[key_added]` and the parameters in `uns[key_added]`.
+        copy: Return a copy instead of writing to `edata`.
 
     Returns:
         Depending on `copy`, returns or updates `edata` with the following fields.
 
-        **X_tsne** : `np.ndarray` (`edata.obs`, dtype `float`) tSNE coordinates of data.
+        **X_tsne** : `np.ndarray` (`edata.obsm['X_tsne' | key_added]`, dtype `float`) tSNE coordinates of data.
     """
-    return sc.tl.tsne(
-        adata=edata,
+    edata = edata.copy() if copy else edata
+    adata = _as_scanpy_input(edata)
+    sc.tl.tsne(
+        adata=adata,
         n_pcs=n_pcs,
+        n_components=n_components,
         use_rep=use_rep,
         perplexity=perplexity,
+        metric=metric,
         early_exaggeration=early_exaggeration,
         learning_rate=learning_rate,
         random_state=random_state,
         n_jobs=n_jobs,
-        copy=copy,
-        metric=metric,
+        key_added=key_added,
     )
+    edata.obsm[key_added or "X_tsne"] = adata.obsm[key_added or "X_tsne"]
+    return edata if copy else None
 
 
 def umap(
@@ -103,19 +112,16 @@ def umap(
     random_state: AnyRandom = 0,
     a: float | None = None,
     b: float | None = None,
+    key_added: str | None = None,
+    neighbors_key: str = "neighbors",
     copy: bool = False,
-    method: Literal["umap", "rapids"] = "umap",
-    neighbors_key: str | None = None,
 ) -> EHRData | None:  # pragma: no cover
     """Embed the neighborhood graph using UMAP :cite:p:`McInnes2018`.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning technique suitable for visualizing high-dimensional data.
-    Besides tending to be faster than tSNE, it optimizes the embedding such that it best reflects
-    the topology of the data, which we represent throughout ehrapy using a
-    neighborhood graph. tSNE, by contrast, optimizes the distribution of
-    nearest-neighbor distances in the embedding such that these best match the
-    distribution of distances in the high-dimensional space.
-    For a few comparisons of UMAP with tSNE, see this `preprint <https://doi.org/10.1101/298430>`__.
+    Besides tending to be faster than tSNE, it optimizes the embedding such that it best reflects the topology of the data, which we represent throughout ehrapy using a neighborhood graph.
+    tSNE, by contrast, optimizes the distribution of nearest-neighbor distances in the embedding such that these best match the distribution of distances in the high-dimensional space.
+    For a few comparisons of UMAP with tSNE, see :cite:p:`Becht2018`.
 
     Args:
         edata: Central data object.
@@ -137,7 +143,7 @@ def umap(
         init_pos: How to initialize the low dimensional embedding. Called `init` in the original UMAP. Options are:
 
                   * Any key for `edata.obsm`.
-                  * 'paga': positions from :func:`~scanpy.pl.paga`.
+                  * 'paga': positions from :func:`~ehrapy.plot.paga`.
                   * 'spectral': use a spectral embedding of the graph.
                   * 'random': assign initial embedding positions at random.
                   * A numpy array of initial embedding positions.
@@ -150,25 +156,24 @@ def umap(
            If `None` these values are set automatically as determined by `min_dist` and `spread`.
         b: More specific parameters controlling the embedding.
            If `None` these values are set automatically as determined by `min_dist` and `spread`.
+        key_added: If not specified, the embedding is stored in `obsm['X_umap']` and the parameters in `uns['umap']`.
+                   If specified, the embedding is stored in `obsm[key_added]` and the parameters in `uns[key_added]`.
+        neighbors_key: Umap looks in `.uns[neighbors_key]` for neighbors settings and in `.obsp[.uns[neighbors_key]['connectivities_key']]` for connectivities.
         copy: Return a copy instead of writing to edata.
-        method: Use the original 'umap' implementation, or 'rapids' (experimental, GPU only)
-        neighbors_key: If not specified, umap looks .uns['neighbors'] for neighbors settings
-                       and .obsp['connectivities'] for connectivities (default storage places for pp.neighbors).
-                       If specified, umap looks .uns[neighbors_key] for neighbors settings and
-                       .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
 
     Returns:
         Depending on `copy`, returns or updates `edata` with the following fields.
 
-        **X_umap** : `edata.obsm` field UMAP coordinates of data.
+        **X_umap** : `edata.obsm['X_umap' | key_added]` UMAP coordinates of data.
+
+        **umap** : `edata.uns['umap' | key_added]` UMAP parameters.
     """
-    key_to_check = neighbors_key if neighbors_key is not None else "neighbors"
-    if key_to_check not in edata.uns:
-        raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
+    if neighbors_key not in edata.uns:
+        raise ValueError(f"Did not find .uns[{neighbors_key!r}]. Please run `ep.pp.neighbors` first.")
 
     if (
-        "use_rep" in edata.uns[key_to_check]["params"]
-        and edata.uns[key_to_check]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+        "use_rep" in edata.uns[neighbors_key]["params"]
+        and edata.uns[neighbors_key]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
     ):
         edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.shape[0])
 
@@ -185,9 +190,9 @@ def umap(
         random_state=random_state,
         a=a,
         b=b,
-        copy=copy,
-        method=method,
+        key_added=key_added,
         neighbors_key=neighbors_key,
+        copy=copy,
     )
 
     if edata_returned is not None:
@@ -214,30 +219,24 @@ def draw_graph(
 ) -> EHRData | None:  # pragma: no cover
     """Force-directed graph drawing :cite:p:`Islam2011`, :cite:p:`Jacomy2014`, and :cite:p:`Chippada2018`.
 
-    .. _fa2: https://github.com/bhargavchippada/forceatlas2
+    .. _fa2-modified: https://github.com/AminAlam/fa2_modified
     .. _Force-directed graph drawing: https://en.wikipedia.org/wiki/Force-directed_graph_drawing
-    .. _fruchterman-reingold: http://igraph.org/python/doc/igraph.Graph-class.html#layout_fruchterman_reingold
 
     An alternative to tSNE that often preserves the topology of the data better.
     This requires to run :func:`~ehrapy.preprocessing.neighbors`, first.
-    The default layout ('fa', `ForceAtlas2`) :cite:p:`Jacomy2014` uses the package `fa2`_
-    :cite:p:`Chippada2018`, which can be installed via `pip install fa2`.
+    The default layout ('fa', `ForceAtlas2`) :cite:p:`Jacomy2014` uses the package `fa2-modified`_ :cite:p:`Chippada2018`, which can be installed via `pip install fa2-modified`.
     `Force-directed graph drawing`_ describes a class of long-established algorithms for visualizing graphs.
 
     Args:
         edata: Central data object.
-        layout: 'fa' (`ForceAtlas2`) or any valid `igraph layout
-                <http://igraph.org/c/doc/igraph-Layout.html>`__. Of particular interest
-                are 'fr' (Fruchterman Reingold), 'grid_fr' (Grid Fruchterman Reingold,
-                faster than 'fr'), 'kk' (Kamadi Kawai', slower than 'fr'), 'lgl' (Large
-                Graph, very fast), 'drl' (Distributed Recursive Layout, pretty fast) and
-                'rt' (Reingold Tilford tree layout).
+        layout: 'fa' (`ForceAtlas2`) or any valid `igraph layout <https://igraph.org/c/doc/igraph-Layout.html>`__.
+                Of particular interest are 'fr' (Fruchterman Reingold), 'grid_fr' (Grid Fruchterman Reingold, faster than 'fr'), 'kk' (Kamadi Kawai', slower than 'fr'), 'lgl' (Large Graph, very fast), 'drl' (Distributed Recursive Layout, pretty fast) and 'rt' (Reingold Tilford tree layout).
         init_pos: `'paga'`/`True`, `None`/`False`, or any valid 2d-`.obsm` key.
                   Use precomputed coordinates for initialization.
                   If `False`/`None` (the default), initialize randomly.
         root: Root for tree layouts.
-        random_state: For layouts with random initialization like 'fr', change this to use
-                      different intial states for the optimization. If `None`, no seed is set.
+        random_state: For layouts with random initialization like 'fr', change this to use different intial states for the optimization.
+                      If `None`, no seed is set.
         n_jobs: Number of jobs for parallel computation.
         adjacency: Sparse adjacency matrix of the graph, defaults to neighbors connectivities.
         key_added_ext: By default, append `layout`.
@@ -246,14 +245,18 @@ def draw_graph(
                        If specified, draw_graph looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
         obsp:  Use `.obsp[obsp]` as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
         copy: Whether to return a copy instead of writing to edata.
-        **kwds: Parameters of chosen igraph layout. See e.g. `fruchterman-reingold`_
-                :cite:p:`Fruchterman1991`. One of the most important ones is `maxiter`.
+        **kwds: Parameters of chosen igraph layout.
+                See e.g. :meth:`~igraph.GraphBase.layout_fruchterman_reingold` :cite:p:`Fruchterman1991`.
+                One of the most important ones is `maxiter`.
 
     Returns:
-          Depending on `copy`, returns or updates `edata` with the following field.
+          Depending on `copy`, returns or updates `edata` with the following fields.
 
-          **X_draw_graph_layout** : `edata.obsm`
-          Coordinates of graph layout. E.g. for layout='fa' (the default), the field is called 'X_draw_graph_fa'
+          **X_draw_graph_[layout | key_added_ext]** : `edata.obsm`
+          Coordinates of graph layout. E.g. for layout='fa' (the default), the field is called 'X_draw_graph_fa'.
+
+          **draw_graph** : `edata.uns`
+          `draw_graph` parameters.
     """
     return sc.tl.draw_graph(
         adata=edata,
@@ -279,37 +282,38 @@ def diffmap(
     random_state: AnyRandom = 0,
     copy: bool = False,
 ) -> EHRData | None:  # pragma: no cover
-    """Diffusion Maps :cite:p:`Coifman2005`, :cite:p:`Haghverdi2015`, :cite:p:`Wolf2019`.
+    """Diffusion Maps :cite:p:`Coifman2005`, :cite:p:`Haghverdi2015`, :cite:p:`Wolf2018`.
 
     Diffusion maps :cite:p:`Coifman2005` has been proposed for visualizing biomedical data by :cite:p:`Haghverdi2015`.
     The tool uses the adapted Gaussian kernel suggested by :cite:p:`Haghverdi2016` in the implementation of :cite:p:`Wolf2018`.
-    The width ("sigma") of the connectivity kernel is implicitly determined by
-    the number of neighbors used to compute the graph in :func:`~ehrapy.preprocessing.neighbors`.
-    To reproduce the original implementation using a Gaussian kernel, use `method=='gauss'` in :func:`~ehrapy.preprocessing.neighbors`.
-    To use an exponential kernel, use the default `method=='umap'`.
+    The width ("sigma") of the connectivity kernel is implicitly determined by the number of neighbors used to compute the graph in :func:`~ehrapy.preprocessing.neighbors`.
+    To reproduce the original implementation using a Gaussian kernel, use `method='gauss'` in :func:`~ehrapy.preprocessing.neighbors`.
+    To use an exponential kernel, use the default `method='umap'`.
     Differences between these options shouldn't usually be dramatic.
 
     Args:
         edata: Central data object.
         n_comps: The number of dimensions of the representation.
-                 neighbors_key: If not specified, diffmap looks .uns['neighbors'] for neighbors settings
-                 and .obsp['connectivities'], .obsp['distances'] for connectivities and
-                 distances respectively (default storage places for pp.neighbors).
-                 If specified, diffmap looks .uns[neighbors_key] for neighbors settings and
-                 .obsp[.uns[neighbors_key]['connectivities_key']],
-                 .obsp[.uns[neighbors_key]['distances_key']] for connectivities and distances respectively.
-        neighbors_key: Key to stored neighbors.
-        random_state: Random seed for the initialization.
-        copy: Whether to return a copy of the Data object.
+        neighbors_key: If not specified, diffmap looks .uns['neighbors'] for neighbors settings
+                       and .obsp['connectivities'], .obsp['distances'] for connectivities and
+                       distances respectively (default storage places for pp.neighbors).
+                       If specified, diffmap looks .uns[neighbors_key] for neighbors settings and
+                       .obsp[.uns[neighbors_key]['connectivities_key']],
+                       .obsp[.uns[neighbors_key]['distances_key']] for connectivities and distances respectively.
+        random_state: A numpy random seed.
+        copy: Whether to return a copy of `edata`.
 
     Returns:
         Depending on `copy`, returns or updates `edata` with the following fields.
 
         `X_diffmap` : :class:`numpy.ndarray` (`edata.obsm`)
         Diffusion map representation of data, which is the right eigen basis of the transition matrix with eigenvectors as columns.
+        The 0-th column is the steady-state solution, which is non-informative in diffusion maps.
+        Therefore, the first diffusion component is at index 1, e.g. `edata.obsm["X_diffmap"][:, 1]`.
 
         `diffmap_evals` : :class:`numpy.ndarray` (`edata.uns`)
-        Array of size (number of eigen vectors). Eigenvalues of transition matrix.
+        Array of size (number of eigen vectors).
+        Eigenvalues of transition matrix.
     """
     return sc.tl.diffmap(
         adata=edata, n_comps=n_comps, neighbors_key=neighbors_key, random_state=random_state, copy=copy
@@ -319,32 +323,34 @@ def diffmap(
 def embedding_density(
     edata: EHRData,
     *,
-    basis: str = "umap",  # was positional before 1.4.5
+    basis: str = "umap",
     groupby: str | None = None,
     key_added: str | None = None,
-    components: str | Sequence[str] = None,
-) -> None:  # pragma: no cover
+    components: str | Sequence[str] | None = None,
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
     """Calculate the density of observation in an embedding (per condition).
 
     Gaussian kernel density estimation is used to calculate the density of observations in an embedded space.
     This can be performed per category over a categorical observation annotation.
-    The cell density can be plotted using the `sc.pl.embedding_density()` function.
+    The density can be plotted using :func:`~ehrapy.plot.embedding_density`.
     Note that density values are scaled to be between 0 and 1.
-    Thus, the density value at each cell is only comparable to other densities in the same condition category.
+    Thus, the density value at each observation is only comparable to other densities in the same condition category.
+    Beware that the KDE estimate used (:class:`scipy.stats.gaussian_kde`) becomes unreliable if a category contains few observations.
 
     Args:
         edata: Central data object.
-        basis: The embedding over which the density will be calculated. This embedded
-               representation should be found in `edata.obsm['X_[basis]']`.
-        groupby: Keys for categorical observation/cell annotation for which densities
-                 are calculated per category. Columns with up to ten categories are accepted.
+        basis: The embedding over which the density will be calculated.
+               This embedded representation should be found in `edata.obsm['X_[basis]']`.
+        groupby: Key for a categorical observation annotation for which densities are calculated per category.
         key_added: Name of the `.obs` covariate that will be added with the density estimates.
         components: The embedding dimensions over which the density should be calculated.
                     This is limited to two components.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        Updates `edata.obs` with an additional field specified by the `key_added` parameter.
-        This parameter defaults to `[basis]_density_[groupby]`,
+        Depending on `copy`, returns or updates `edata` with an additional `.obs` field specified by the `key_added` parameter.
+        This parameter defaults to `[basis]_density_[groupby]` or `[basis]_density` without `groupby`,
         where `[basis]` is one of `umap`, `diffmap`, `pca`, `tsne`, or `draw_graph_fa` and `[groupby]` denotes the parameter input.
         Updates `edata.uns` with an additional field `[key_added]_params`.
 
@@ -359,7 +365,9 @@ def embedding_density(
         >>> ep.tl.embedding_density(edata, basis="umap")
         >>> ep.pl.embedding_density(edata, basis="umap")
     """
+    edata = edata.copy() if copy else edata
     sc.tl.embedding_density(adata=edata, basis=basis, groupby=groupby, key_added=key_added, components=components)
+    return edata if copy else None
 
 
 @singledispatch
@@ -381,10 +389,10 @@ def famd(
     The method produces factor scores for individuals, correlation circles for quantitative variables, and category centroids for qualitative variables.
 
     Args:
-        edata: The EHRData object (n_obs × n_vars × n_timesteps) containing mixed data types.
+        edata: Central data object or a 2D array with quantitative and qualitative variables.
         layer: The layer to perform the computation on.
         n_components: Number of dimensions to retain in the reduced space. Must be less than min(n_obs, n_vars).
-        key_added: Key under which to store the results in `.obsm` and `.uns`. Defaults to 'famd'.
+        key_added: Key under which to store the results in `.obsm`, `.varm` and `.uns`. Defaults to 'famd'.
         var_names: Names of the input variables (features).
             Used to generate interpretable feature names in the output (e.g., 'age' vs 'var_0', 'sex_M' vs 'var_1_M').
             If None, defaults to 'var_0', 'var_1', etc. Automatically extracted from `.var_names`.
@@ -399,16 +407,27 @@ def famd(
         >>> edata.uns["famd"]["variance_ratio"]  # Explained variance
 
     Returns:
-        If edata is EHRData and copy=True, returns modified copy. If edata is ndarray, returns (factor_scores, loadings, metadata).
+        If `edata` is an array, returns `(factor_scores, loadings, metadata)`.
+        `loadings` has one row per entry of `metadata["feature_names"]`: one per quantitative variable, followed by one per category of each qualitative variable.
+        Otherwise, depending on `copy`, returns or updates `edata` with the following fields.
+
+        `X_{key_added}` : :class:`numpy.ndarray` (`edata.obsm`)
+        Factor scores of shape `(n_obs, n_components)`.
+
+        `{key_added}_loadings` : :class:`numpy.ndarray` (`edata.varm`)
+        Loadings of the quantitative variables.
+        Rows of qualitative variables are `NaN` because their loadings are per category.
+
+        `{key_added}` : `dict` (`edata.uns`)
+        `loadings` of all quantitative variables and categories labelled by `feature_names` and mapped to variable positions by `feature_to_original`, together with `variance`, `variance_ratio`, `quant_mask` and `params`.
     """
-    arr = edata.X if layer is None else edata.layers[layer]
-    _raise_array_type_not_implemented(famd, type(arr))
+    _raise_array_type_not_implemented(famd, type(edata))
     return None
 
 
-@function_2D_only()
 @famd.register(EHRData)
-def _(
+@function_2D_only(allow_single_timepoint=True)
+def _famd_ehrdata(  # named because function_2D_only puts __name__ into its error message
     edata: EHRData,
     /,
     *,
@@ -426,15 +445,21 @@ def _(
     arr = edata.X if layer is None else edata.layers[layer]
     factor_scores, loadings, metadata = famd(arr, n_components=n_components, var_names=edata.var_names)
 
+    quant_mask = metadata["quant_mask"]
+    var_loadings = np.full((edata.n_vars, loadings.shape[1]), np.nan)
+    # quantitative features come first in the transformed matrix
+    var_loadings[quant_mask] = loadings[: quant_mask.sum()]
+
     edata.obsm[f"X_{key_added}"] = factor_scores
-    edata.varm[f"{key_added}_loadings"] = loadings
+    edata.varm[f"{key_added}_loadings"] = var_loadings
     edata.uns[key_added] = {
         "params": {
             "n_components": n_components,
         },
+        "loadings": loadings,
         "variance": metadata["variance"],
         "variance_ratio": metadata["variance_ratio"],
-        "quant_mask": metadata["quant_mask"],
+        "quant_mask": quant_mask,
         "feature_names": metadata["feature_names"],
         "feature_to_original": metadata["feature_to_original"],
     }
@@ -442,14 +467,20 @@ def _(
     return edata if copy else None
 
 
+@famd.register(CSBase)
+@famd.register(DaskArray)
+def _(arr: CSBase | DaskArray, /, **kwargs) -> tuple[np.ndarray, np.ndarray, dict]:
+    return famd(_materialize(to_dense(arr))[0], **kwargs)
+
+
 @famd.register(np.ndarray)
 def _(
     arr: np.ndarray, /, *, n_components: int = 2, var_names: Sequence[str] | None = None, **kwargs
 ) -> tuple[np.ndarray, np.ndarray, dict]:
-    if arr.ndim != 3 or arr.shape[2] != 1:
-        raise ValueError(f"FAMD requires 3D array with single timepoint (shape[2]=1), got shape {arr.shape}")
+    data = arr[:, :, 0] if arr.ndim == 3 and arr.shape[2] == 1 else arr
+    if data.ndim != 2:
+        raise ValueError(f"famd() only supports 2D data, got an array with shape {arr.shape}")
 
-    data = arr[:, :, 0]
     n_vars = data.shape[1]
 
     if var_names is None:

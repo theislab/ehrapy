@@ -7,7 +7,6 @@ import scanpy as sc
 from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
-    import pandas as pd
     from ehrdata import EHRData
 
 
@@ -17,34 +16,34 @@ def highly_variable_features(
     *,
     layer: str | None = None,
     top_features_percentage: float = 0.2,
-    span: float | None = 0.3,
-    n_bins: int = 20,
+    span: float = 0.3,
+    batch_key: str | None = None,
     subset: bool = False,
-    inplace: bool = True,
     check_values: bool = True,
-) -> pd.DataFrame | None:
-    """Annotate highly variable features.
+    copy: bool = False,
+) -> EHRData | None:
+    """Annotate highly variable features :cite:p:`Stuart2019`.
 
-    Expects count data. A normalized variance for each feature is computed. First, the data
-    are standardized (i.e., z-score normalization per feature) with a regularized
-    standard deviation. Next, the normalized variance is computed as the variance
-    of each feature after the transformation. Features are ranked by the normalized variance.
+    Expects count data.
+    A normalized variance for each feature is computed.
+    First, the data are standardized (i.e., z-score normalization per feature) with a regularized standard deviation.
+    Next, the normalized variance is computed as the variance of each feature after the transformation.
+    Features are ranked by the normalized variance.
 
     Args:
         edata: Central data object.
         layer: If provided, use `edata.layers[layer]` for expression values instead of `edata.X`.
         top_features_percentage: Percentage of highly-variable features to keep.
-        span: The fraction of the data used when estimating the variance in the loess model fit.
-        n_bins: Number of bins for binning. Normalization is done with respect to each bin.
-                If just a single observation falls into a bin, the normalized dispersion is artificially set to 1.
-                You'll be informed about this if you set `settings.verbosity = 4`.
+        span: The fraction of the data (observations) used when estimating the variance in the loess model fit.
+        batch_key: If specified, highly-variable features are selected within each batch separately and merged.
+                   Features are first sorted by the median (across batches) rank, with ties broken by the number of batches a feature is highly variable in.
         subset: Inplace subset to highly-variable features if `True` otherwise merely indicate highly variable features.
-        inplace: Whether to place calculated metrics in `.var` or return them.
         check_values: Check if counts in selected layer are integers. A Warning is returned if set to True.
+        copy: Whether to return a copy of `edata` or modify it in place.
 
     Returns:
-        Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or
-        updates `.var` with the following fields
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
+        Updates `.var` with the following fields
 
     **highly_variable**
         boolean indicator of highly-variable features
@@ -56,17 +55,22 @@ def highly_variable_features(
         normalized variance per feature, averaged in the case of multiple batches
     **highly_variable_rank**
         rank of the feature according to normalized variance, median rank in the case of multiple batches
+    **highly_variable_nbatches**
+        if `batch_key` is given, in how many batches the feature is highly variable
     """
+    edata = edata.copy() if copy else edata
     n_top_features = int(top_features_percentage * len(edata.var))
 
-    return sc.pp.highly_variable_genes(
+    sc.pp.highly_variable_genes(
         adata=edata,
         layer=layer,
         n_top_genes=n_top_features,
         span=span,
-        n_bins=n_bins,
         flavor="seurat_v3",
         subset=subset,
-        inplace=inplace,
+        inplace=True,
+        batch_key=batch_key,
         check_values=check_values,
     )
+
+    return edata if copy else None

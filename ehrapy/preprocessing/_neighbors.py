@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from ehrapy._types import AnyRandom, KnownTransformer
 
 
-_Method = Literal["umap", "gauss"]
+_Method = Literal["umap", "gauss", "jaccard"]
 _MetricFn = Callable[[np.ndarray, np.ndarray], float]
 _MetricSparseCapable = Literal["cityblock", "cosine", "euclidean", "l1", "l2", "manhattan"]
 _MetricTimeSeries = Literal["dtw", "soft_dtw", "gak"]  # these are not yet sparse capable
@@ -52,9 +52,9 @@ def neighbors(
 ) -> EHRData | None:  # pragma: no cover
     """Compute a neighborhood graph of observations :cite:p:`McInnes2018`.
 
-    The neighbor search efficiency of this heavily relies on UMAP :cite:p:`McInnes2018`,
-    which also provides a method for estimating connectivities of data points - the connectivity of the manifold (`method=='umap'`).
-    If `method=='gauss'`, connectivities are computed according to :cite:p:`Coifman2005`, in the adaption of :cite:p:`Haghverdi2016`.
+    The computation proceeds in two independent stages.
+    First, a k-nearest neighbor (kNN) search produces the distance matrix via the estimator passed as `transformer`.
+    Second, connectivities are derived from the kNN search output by the kernel selected via `method`.
 
     Args:
         edata: Central data object.
@@ -66,13 +66,15 @@ def neighbors(
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid. For time series data (`metric='dtw'`, `'soft_dtw'`, `'gak'`), the key must be a 3D array with shape (n_obs, n_vars, n_timepoints).
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
-                 If 'X_pca' is not present, it's computed with default parameters.
+                 If 'X_pca' is not present, it's computed with default parameters or `n_pcs` if present.
         knn: If `True`, use a hard threshold to restrict the number of neighbors to `n_neighbors`, that is, consider a knn graph.
              Otherwise, use a Gaussian Kernel to assign low weights to neighbors more distant than the `n_neighbors` nearest neighbor.
         random_state: A numpy random seed.
-        method: Use 'umap' :cite:p:`McInnes2018` or 'gauss' (Gauss kernel following :cite:p:`Coifman2005` with adaptive width :cite:p:`Haghverdi2016` for computing connectivities.
+        method: Kernel that derives connectivities from the kNN search output.
+                Use 'umap' :cite:p:`McInnes2018`, 'gauss' (Gauss kernel following :cite:p:`Coifman2005` with adaptive width :cite:p:`Haghverdi2016`), or 'jaccard' (Jaccard kernel as in PhenoGraph :cite:p:`Levine2015`).
         metric: A known metric's name or a callable that returns a distance.
             'euclidean' works well for 2D data and 'dtw' for 3D time series data.
+            With time series metrics, two patients are not connected if no variable has more than 3 measurements in both.
         metric_kwds: Options for the metric.
         transformer: Approximate kNN search implementation.
 
@@ -99,9 +101,10 @@ def neighbors(
 
          **distances** : sparse matrix of dtype `float32`.
          Instead of decaying weights, this stores distances for each pair of neighbors.
-    """
-    import ehrapy as ep
 
+         **neighbors** : `dict` in `edata.uns['neighbors' | key_added]`.
+         The neighbors parameters.
+    """
     if metric in {"dtw", "soft_dtw", "gak"}:
         if use_rep is None:
             raise ValueError(f"use_rep must be specified if metric is {metric}")
@@ -151,5 +154,14 @@ def neighbors(
         edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
 
     edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    if use_rep == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY:
+        result = edata if edata_returned is None else edata_returned
+        neighbors_params = result.uns["neighbors" if key_added is None else key_added]
+        # incomparable patients have infinite distances, which turn their UMAP connectivities into NaN
+        for graph_key in ("distances_key", "connectivities_key"):
+            graph = result.obsp[neighbors_params[graph_key]]
+            graph.data[~np.isfinite(graph.data)] = 0
+            graph.eliminate_zeros()
 
     return edata_returned

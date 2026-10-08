@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -9,12 +9,20 @@ import scanpy as sc
 from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils import stats
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import DaskArray
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import _materialize, function_2D_only
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ehrapy.tools import _method_options
+
+# params is metadata and pts/pts_rest are tables indexed by feature name, not per-group rankings
+_UNRANKED_KEYS = frozenset({"params", "pts", "pts_rest"})
 
 
 def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
@@ -66,7 +74,7 @@ def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> N
         edata: Central data object after running :func:`~ehrapy.tools.rank_features_groups`
         key_added: The key in `edata.uns` information is saved to.
     """
-    if key_added not in edata.uns:
+    if "pvals_adj" not in edata.uns.get(key_added, {}):
         return
 
     pvals_adj = edata.uns[key_added]["pvals_adj"]
@@ -76,8 +84,7 @@ def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> N
         sorted_indexes = np.argsort(group_pvals)
 
         for key in edata.uns[key_added].keys():
-            if key == "params":
-                # This key only stores technical information, nothing to sort here
+            if key in _UNRANKED_KEYS:
                 continue
 
             # Sort every key (e.g. pvals, names) by adjusted p-value in an increasing order
@@ -92,7 +99,6 @@ def _save_rank_features_result(
     pvals,
     pvals_adj=None,
     logfoldchanges=None,
-    pts=None,
     groups_order=None,
 ) -> None:
     """Write keys with statistical test results to edata.uns.
@@ -105,11 +111,10 @@ def _save_rank_features_result(
         pvals: p-values of a statistical test
         pvals_adj: Adjusted p-values of a statistical test
         logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
-        pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
     """
-    fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
-    field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
+    fields = (names, scores, pvals, pvals_adj, logfoldchanges)
+    field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges")
 
     for values, key in zip(fields, field_names, strict=False):
         if values is None or not len(values):
@@ -218,7 +223,7 @@ def _evaluate_categorical_features(
             continue
 
         try:
-            feature_values = edata[:, feature].X.flatten().toarray()
+            feature_values = to_dense(edata[:, feature].X, to_cpu_memory=True).ravel()
         except ValueError as e:
             raise ValueError(f"Feature {feature} is not encoded. Please encode it using `ehrapy.pp.encode`") from e
 
@@ -261,6 +266,31 @@ def _evaluate_categorical_features(
     )
 
 
+def _nonzero_fractions(
+    edata: EHRData, features: Sequence[str], *, groupby: str, groups_order: Sequence[str], reference: str
+) -> dict[str, pd.DataFrame]:
+    """Fractions of observations with non-zero values per feature (rows) and group (columns), as `pts` of :func:`scanpy.tl.rank_genes_groups`."""
+    X = edata.X[:, edata.var_names.get_indexer(features)]
+    groups = edata.obs[groupby].astype(str).to_numpy()
+    masks = [groups == group for group in groups_order]
+    *n_nonzero, n_nonzero_all = _materialize(
+        *(stats.sum(X[mask] != 0, axis=0) for mask in masks), stats.sum(X != 0, axis=0)
+    )
+    n_nonzero = np.stack(n_nonzero)
+    n_obs = np.array([mask.sum() for mask in masks])[:, None]
+    fractions = {"pts": pd.DataFrame((n_nonzero / n_obs).T, index=features, columns=groups_order)}
+    if reference == "rest":
+        fractions["pts_rest"] = pd.DataFrame(
+            ((n_nonzero_all - n_nonzero) / (len(groups) - n_obs)).T, index=features, columns=groups_order
+        )
+    return fractions
+
+
+def _ranked_features(result: Mapping) -> list[str]:
+    """Names of all features in a :func:`~ehrapy.tools.rank_features_groups` result."""
+    return list(dict.fromkeys(pd.DataFrame(result["names"]).iloc[:, 0]))
+
+
 def _check_no_datetime_columns(df):
     datetime_cols = [
         col
@@ -287,7 +317,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
         else:
             raise ValueError("If columns_to_rank is a string, it must be 'all'.")
 
-    elif isinstance(columns_to_rank, dict):
+    elif isinstance(columns_to_rank, Mapping):
         allowed_keys = {"var_names", "obs_names"}
         for key in columns_to_rank.keys():
             if key not in allowed_keys:
@@ -320,17 +350,17 @@ def rank_features_groups(
     n_features: int | None = None,
     rankby_abs: bool = False,
     pts: bool = False,
-    key_added: str | None = "rank_features_groups",
+    key_added: str = "rank_features_groups",
     copy: bool = False,
     num_cols_method: _method_options._rank_features_groups_method = None,
     cat_cols_method: _method_options._rank_features_groups_cat_method = "g-test",
     correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: str | None = None,
-    field_to_rank: Literal["layer"] | Literal["obs"] | Literal["layer_and_obs"] = "layer",
-    columns_to_rank: dict[str, Iterable[str]] | Literal["all"] = "all",
+    field_to_rank: Literal["layer", "obs", "layer_and_obs"] = "layer",
+    columns_to_rank: Mapping[str, Iterable[str]] | Literal["all"] = "all",
     **kwds,
-) -> None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Rank features for characterizing groups.
 
     Args:
@@ -340,10 +370,11 @@ def rank_features_groups(
                 shall be restricted, or `'all'` (default), for all groups.
         reference: If `'rest'`, compare each group to the union of the rest of the group.
                    If a group identifier, compare with respect to this group.
-        n_features: The number of features that appear in the returned tables. Defaults to all features if `None`.
-        rankby_abs: Rank genes by the absolute value of the score, not by the score.
+        n_features: The number of features with the lowest adjusted p-values that appear in the returned tables per group.
+                    Defaults to all features if `None`.
+        rankby_abs: Rank features by the absolute value of the score, not by the score.
                     The returned scores are never the absolute values.
-        pts: Compute the fraction of observations containing the features.
+        pts: Compute the fraction of observations with non-zero values of the features.
         key_added: The key in `edata.uns` information is saved to.
         copy: Whether to return a copy of the data object.
         num_cols_method:  Statistical method to rank numerical features. The default method is `'t-test'`,
@@ -368,20 +399,25 @@ def rank_features_groups(
         **kwds: Are passed to test methods. Currently, this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
-                minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
+                minimal set of features that are good predictors (sparse solution meaning few non-zero fitted coefficients).
 
     Returns:
-        None
+        Depending on `copy`, returns or updates `edata` with the results stored in `edata.uns[key_added]`, which include:
 
-        The results are stored in `edata.uns['rank_features_groups']` and include:
-
-        - names (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the gene names. Ordered according to scores.
-        - scores (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the z-score underlying the computation of a p-value for each gene for each group. Ordered according to scores.
-        - logfoldchanges (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the log2 fold change for each gene for each group. Ordered according to scores. Only provided if method is ‘t-test’ like. Note: this is an approximation calculated from mean-log values.
+        - names (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the feature names.
+          Ordered according to adjusted p-values.
+        - scores (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the z-score underlying the computation of a p-value for each feature for each group.
+          Ordered according to adjusted p-values.
+        - logfoldchanges (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the log2 fold change for each feature for each group.
+          Ordered according to adjusted p-values.
+          Only provided if method is ‘t-test’ like.
+          Note: this is an approximation calculated from mean-log values.
         - pvals (:class:`numpy.ndarray`): p-values.
         - pvals_adj (:class:`numpy.ndarray`): Corrected p-values.
-        - pts (:class:`pandas.DataFrame`): Fraction of cells expressing the genes for each group.
-        - pts_rest (:class:`pandas.DataFrame`): Only if reference is set to ‘rest’. Fraction of observations from the union of the rest of each group containing the features.
+        - pts (:class:`pandas.DataFrame`): Only if `pts=True`.
+          Fraction of observations with non-zero values of the features (rows) for each group (columns).
+        - pts_rest (:class:`pandas.DataFrame`): Only if `pts=True` and `reference='rest'`.
+          Fraction of observations from the union of the rest of each group with non-zero values of the features.
 
     Examples:
         >>> import ehrdata as ed
@@ -389,7 +425,7 @@ def rank_features_groups(
         >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
         >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
-        >>> ep.tl.rank_features_groups(edata, "service_unit")
+        >>> ep.tl.rank_features_groups(edata, groupby="service_unit")
         >>> ep.pl.rank_features_groups(edata)
 
         >>> import ehrdata as ed
@@ -398,7 +434,10 @@ def rank_features_groups(
         >>> # want to move some metedata to the obs field
         >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
-        ...     edata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]}
+        ...     edata,
+        ...     groupby="service_unit",
+        ...     field_to_rank="obs",
+        ...     columns_to_rank={"obs_names": ["age", "mort_day_censored"]},
         ... )
         >>> ep.pl.rank_features_groups(edata)
 
@@ -409,7 +448,7 @@ def rank_features_groups(
         >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
         ...     edata,
-        ...     "service_unit",
+        ...     groupby="service_unit",
         ...     field_to_rank="layer_and_obs",
         ...     columns_to_rank={"var_names": ["copd_flg", "renal_flg"], "obs_names": ["age", "mort_day_censored"]},
         ... )
@@ -439,7 +478,7 @@ def rank_features_groups(
     # subsetted to the specified columns
     if field_to_rank in ["layer", "layer_and_obs"]:
         # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "var_names" if _var_subset is True
-        if _var_subset and isinstance(columns_to_rank, dict):
+        if _var_subset and isinstance(columns_to_rank, Mapping):
             X_to_keep = (
                 edata[:, columns_to_rank["var_names"]].X
                 if layer is None
@@ -450,6 +489,10 @@ def rank_features_groups(
         else:
             X_to_keep = edata.X if layer is None else edata.layers[layer]
             var_to_keep = edata.var
+        if X_to_keep.ndim == 3:
+            X_to_keep = X_to_keep[:, :, 0]
+        if isinstance(X_to_keep, DaskArray):
+            X_to_keep = X_to_keep.compute()
 
     else:
         # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards
@@ -465,7 +508,7 @@ def rank_features_groups(
     if field_to_rank in ["obs", "layer_and_obs"]:
         # want columns of obs to become variables in X to be able to use rank_features_groups
         # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "obs_names" if _obs_subset is True
-        if _obs_subset and isinstance(columns_to_rank, dict):
+        if _obs_subset and isinstance(columns_to_rank, Mapping):
             obs_to_move = edata.obs[columns_to_rank["obs_names"]].keys()
         else:
             obs_to_move = edata.obs.keys()
@@ -515,6 +558,7 @@ def rank_features_groups(
         "categorical_method": cat_cols_method,
         "layer": layer,
         "corr_method": correction_method,
+        "use_raw": False,
     }
 
     group_names = pd.Categorical(edata.obs[groupby].astype(str)).categories.tolist()
@@ -532,9 +576,7 @@ def rank_features_groups(
             groupby,
             groups=groups,
             reference=reference,
-            n_features=n_features,
             rankby_abs=rankby_abs,
-            pts=pts,
             key_added=key_added,
             copy=False,
             method=num_cols_method,
@@ -550,14 +592,18 @@ def rank_features_groups(
             key_added,
             names=numerical_edata.uns[key_added]["names"],
             scores=numerical_edata.uns[key_added]["scores"],
-            pvals=numerical_edata.uns[key_added]["pvals"],
-            pvals_adj=numerical_edata.uns[key_added].get("pvals_adj", None),
-            logfoldchanges=numerical_edata.uns[key_added].get("logfoldchanges", None),
-            pts=numerical_edata.uns[key_added].get("pts", None),
+            pvals=numerical_edata.uns[key_added].get("pvals"),
+            pvals_adj=numerical_edata.uns[key_added].get("pvals_adj"),
+            logfoldchanges=numerical_edata.uns[key_added].get("logfoldchanges"),
             groups_order=group_names,
         )
 
     if list(edata.var_names[edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]):
+        if num_cols_method == "logreg" and "names" in edata.uns[key_added]:
+            raise ValueError(
+                "num_cols_method='logreg' cannot be combined with categorical features, "
+                "because logistic regression yields no p-values to rank them by."
+            )
         (
             categorical_names,
             categorical_scores,
@@ -581,8 +627,18 @@ def rank_features_groups(
             pvals=categorical_pvals,
             pvals_adj=categorical_pvals.copy(),
             logfoldchanges=categorical_logfoldchanges,
-            pts=categorical_pts,
             groups_order=group_names,
+        )
+
+    if pts and "names" in edata.uns[key_added]:
+        edata.uns[key_added].update(
+            _nonzero_fractions(
+                edata,
+                _ranked_features(edata.uns[key_added]),
+                groupby=groupby,
+                groups_order=_get_groups_order(groups_subset=groups, group_names=group_names, reference=reference),
+                reference=reference,
+            )
         )
 
     # if field_to_rank was obs or layer_and_obs, the edata object we have been working with is edata_minimal
@@ -594,11 +650,11 @@ def rank_features_groups(
             edata.uns[key_added]["pvals"], corr_method=correction_method
         )
 
-    # For some reason, pts should be a DataFrame
-    if "pts" in edata.uns[key_added]:
-        edata.uns[key_added]["pts"] = pd.DataFrame(edata.uns[key_added]["pts"])
-
     _sort_features(edata, key_added)
+
+    if n_features is not None:
+        for key in edata.uns[key_added].keys() - _UNRANKED_KEYS:
+            edata.uns[key_added][key] = edata.uns[key_added][key][:n_features]
 
     return edata if copy else None
 
@@ -611,46 +667,70 @@ def filter_rank_features_groups(
     groupby: str | None = None,
     key_added: str = "rank_features_groups_filtered",
     min_in_group_fraction: float = 0.25,
-    min_fold_change: int = 1,
+    min_fold_change: float = 1,
     max_out_group_fraction: float = 0.5,
-) -> None:  # pragma: no cover
-    """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
+    compare_abs: bool = False,
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
+    """Filters out features based on fold change and fraction of observations with the feature within and outside the `groupby` categories.
 
     See :func:`~ehrapy.tools.rank_features_groups`.
 
-    Results are stored in `edata.uns[key_added]`
-    (default: 'rank_genes_groups_filtered').
-
-    To preserve the original structure of edata.uns['rank_genes_groups'],
-    filtered genes are set to `NaN`.
+    Results are stored in `edata.uns[key_added]` (default: 'rank_features_groups_filtered').
+    To preserve the original structure of `edata.uns[key]`, filtered features are set to `NaN`.
 
     Args:
         edata: Central data object.
-        key: Key previously added by :func:`~ehrapy.tools.rank_features_groups`
+        key: Key previously added by :func:`~ehrapy.tools.rank_features_groups`.
         groupby: The key of the observations grouping to consider.
+                 Defaults to the `groupby` used in :func:`~ehrapy.tools.rank_features_groups`.
         key_added: The key in `edata.uns` information is saved to.
-        min_in_group_fraction: Minimum in group fraction (default: 0.25).
-        min_fold_change: Miniumum fold change (default: 1).
-        max_out_group_fraction: Maximum out group fraction (default: 0.5).
+        min_in_group_fraction: Minimum fraction of observations in the group with non-zero values of the feature.
+        min_fold_change: Minimum fold change.
+        max_out_group_fraction: Maximum fraction of observations outside the group with non-zero values of the feature.
+        compare_abs: If `True`, compare absolute values of log fold change with `min_fold_change`.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        Same output as :func:`ehrapy.tools.rank_features_groups` but with filtered feature names set to `nan`
+        Depending on `copy`, returns or updates `edata` with the same output as :func:`ehrapy.tools.rank_features_groups` but with filtered feature names set to `nan`.
 
     Examples:
         >>> import ehrapy as ep
         >>> import ehrdata as ed
         >>> edata = ed.dt.mimic_2()
         >>> ed.move_to_obs(edata, ["service_unit"])
-        >>> ep.tl.rank_features_groups(edata, "service_unit")
-        >>> ep.pl.rank_features_groups(edata)
+        >>> ep.tl.rank_features_groups(edata, groupby="service_unit")
+        >>> ep.tl.filter_rank_features_groups(edata)
     """
-    return sc.tl.filter_rank_genes_groups(
-        adata=edata,
-        key=key,
-        groupby=groupby,
-        use_raw=False,
-        key_added=key_added,
-        min_in_group_fraction=min_in_group_fraction,
-        min_fold_change=min_fold_change,
-        max_out_group_fraction=max_out_group_fraction,
-    )
+    edata = edata.copy() if copy else edata
+    result = edata.uns[key]
+    params = result["params"]
+    features = _ranked_features(result)
+    if (
+        "pts_rest" not in result
+        and params["reference"] == "rest"
+        and groupby in (None, params["groupby"])
+        and pd.Index(features).isin(edata.var_names).all()
+    ):
+        edata.uns[key] = result | _nonzero_fractions(
+            edata,
+            features,
+            groupby=params["groupby"],
+            groups_order=list(pd.DataFrame(result["names"]).columns),
+            reference="rest",
+        )
+    try:
+        sc.tl.filter_rank_genes_groups(
+            adata=edata,
+            key=key,
+            groupby=groupby,
+            use_raw=False,
+            key_added=key_added,
+            min_in_group_fraction=min_in_group_fraction,
+            min_fold_change=min_fold_change,
+            max_out_group_fraction=max_out_group_fraction,
+            compare_abs=compare_abs,
+        )
+    finally:
+        edata.uns[key] = result
+    return edata if copy else None

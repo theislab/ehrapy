@@ -4,25 +4,95 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+### 🚀 Features
+
+* Preprocessing functions support numpy, scipy sparse and dask arrays, including dask arrays with sparse chunks, for static 2D and longitudinal 3D data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+
+  Sparse arrays stay sparse and dask arrays stay lazy, and functions that store summaries compute once.
+  The few combinations that cannot work this way raise a `NotImplementedError` that says why, such as centering or ComBat on sparse data, the faiss backend of {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` on sparse or dask arrays, and {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` or {func}`ep.pp.detect_bias <ehrapy.preprocessing.detect_bias>` on dask arrays.
+* {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` aggregates longitudinal data over time into a 2D object with one column per variable and statistic (`min`, `max`, `mean`, `median`, `first`, `last`), which makes every 2D-only function usable on longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>`, {func}`ep.pp.clip_quantile <ehrapy.preprocessing.clip_quantile>` and {func}`ep.pp.qc_lab_measurements <ehrapy.preprocessing.qc_lab_measurements>` support longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* Tools, plots and `ep.get` functions support numpy, scipy sparse and dask arrays, and densify and compute only the variables they use ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
+
+  The causal estimators, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` accept sparse and dask arrays instead of rejecting or fully densifying them.
+  Embedding plots such as {func}`ep.pl.umap <ehrapy.plot.umap>` color longitudinal data by `obs` columns, and {func}`ep.pl.timeseries <ehrapy.plot.timeseries>` plots 3D `.X` with `layer=None`.
+
 ### 💥 Breaking changes
 
+* {func}`ep.pl.timeseries <ehrapy.plot.timeseries>` plots the 3D `.X` by default instead of `.layers["tem_data"]`, like every other function ([#1121](https://github.com/theislab/ehrapy/pull/1121)) @sueoglu
+* Survival analysis and regression models take their columns from `edata.obs` or variables and only drop observations missing a column the model uses ([#1133](https://github.com/theislab/ehrapy/pull/1133)) @Zethson
+
+  {func}`ep.tl.kaplan_meier <ehrapy.tools.kaplan_meier>`, {func}`ep.tl.cox_ph <ehrapy.tools.cox_ph>` and the other survival fitters, {func}`ep.tl.ols <ehrapy.tools.ols>` and {func}`ep.tl.glm <ehrapy.tools.glm>` accept obs columns wherever they accept variables, and work on longitudinal data when every column they use lives in `obs`.
+  Previously, every observation with a missing value in any variable was silently dropped, even in variables the model did not use.
+  Regression fitters gained `covariates`, the univariate fitters take `entry_col` and `weights_col` instead of the `entry` and `weights` arrays, and numeric columns are passed to the models as numbers, so a binomial {func}`ep.tl.glm <ehrapy.tools.glm>` on a 0/1 outcome models the probability of 1.
+* Normalization functions take explicit parameters instead of forwarding `**kwargs` to scikit-learn or dask-ml ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+
+  {func}`ep.pp.scale_norm <ehrapy.preprocessing.scale_norm>` takes `with_mean` and `with_std`, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` `feature_range`, {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` `with_centering`, `with_scaling`, `quantile_range` and `unit_variance`, {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` `n_quantiles`, `output_distribution`, `subsample` and `random_state`, and {func}`ep.pp.power_norm <ehrapy.preprocessing.power_norm>` `method` and `standardize`.
+  A `groupby` column with missing values now raises instead of leaving those observations unnormalized, and the `dask` extra no longer installs dask-ml.
+* {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>` takes `inclusive` instead of `**kwargs`, ignores missing values when ranking, and cuts 1% from each side by default ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+
+  The previous default `limits=(0.01, 0.99)` cut 99% of the largest values, replacing almost every value of a variable with the same number.
+* {func}`ep.pp.regress_out <ehrapy.preprocessing.regress_out>` no longer takes `n_jobs` ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` no longer accepts `statistics=None`, which always raised ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
 
   `miceforest` is effectively unmaintained (last commit 2025-10-27) and broken against `lightgbm>=4.7.0`, which it calls through a private, name-mangled internal ([miceforest#104](https://github.com/AnotherSamWilson/miceforest/issues/104)).
   Use {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` instead, which is MICE via {class}`~sklearn.impute.IterativeImputer` with a tree ensemble.
   For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
+* Unify the API conventions across `ep.pp`, `ep.tl`, `ep.pl` and `ep.get` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+
+  Required arguments are positional and every argument with a default is keyword-only.
+  Grouping keys are called `groupby` (was `group_key`, `cluster_key`, `balanced_key`), feature subsets `var_names` (was `vars`, `input_features`, `feature_names`), feature-name columns `feature_symbols` (was `gene_symbols`, `features`), and result keys `key_added` when written and `key` when read (was `uns_key`).
+  {func}`ep.pp.combat <ehrapy.preprocessing.combat>` takes `batch_key` (was `key`), and {func}`ep.pp.pca <ehrapy.preprocessing.pca>` and {func}`ep.pp.sample <ehrapy.preprocessing.sample>` take `edata` (was `data`).
+* Replace `inplace` with `copy` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+
+  {func}`ep.pp.combat <ehrapy.preprocessing.combat>`, {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>`, {func}`ep.tl.dendrogram <ehrapy.tools.dendrogram>` and {func}`ep.tl.ingest <ehrapy.tools.ingest>` take `copy` instead of `inplace`.
+  {func}`ep.pp.qc_metrics <ehrapy.preprocessing.qc_metrics>`, {func}`ep.pp.detect_bias <ehrapy.preprocessing.detect_bias>`, {func}`ep.tl.embedding_density <ehrapy.tools.embedding_density>`, {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>`, {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` and {func}`ep.tl.cox_ph_adjusted_curves <ehrapy.tools.cox_ph_adjusted_curves>` gained `copy`.
+  `qc_metrics` and `detect_bias` store their results in `edata` instead of returning them (`detect_bias` under `uns["bias"]`), and `rank_features_supervised` stores the model's test score in `uns[key_added]` instead of returning it.
+* Remove the deprecated `ep.tl.kmf`, `ep.pp.subsample` and the `n_neighbours` alias of {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 
 ### 🐛 Bug Fixes
 
+* On dask arrays with missing values, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` and {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` returned all-NaN variables and {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` returned wrong values ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` and {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` crashed for every non-numpy array, {func}`ep.pp.encode <ehrapy.preprocessing.encode>` crashed on sparse arrays, and the imputers crashed on variables without any observed value ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* {func}`ep.pp.qc_metrics <ehrapy.preprocessing.qc_metrics>` no longer computes dask arrays once per variable or reports all-NaN statistics when any variable holds strings ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` no longer computes dask arrays once per group statistic or crashes with `pts=True` on sparse arrays, on 3D data with a single timepoint, or with `num_cols_method="logreg"`, and its `pts` only hold the compared groups ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
+* {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>` no longer crashes on sparse arrays and {func}`ep.tl.dendrogram <ehrapy.tools.dendrogram>` no longer crashes on scipy sparse matrices ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
+* {func}`ep.tl.tsne <ehrapy.tools.tsne>`, {func}`ep.tl.dendrogram <ehrapy.tools.dendrogram>`, {func}`ep.tl.ingest <ehrapy.tools.ingest>`, the `ep.pl.rank_features_groups_*` plots, {func}`ep.pl.dpt_timeseries <ehrapy.plot.dpt_timeseries>` and embedding plots colored by variables reject 3D data with a clear error instead of failing inside scikit-learn or scanpy ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
+* The `ep.pl.missing_values_*` plots read only the missing value mask of the plotted variables instead of densifying or computing the whole data matrix ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
+* {func}`ep.pl.timeseries <ehrapy.plot.timeseries>`, {func}`ep.pl.sankey_diagram_time <ehrapy.plot.sankey_diagram_time>` and {func}`ep.pl.ncp_cluster_trajectories <ehrapy.plot.ncp_cluster_trajectories>` compute only the plotted values, `sankey_diagram_time` no longer crashes on dask arrays or on a single timepoint, and {func}`ep.tl.ncp <ehrapy.tools.ncp>` reports 2D sparse input as not 3D ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 * `ep.pp.knn_impute()` now raises a clear `NotImplementedError` for unsupported array types (dask and sparse arrays) instead of failing silently ([#1109](https://github.com/theislab/ehrapy/pull/1109)) @sueoglu
 * `_little_mcar_test` now computes its global covariance matrix with true pairwise deletion instead of centering on the global mean, fixing incorrect p-values under moderate-to-high missingness ([#1110](https://github.com/theislab/ehrapy/pull/1110)) @sueoglu
-* `ep.pl.timeseries()`, `ep.pl.variable_correlations()` and `ep.pl.variable_dependencies()` now use `.X` when no `layer` is given, and `ep.pl.timeseries()` raises a clear `NotImplementedError` for unsupported array types instead of loading them into memory ([#1119](https://github.com/theislab/ehrapy/pull/1119)) @sueoglu
-
+* {func}`ep.pp.encode <ehrapy.preprocessing.encode>` and {func}`ep.pp.clip_quantile(copy=True) <ehrapy.preprocessing.clip_quantile>` no longer modify their input ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>` no longer raises `KeyError: 'use_raw'` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` reports R² instead of accuracy for numeric targets ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* `ep.tl` no longer leaks implementation details such as `np` and `sc`, and its `__all__` now lists `leiden`, `dendrogram`, `dpt`, `paga` and `ingest`; `ep.pl` gained an `__all__` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.famd <ehrapy.tools.famd>` works on 2D `.X` and layers with numeric or mixed variables, rejects 3D data, and stores per-variable loadings in `.varm` and all category loadings in `.uns` ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.ncp <ehrapy.tools.ncp>` raises a `ValueError` for missing or negative values instead of returning NaN or negative factors ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pl.ols <ehrapy.plot.ols>` gained `layer`, supports sparse arrays and rejects 3D data instead of flattening the time axis into extra points ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.get.obs_df <ehrapy.get.obs_df>` raises a clear error when reading variables from 3D data and {func}`ep.get.var_df <ehrapy.get.var_df>` for any 3D data, instead of failing inside pandas ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.stratified_table_one <ehrapy.tools.stratified_table_one>` stores its table with `variable` and `level` columns so that results can be written to h5ad ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` supports categorical features in sparse arrays ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pp.neighbors <ehrapy.preprocessing.neighbors>` with a time series metric no longer makes patients without comparable measurements everyone's nearest neighbours but leaves them unconnected ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Align all scanpy wrappers with scanpy 1.12: the `ep.pl.rank_features_groups_*` plots read the {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` results by default, which now honours `n_features` and stores `pts` per feature, {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses `var["highly_variable"]` by default as documented, every plot passes `feature_symbols` on to scanpy, and the deprecated `save`, `ep.tl.umap(method=...)` and the no-op `n_bins` of {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>` are removed ([#1130](https://github.com/theislab/ehrapy/pull/1130)) @Zethson
 
 ### 📖 Documentation
 
+* Refresh the README and installation guide (optional extras, install from GitHub) and drop dead Sphinx extensions ([#1128](https://github.com/theislab/ehrapy/pull/1128)) @Zethson
 * Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
+* Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Describe {func}`ep.tl.ncp <ehrapy.tools.ncp>` in plain words and drop the doubled period in the docs footer ([#1131](https://github.com/theislab/ehrapy/pull/1131)) @Zethson
+* Docstring examples keep time series in the 3D `.X` instead of `.layers["tem_data"]` and show the outputs the examples actually produce ([#1098](https://github.com/theislab/ehrapy/pull/1098)) @sueoglu
+
+### 🧰 Maintenance
+
+* Run the imputation, causal inference and effect estimation tutorials in the notebook CI ([#1120](https://github.com/theislab/ehrapy/pull/1120)) @sueoglu
+* Update to cookiecutter-scverse v0.8.0, derive the version from git tags via hatch-vcs, and move the `dev` extra to a `dev` dependency group ([#1125](https://github.com/theislab/ehrapy/pull/1125)) @Zethson
+* `import ehrapy` no longer loads the holoviews extensions, which now load on the first holoviews-backed plot, and no longer installs a global `SyntaxWarning` filter ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Drop the unused `thefuzz`, `fhiry` and `filelock` dependencies and move `requests` to the `test` extra ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Remove dead code and let codecov compare project coverage against the base commit ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ## v0.15.0
 <!--
