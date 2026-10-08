@@ -19,6 +19,7 @@ from sklearn.metrics import (
 )
 from sklearn.preprocessing import label_binarize
 
+from ehrapy._compat import _materialize
 from ehrapy.ml._task import _targets
 
 if TYPE_CHECKING:
@@ -89,7 +90,7 @@ def evaluate(
     y, prediction, obs = _evaluation_data(edata, task, key=key, split_key=split_key, split=split)
     metrics = _metrics(task.kind, threshold)
     groups = None if groupby is None else obs[groupby].to_numpy()
-    patients = np.arange(len(obs)) if patient_key is None else pd.factorize(obs[patient_key])[0]
+    patients = pd.factorize(obs.index if patient_key is None else obs[patient_key])[0]
 
     def table(rows: np.ndarray) -> pd.Series:
         return _table(y[rows], prediction[rows], None if groups is None else groups[rows], metrics, task.kind)
@@ -110,17 +111,23 @@ def evaluate(
 def _evaluation_data(
     edata: EHRData, task: Task, *, key: str, split_key: str, split: str | None
 ) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
-    """Targets, predictions and `obs` of the evaluated observations with all targets and predictions."""
-    predictions = edata.obsm if task.kind in {"multiclass", "multilabel"} else edata.obs
+    """Targets, predictions and `obs` of the evaluated samples with all targets and a prediction.
+
+    The samples of rolling tasks are the labeled and predicted timepoints, each with the `obs` row of its observation.
+    """
+    predictions = edata.obsm if task.kind in {"multiclass", "multilabel"} or task.rolling else edata.obs
     if key not in predictions:
         raise KeyError(f"No predictions under {key!r}. Predict first with `ep.ml.predict`.")
     prediction = np.asarray(predictions[key], dtype=np.float64)
-    y, _ = _targets(edata.obs, task)
-    rows = ~np.isnan(np.column_stack([y, prediction])).any(axis=1)
-    if split is not None:
-        rows &= (edata.obs[split_key] == split).to_numpy()
-    y = y[rows] if task.kind in {"regression", "survival"} else y[rows].astype(np.int64)
-    return y, prediction[rows], edata.obs[rows]
+    y = _materialize(_targets(edata, task)[0])[0]
+    in_split = np.ones(edata.n_obs, dtype=bool) if split is None else (edata.obs[split_key] == split).to_numpy()
+    if task.rolling:
+        samples = ~np.isnan(y) & ~np.isnan(prediction) & in_split[:, None]
+        y, prediction, obs = y[samples], prediction[samples], edata.obs.iloc[np.nonzero(samples)[0]]
+    else:
+        rows = ~np.isnan(np.column_stack([y, prediction])).any(axis=1) & in_split
+        y, prediction, obs = y[rows], prediction[rows], edata.obs[rows]
+    return (y if task.kind in {"regression", "survival"} else y.astype(np.int64)), prediction, obs
 
 
 def _table(

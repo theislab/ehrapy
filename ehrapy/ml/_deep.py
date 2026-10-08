@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from torch import Tensor, nn
 
-    from ehrapy.ml._task import Kind
+    from ehrapy.ml._task import Kind, Task
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +53,7 @@ class DeepModel:
     #: How the model is trained.
     trainer: Trainer = Trainer()
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         raise NotImplementedError
 
     def _fit(
@@ -61,7 +61,7 @@ class DeepModel:
         X: np.ndarray,
         y: np.ndarray,
         *,
-        kind: Kind,
+        task: Task,
         n_outputs: int,
         n_static: int,
         tuning: tuple[np.ndarray, np.ndarray],
@@ -70,22 +70,27 @@ class DeepModel:
         torch = _torch()
         from ehrapy.ml._networks import Model, embed
 
+        every_step = task.rolling and self.sequential
+        if every_step and task.observation_window is not None:
+            raise ValueError(
+                "Models of time series predict a rolling task from all earlier timepoints and take no `observation_window`."
+            )
         torch.manual_seed(random_state)
-        fitted = _FittedModel(self, kind, n_static, X, y)
+        fitted = _FittedModel(self, task, n_static, X, y)
         inputs, targets = fitted._inputs(X), fitted._targets(y)
-        network = self._network(inputs[0].shape[2], inputs[0].shape[1], n_static)
+        network = self._network(inputs[0].shape[2], inputs[0].shape[1], n_static, every_step)
         with torch.no_grad():
             embedding, attention = embed(network, *(tensor[:1] for tensor in inputs))
-        fitted.n_embedding = embedding.shape[1]
+        fitted.n_embedding = 0 if every_step else embedding.shape[-1]
         fitted.n_attention = 0 if attention is None else attention.shape[1]
-        fitted.module = Model(network, inputs[3].shape[1], n_outputs, fitted.n_embedding).to(fitted.device)
+        fitted.module = Model(network, inputs[3].shape[1], n_outputs, embedding.shape[-1]).to(fitted.device)
         fitted.n_epochs = _train(
             fitted,
             inputs,
             targets,
             fitted._inputs(tuning[0]),
             fitted._targets(tuning[1]),
-            _loss(kind, y, n_outputs, self.trainer),
+            _loss(task.kind, y[~np.isnan(y)] if every_step else y, n_outputs, self.trainer, labeled=every_step),
             random_state,
         )
         return fitted
@@ -109,7 +114,7 @@ class MLP(DeepModel):
     #: Probability of dropping a unit while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from ehrapy.ml import _networks
 
         return _networks.MLP(n_static, self.hidden_size, self.num_layers, self.dropout)
@@ -131,12 +136,12 @@ class GRU(DeepModel):
     #: Probability of dropping a unit while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from torch import nn
 
         from ehrapy.ml import _networks
 
-        return _networks.Recurrent(nn.GRU, n_variables, self.hidden_size, self.num_layers, self.dropout)
+        return _networks.Recurrent(nn.GRU, n_variables, self.hidden_size, self.num_layers, self.dropout, every_step)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -155,12 +160,12 @@ class LSTM(DeepModel):
     #: Probability of dropping a unit while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from torch import nn
 
         from ehrapy.ml import _networks
 
-        return _networks.Recurrent(nn.LSTM, n_variables, self.hidden_size, self.num_layers, self.dropout)
+        return _networks.Recurrent(nn.LSTM, n_variables, self.hidden_size, self.num_layers, self.dropout, every_step)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -177,10 +182,10 @@ class GRUD(DeepModel):
     #: Probability of dropping a unit of the final hidden state while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from ehrapy.ml import _networks
 
-        return _networks.GRUD(n_variables, self.hidden_size, self.dropout)
+        return _networks.GRUD(n_variables, self.hidden_size, self.dropout, every_step)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -201,10 +206,10 @@ class TCN(DeepModel):
     #: Probability of dropping a unit while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from ehrapy.ml import _networks
 
-        return _networks.TCN(n_variables, self.hidden_size, self.num_layers, self.kernel_size, self.dropout)
+        return _networks.TCN(n_variables, self.hidden_size, self.num_layers, self.kernel_size, self.dropout, every_step)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -225,11 +230,11 @@ class Transformer(DeepModel):
     #: Probability of dropping a unit while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from ehrapy.ml import _networks
 
         return _networks.Transformer(
-            n_variables, n_timepoints, self.hidden_size, self.num_layers, self.num_heads, self.dropout
+            n_variables, n_timepoints, self.hidden_size, self.num_layers, self.num_heads, self.dropout, every_step
         )
 
 
@@ -247,9 +252,13 @@ class RETAIN(DeepModel):
     #: Probability of dropping a unit while training.
     dropout: float = 0.1
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         from ehrapy.ml import _networks
 
+        if every_step:
+            raise ValueError(
+                "RETAIN cannot predict every timepoint of a rolling task, because its attention reads later timepoints."
+            )
         return _networks.RETAIN(n_variables, self.hidden_size, self.dropout)
 
 
@@ -257,7 +266,7 @@ class RETAIN(DeepModel):
 class _Module(DeepModel):
     network: Any
 
-    def _network(self, n_variables: int, n_timepoints: int, n_static: int) -> nn.Module:
+    def _network(self, n_variables: int, n_timepoints: int, n_static: int, every_step: bool) -> nn.Module:
         return copy.deepcopy(self.network)
 
 
@@ -292,13 +301,17 @@ class _FittedModel:
     target_mean: np.ndarray | float
     target_std: np.ndarray | float
 
-    def __init__(self, model: DeepModel, kind: Kind, n_static: int, X: np.ndarray, y: np.ndarray):
-        self.model, self.kind, self.n_static = model, kind, n_static
+    def __init__(self, model: DeepModel, task: Task, n_static: int, X: np.ndarray, y: np.ndarray):
+        self.model, self.kind, self.n_static = model, task.kind, n_static
+        self.gap = task.gap if task.rolling and model.sequential else None
         self.device = _device(model.trainer.device)
         if model.sequential:
             self.mean, self.std = _moments(X[:, : X.shape[1] - n_static], axis=(0, 2))
             self.static_mean, self.static_std = _moments(X[:, X.shape[1] - n_static :, 0], axis=0)
-        self.target_mean, self.target_std = _moments(y, axis=0) if kind == "regression" else (0.0, 1.0)
+        if self.kind == "regression":
+            self.target_mean, self.target_std = _moments(y, axis=None if self.gap is not None else 0)
+        else:
+            self.target_mean, self.target_std = 0.0, 1.0
 
     def outputs(self, X: np.ndarray) -> np.ndarray:
         """Predictions, embedding and attention of every observation, side by side."""
@@ -312,6 +325,10 @@ class _FittedModel:
                 outputs = torch.softmax(outputs, dim=1)
             case "regression":
                 outputs = outputs * self.target_std + self.target_mean
+        if self.gap is not None:
+            predictions = np.full(outputs.shape[:2], np.nan)
+            predictions[:, self.gap + 1 :] = outputs[:, : outputs.shape[1] - self.gap - 1, 0].double().numpy()
+            return predictions
         return torch.cat([outputs, embedding, *([] if attention is None else [attention])], dim=1).double().numpy()
 
     def _inputs(self, X: np.ndarray) -> tuple[Tensor, Tensor, Tensor, Tensor]:
@@ -338,6 +355,10 @@ class _FittedModel:
 
         if self.kind == "multiclass":
             return torch.as_tensor(y, dtype=torch.long)
+        if self.gap is not None:
+            shifted = np.full(y.shape, np.nan)
+            shifted[:, : y.shape[1] - self.gap - 1] = y[:, self.gap + 1 :]
+            y = shifted
         return torch.as_tensor(((y - self.target_mean) / self.target_std).reshape(len(y), -1), dtype=torch.float32)
 
 
@@ -390,9 +411,21 @@ def _forward(fitted: _FittedModel, inputs: tuple[Tensor, ...]) -> tuple[Tensor, 
     return torch.cat(outputs), torch.cat(embedding), None if attention[0] is None else torch.cat(attention)
 
 
-def _loss(kind: Kind, y: np.ndarray, n_outputs: int, trainer: Trainer) -> Callable[[Tensor, Tensor], Tensor]:
+def _loss(
+    kind: Kind, y: np.ndarray, n_outputs: int, trainer: Trainer, *, labeled: bool = False
+) -> Callable[[Tensor, Tensor], Tensor]:
+    """The loss of a task, only over labeled timepoints of outputs of every timepoint if `labeled`."""
     torch = _torch()
     from ehrapy.ml._networks import cox_loss
+
+    if labeled:
+        loss = _loss(kind, y, n_outputs, trainer)
+
+        def labeled_loss(outputs: Tensor, targets: Tensor) -> Tensor:
+            observed = ~torch.isnan(targets)
+            return loss(outputs[..., 0][observed], targets[observed]) if observed.any() else outputs.sum() * 0
+
+        return labeled_loss
 
     balanced = trainer.class_weight == "balanced"
     match kind:

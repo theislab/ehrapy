@@ -99,6 +99,7 @@ def fit(
     For them, missing values are imputed with the median and features are standardized, with both steps fit on the training set only, like the model.
     Models of time series read the variables at every timepoint of the observation window, whether they were observed and the time since their last observation, standardized with statistics of the training set.
     Deep learning models stop training once their loss on the `"tuning"` set stops improving.
+    For rolling tasks, models of summaries are fit on every labeled timepoint, and models of time series except RETAIN predict every timepoint from all earlier ones.
 
     The models are
 
@@ -118,6 +119,7 @@ def fit(
         model: Name of the model, a scikit-learn estimator, a configured deep learning model, or a torch module.
             An estimator for survival tasks is fit on the time and whether the event occurred and predicts a risk score.
             A torch module is a model of time series that maps the `values`, whether they were observed (`mask`) and the time since their last observation (`time_since_observed`), each of shape `(observations, timepoints, variables)`, and the `static` covariates of shape `(observations, covariates)` to an embedding of shape `(observations, features)`, or to an embedding and the attention to every timepoint.
+            For rolling tasks, it returns an embedding of every timepoint of shape `(observations, timepoints, features)` that only reads earlier timepoints.
             If `None`, gradient boosting, or the Cox model for survival tasks.
         var_names: Variables to compute features from.
             If `None`, all variables except the targets are used.
@@ -148,7 +150,7 @@ def fit(
     obs_keys = list(obs_keys)
     if leaked := set(task._columns) & {*var_names, *obs_keys}:
         raise ValueError(f"The targets {sorted(leaked)} cannot be features.")
-    targets, classes = _targets(edata.obs, task)
+    targets, classes = _targets(edata, task)
     if model is None:
         model = "cox" if task.kind == "survival" else "gradient_boosting"
     deep = _deep_model(model)
@@ -156,7 +158,9 @@ def fit(
     n_outputs = len(classes) if task.kind in {"multiclass", "multilabel"} else 1
 
     rng = np.random.default_rng(random_state)
-    labeled = ~np.isnan(targets.reshape(len(targets), -1)).any(axis=1)
+    labeled = np.ones(edata.n_obs, dtype=bool)
+    if not task.rolling:
+        labeled = ~np.isnan(targets.reshape(len(targets), -1)).any(axis=1)
     train, tuning = (
         _sample(np.flatnonzero((edata.obs[split_key] == split).to_numpy() & labeled), max_train_obs, rng)
         for split in ("train", "tuning")
@@ -166,7 +170,14 @@ def fit(
         features, feature_names = _sequences(edata, task, var_names, obs_keys, layer)
     else:
         features, feature_names = _features(edata, task, var_names, obs_keys, layer, statistics)
-    train_features, tuning_features = _materialize(features[train], features[tuning])
+    train_features, tuning_features, train_targets, tuning_targets = _materialize(
+        features[train], features[tuning], targets[train], targets[tuning]
+    )
+    if task.rolling and task.kind == "binary" and not np.isin(train_targets[~np.isnan(train_targets)], (0, 1)).all():
+        raise ValueError(f"A rolling binary task marks positive timepoints of {task.label!r} with 1 and others with 0.")
+    if task.rolling and not sequential:
+        train_features, train_targets = _samples(train_features, train_targets, task.gap)
+        tuning_features, tuning_targets = _samples(tuning_features, tuning_targets, task.gap)
 
     preprocessing = None
     if not sequential:
@@ -176,15 +187,15 @@ def fit(
             preprocessing.transform(tuning_features),
         )
     if deep is None:
-        fitted = _estimator(model, task.kind, random_state).fit(train_features, targets[train])
+        fitted = _estimator(model, task.kind, random_state).fit(train_features, train_targets)
     else:
         fitted = deep._fit(
             train_features,
-            targets[train],
-            kind=task.kind,
+            train_targets,
+            task=task,
             n_outputs=n_outputs,
             n_static=len(feature_names) - len(var_names) if sequential else train_features.shape[1],
-            tuning=(tuning_features, targets[tuning]),
+            tuning=(tuning_features, tuning_targets),
             random_state=random_state,
         )
     return Predictor(task, preprocessing, fitted, var_names, obs_keys, layer, statistics, feature_names, classes)
@@ -211,6 +222,7 @@ def predict(
         They are the probability of the larger of the two label values, such as `1` or `True`, for binary tasks, the most probable class for multiclass tasks, the predicted value for regression tasks and a risk score, which is higher for earlier events, for survival tasks.
         The probability of every class of multiclass tasks and of every label of multilabel tasks is stored in `edata.obsm[key_added]`.
         Models from :func:`~ehrapy.ml.conformalize` store prediction sets of classes in `edata.obsm[f"{key_added}_set"]` and prediction intervals in `edata.obs[f"{key_added}_lower"]` and `edata.obs[f"{key_added}_upper"]`.
+        Rolling tasks store the prediction for every timepoint in `edata.obsm[key_added]`, missing at timepoints without an observation window, and their prediction sets and intervals in `edata.obsm` as well.
         Deep learning models store the embedding of every observation in `edata.obsm[f"X_{key_added}"]`, and the transformer and RETAIN the attention to every timepoint in `edata.obsm[f"{key_added}_attention"]`.
 
     Examples:
@@ -226,6 +238,14 @@ def predict(
     outputs, embedding, attention = _outputs_of(edata, predictor)
     outputs = _calibrated(predictor, outputs)
     kind = predictor.task.kind
+    if predictor.task.rolling:
+        edata.obsm[key_added] = outputs
+        if predictor.conformal is not None and kind == "regression":
+            edata.obsm[f"{key_added}_lower"] = outputs - predictor.conformal
+            edata.obsm[f"{key_added}_upper"] = outputs + predictor.conformal
+        elif predictor.conformal is not None:
+            edata.obsm[f"{key_added}_set"] = np.stack([1 - outputs, outputs], axis=2) >= 1 - predictor.conformal
+        return edata if copy else None
     if kind in {"multiclass", "multilabel"}:
         columns = [str(c) for c in predictor.classes]
         edata.obsm[key_added] = pd.DataFrame(outputs, index=edata.obs_names, columns=columns)
@@ -279,24 +299,56 @@ def _outputs_of(edata: EHRData, predictor: Predictor, features: Any = None) -> l
     kind = predictor.task.kind
     n_outputs = len(predictor.classes) if kind in {"multiclass", "multilabel"} else 1
     widths = [n_outputs, 0, 0]
-    if isinstance(predictor.model, _FittedModel):
+    if predictor.task.rolling:
+        widths[0] = features.shape[2]
+    elif isinstance(predictor.model, _FittedModel):
         widths[1:] = predictor.model.n_embedding, predictor.model.n_attention
-    outputs = _outputs(features, predictor.preprocessing, predictor.model, kind, n_outputs, sum(widths))
-    return np.split(_materialize(outputs)[0], np.cumsum(widths)[:-1], axis=1)
+    outputs = _materialize(_outputs(features, predictor.preprocessing, predictor.model, kind, n_outputs, sum(widths)))[
+        0
+    ]
+    if predictor.task.rolling:
+        outputs[:, : predictor.task.gap + 1] = np.nan
+    return np.split(outputs, np.cumsum(widths)[:-1], axis=1)
 
 
 def _calibrated(predictor: Predictor, outputs: np.ndarray) -> np.ndarray:
-    return outputs if predictor.calibrator is None else predictor.calibrator(outputs)
+    if predictor.calibrator is None:
+        return outputs
+    if not predictor.task.rolling:
+        return predictor.calibrator(outputs)
+    predicted = ~np.isnan(outputs)
+    calibrated = outputs.copy()
+    calibrated[predicted] = predictor.calibrator(outputs[predicted][:, None])[:, 0]
+    return calibrated
 
 
 def _held_out(edata: EHRData, predictor: Predictor, *, split_key: str, split: str) -> tuple[np.ndarray, np.ndarray]:
-    """Rows of the observations in `split` with all targets, and their targets."""
-    targets, _ = _targets(edata.obs, predictor.task)
-    labeled = ~np.isnan(targets.reshape(len(targets), -1)).any(axis=1)
-    rows = np.flatnonzero((edata.obs[split_key] == split).to_numpy() & labeled)
+    """Rows of the observations in `split` with all targets, or with any target of rolling tasks, and their targets."""
+    targets, _ = _targets(edata, predictor.task)
+    in_split = (edata.obs[split_key] == split).to_numpy()
+    if predictor.task.rolling:
+        rows = np.flatnonzero(in_split)
+        targets = _materialize(targets[rows])[0]
+    else:
+        rows = np.flatnonzero(in_split & ~np.isnan(targets.reshape(len(targets), -1)).any(axis=1))
+        targets = targets[rows]
     if not len(rows):
         raise ValueError(f"No observations with targets in the {split!r} set of `edata.obs[{split_key!r}]`.")
-    return rows, targets[rows]
+    return rows, targets
+
+
+def _paired(task: Task, targets: np.ndarray, outputs: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Targets and predictions of every sample, which are the labeled and predicted timepoints of rolling tasks."""
+    if not task.rolling:
+        return targets, outputs
+    paired = ~np.isnan(targets) & ~np.isnan(outputs)
+    return targets[paired], outputs[paired][:, None]
+
+
+def _samples(features: np.ndarray, targets: np.ndarray, gap: int) -> tuple[np.ndarray, np.ndarray]:
+    """Features and targets of the labeled timepoints of a rolling task that lie more than `gap` timepoints after the first."""
+    labeled = ~np.isnan(targets) & (np.arange(targets.shape[1]) > gap)
+    return np.moveaxis(features, 2, 1)[labeled], targets[labeled]
 
 
 def _class_probabilities(outputs: np.ndarray) -> np.ndarray:
@@ -337,6 +389,9 @@ def _estimator(model: str | BaseEstimator, kind: Kind, random_state: int) -> Bas
 def _outputs(
     features: np.ndarray, preprocessing: Pipeline | None, model: Any, kind: Kind, n_outputs: int, n_columns: int
 ) -> np.ndarray:
+    if preprocessing is not None and features.ndim == 3:
+        samples = np.moveaxis(features, 2, 1).reshape(-1, features.shape[1])
+        return _outputs(samples, preprocessing, model, kind, n_outputs, 1)[:, 0].reshape(len(features), -1)
     if preprocessing is not None:
         features = preprocessing.transform(features)
     if isinstance(model, _FittedModel):

@@ -6,6 +6,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🚀 Features
 
+* {class}`ep.ml.Task <ehrapy.ml.Task>` with `rolling=True` predicts a longitudinal variable, such as the hourly sepsis label of PhysioNet 2019, at every timepoint from the timepoints before it, and every function of `ep.ml` fits, stores, evaluates, calibrates and explains these predictions per timepoint while keeping patients together ([#1152](https://github.com/theislab/ehrapy/pull/1152)) @Zethson
+
+  On the held-out patients of PhysioNet 2019, a GRU predicts the hourly sepsis label from the hours before with an AUROC of 0.75 and AUPRC of 0.05, and gradient boosting on summaries of those hours with 0.67 and 0.02, for 1.2% positive hours.
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` computes the number of values, their standard deviation and, for longitudinal data, their slope over time ([#1150](https://github.com/theislab/ehrapy/pull/1150)) @Zethson
 * {func}`ep.pl.trajectories <ehrapy.plot.trajectories>` plots the mean of longitudinal variables over time with a confidence band for every group of observations ([#1146](https://github.com/theislab/ehrapy/pull/1146)) @Zethson
 * {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>` takes a `limit` on how many timepoints an observed value is carried forward, and its fallback only fills timepoints before a patient's first observation ([#1147](https://github.com/theislab/ehrapy/pull/1147)) @Zethson

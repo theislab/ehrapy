@@ -7,7 +7,7 @@ import pandas as pd
 
 from ehrapy._compat import _materialize
 from ehrapy.ml._evaluate import _metrics, _values
-from ehrapy.ml._predictor import _calibrated, _features_of, _held_out, _outputs_of
+from ehrapy.ml._predictor import _calibrated, _features_of, _held_out, _outputs_of, _paired
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
@@ -66,13 +66,16 @@ def permutation_importance(
         edata = edata.copy()
     rows, y = _held_out(edata, predictor, split_key=split_key, split=split)
     kind = predictor.task.kind
-    if kind in {"binary", "multiclass", "multilabel"}:
-        y = y.astype(np.int64)
     metric = {_MAIN_METRICS[kind]: _metrics(kind, 0.5)[_MAIN_METRICS[kind]]}
 
     def score(features: np.ndarray) -> float:
         outputs = _calibrated(predictor, _outputs_of(edata, predictor, features)[0])
-        return _values(y, outputs[:, 0] if kind in {"binary", "regression", "survival"} else outputs, metric, kind)[0]
+        targets, outputs = _paired(predictor.task, y, outputs)
+        if kind in {"binary", "multiclass", "multilabel"}:
+            targets = targets.astype(np.int64)
+        return _values(
+            targets, outputs[:, 0] if kind in {"binary", "regression", "survival"} else outputs, metric, kind
+        )[0]
 
     features = _materialize(_features_of(edata[rows], predictor))[0]
     baseline = score(features)

@@ -22,23 +22,31 @@ class MLP(nn.Module):
 
 class Recurrent(nn.Module):
     def __init__(
-        self, cell: type[nn.GRU | nn.LSTM], n_variables: int, hidden_size: int, num_layers: int, dropout: float
+        self,
+        cell: type[nn.GRU | nn.LSTM],
+        n_variables: int,
+        hidden_size: int,
+        num_layers: int,
+        dropout: float,
+        every_step: bool,
     ):
         super().__init__()
+        self.every_step = every_step
         self.rnn = cell(
             3 * n_variables, hidden_size, num_layers, batch_first=True, dropout=dropout if num_layers > 1 else 0
         )
 
     def forward(self, values: Tensor, mask: Tensor, time_since_observed: Tensor, static: Tensor) -> tuple[Tensor, None]:
         output, _ = self.rnn(torch.cat([values, mask, time_since_observed], dim=-1))
-        return output[:, -1], None
+        return (output if self.every_step else output[:, -1]), None
 
 
 class GRUD(nn.Module):
     """GRU-D, which decays missing values towards the mean and the hidden state with the time since the last observation."""
 
-    def __init__(self, n_variables: int, hidden_size: int, dropout: float):
+    def __init__(self, n_variables: int, hidden_size: int, dropout: float, every_step: bool):
         super().__init__()
+        self.every_step = every_step
         self.input_decay = nn.Parameter(torch.zeros(n_variables))
         self.input_decay_bias = nn.Parameter(torch.zeros(n_variables))
         self.hidden_decay = nn.Linear(n_variables, hidden_size)
@@ -47,6 +55,7 @@ class GRUD(nn.Module):
 
     def forward(self, values: Tensor, mask: Tensor, time_since_observed: Tensor, static: Tensor) -> tuple[Tensor, None]:
         hidden = values.new_zeros(values.shape[0], self.cell.hidden_size)
+        hiddens = []
         for t in range(values.shape[1]):
             delta = time_since_observed[:, t]
             input_decay = torch.exp(-torch.relu(self.input_decay * delta + self.input_decay_bias))
@@ -54,15 +63,18 @@ class GRUD(nn.Module):
             imputed = mask[:, t] * values[:, t] + (1 - mask[:, t]) * input_decay * values[:, t]
             hidden = torch.exp(-torch.relu(self.hidden_decay(delta))) * hidden
             hidden = self.cell(torch.cat([imputed, mask[:, t]], dim=-1), hidden)
-        return self.dropout(hidden), None
+            hiddens.append(hidden)
+        return self.dropout(torch.stack(hiddens, dim=1) if self.every_step else hidden), None
 
 
 class TCN(nn.Module):
     """Temporal convolutional network of causal convolutions whose dilation doubles with every layer."""
 
-    def __init__(self, n_variables: int, hidden_size: int, num_layers: int, kernel_size: int, dropout: float):
+    def __init__(
+        self, n_variables: int, hidden_size: int, num_layers: int, kernel_size: int, dropout: float, every_step: bool
+    ):
         super().__init__()
-        self.kernel_size = kernel_size
+        self.kernel_size, self.every_step = kernel_size, every_step
         sizes = [3 * n_variables, *[hidden_size] * num_layers]
         self.convolutions = nn.ModuleList(
             nn.Conv1d(n_in, n_out, kernel_size, dilation=2**layer)
@@ -78,16 +90,24 @@ class TCN(nn.Module):
         for layer, (convolution, residual) in enumerate(zip(self.convolutions, self.residuals, strict=True)):
             padded = nn.functional.pad(hidden, ((self.kernel_size - 1) * 2**layer, 0))
             hidden = torch.relu(self.dropout(convolution(padded)) + residual(hidden))
-        return hidden[:, :, -1], None
+        return (hidden.transpose(1, 2) if self.every_step else hidden[:, :, -1]), None
 
 
 class Transformer(nn.Module):
-    """Transformer encoder over timepoints, pooled with attention."""
+    """Transformer encoder over timepoints, pooled with attention, or attending to earlier timepoints only at every step."""
 
     def __init__(
-        self, n_variables: int, n_timepoints: int, hidden_size: int, num_layers: int, num_heads: int, dropout: float
+        self,
+        n_variables: int,
+        n_timepoints: int,
+        hidden_size: int,
+        num_layers: int,
+        num_heads: int,
+        dropout: float,
+        every_step: bool,
     ):
         super().__init__()
+        self.every_step = every_step
         self.embedding = nn.Linear(3 * n_variables, hidden_size)
         self.position = nn.Parameter(torch.zeros(n_timepoints, hidden_size))
         layer = nn.TransformerEncoderLayer(hidden_size, num_heads, 2 * hidden_size, dropout, batch_first=True)
@@ -96,8 +116,12 @@ class Transformer(nn.Module):
 
     def forward(
         self, values: Tensor, mask: Tensor, time_since_observed: Tensor, static: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        hidden = self.encoder(self.embedding(torch.cat([values, mask, time_since_observed], dim=-1)) + self.position)
+    ) -> tuple[Tensor, Tensor | None]:
+        embedded = self.embedding(torch.cat([values, mask, time_since_observed], dim=-1)) + self.position
+        if self.every_step:
+            causal = nn.Transformer.generate_square_subsequent_mask(values.shape[1], device=values.device)
+            return self.encoder(embedded, mask=causal, is_causal=True), None
+        hidden = self.encoder(embedded)
         attention = torch.softmax(self.pooling(hidden).squeeze(-1), dim=1)
         return (attention.unsqueeze(-1) * hidden).sum(dim=1), attention
 
@@ -137,6 +161,8 @@ class Model(nn.Module):
         self, values: Tensor, mask: Tensor, time_since_observed: Tensor, static: Tensor
     ) -> tuple[Tensor, Tensor, Tensor | None]:
         embedding, attention = embed(self.network, values, mask, time_since_observed, static)
+        if embedding.ndim == 3:
+            static = static[:, None].expand(-1, embedding.shape[1], -1)
         return self.head(torch.cat([embedding, static], dim=-1)), embedding, attention
 
 

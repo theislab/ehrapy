@@ -32,9 +32,28 @@ def _features(
     *,
     feature_names: Sequence[str] | None = None,
 ) -> tuple[Array, list[str]]:
-    """Dense features of every observation and their names, aligning one-hot encoded `obs` columns with `feature_names`."""
+    """Dense features of every observation and their names, aligning one-hot encoded `obs` columns with `feature_names`.
+
+    The features of rolling tasks have a third axis with the features of every timepoint, which are missing where no timepoint precedes it by more than the gap.
+    """
     X = edata.X if layer is None else edata.layers[layer]
-    if X.ndim == 3:
+    if task.rolling:
+        windows = task._windows(X.shape[2])
+        summaries = {
+            timepoint: summarize_measurements(
+                edata[:, :, window], layer=layer, var_names=var_names, statistics=statistics
+            )
+            for timepoint, window in enumerate(windows)
+            if window is not None
+        }
+        if not summaries:
+            raise ValueError(f"No timepoint lies more than {task.gap} timepoints after another.")
+        first = next(iter(summaries.values()))
+        xp = array_namespace(first.X)
+        missing = xp.full_like(first.X, np.nan)
+        values = xp.stack([summaries[t].X if t in summaries else missing for t in range(len(windows))], axis=2)
+        names = list(first.var_names)
+    elif X.ndim == 3:
         summary = summarize_measurements(
             edata[:, :, task._window(X.shape[2])], layer=layer, var_names=var_names, statistics=statistics
         )
@@ -46,10 +65,7 @@ def _features(
         values, names = (view.X if layer is None else view.layers[layer]), list(var_names)
 
     covariates = _covariates(edata, obs_keys, None if feature_names is None else feature_names[len(names) :])
-    values = to_dense(values)
-    xp = array_namespace(values)
-    features = xp.concat([xp.astype(values, xp.float64), _like_obs(values, covariates.to_numpy(np.float64))], axis=1)
-    return features, [*names, *covariates.columns]
+    return _with_covariates(values, covariates), [*names, *covariates.columns]
 
 
 def _sequences(
@@ -66,12 +82,21 @@ def _sequences(
     if X.ndim != 3:
         raise ValueError("Models of time series need longitudinal data.")
     window = edata[:, list(var_names), task._window(X.shape[2])]
-    values = to_dense(window.X if layer is None else window.layers[layer])
     covariates = _covariates(edata, obs_keys, None if feature_names is None else feature_names[len(var_names) :])
+    return _with_covariates(window.X if layer is None else window.layers[layer], covariates), [
+        *var_names,
+        *covariates.columns,
+    ]
+
+
+def _with_covariates(values: Array, covariates: pd.DataFrame) -> Array:
+    """Dense `values` followed by the covariates, which are repeated over time for 3D values."""
+    values = to_dense(values)
     xp = array_namespace(values)
     static = _like_obs(values, covariates.to_numpy(np.float64))
-    static = xp.broadcast_to(static[:, :, None], (*static.shape, values.shape[2]))
-    return xp.concat([xp.astype(values, xp.float64), static], axis=1), [*var_names, *covariates.columns]
+    if values.ndim == 3:
+        static = xp.broadcast_to(static[:, :, None], (*static.shape, values.shape[2]))
+    return xp.concat([xp.astype(values, xp.float64), static], axis=1)
 
 
 def _covariates(edata: EHRData, obs_keys: Sequence[str], columns: Sequence[str] | None) -> pd.DataFrame:
