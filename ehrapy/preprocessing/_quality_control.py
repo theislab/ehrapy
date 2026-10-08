@@ -13,6 +13,7 @@ from array_api_compat import array_namespace, is_lazy_array
 from ehrdata import EHRData
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
 from scipy.stats import chi2, rankdata, ttest_ind_from_stats
@@ -271,13 +272,13 @@ def _total(mtx: Array) -> Array:
 
 @_total.register(CSBase)
 def _(mtx: CSBase) -> np.ndarray:
-    return np.asarray(mtx.sum(axis=1)).ravel()
+    return stats.sum(mtx, axis=1)
 
 
 @_total.register(DaskArray)
 def _(mtx: DaskArray) -> DaskArray:
     if _has_sparse_chunks(mtx):
-        return _map_reduction(mtx, lambda block, axis: _total(block), (1,), np.float64)
+        return stats.sum(mtx, axis=1)
     return _total.dispatch(object)(mtx)
 
 
