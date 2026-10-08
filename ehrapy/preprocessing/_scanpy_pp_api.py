@@ -14,7 +14,7 @@ from ehrapy._types import _empty
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
 
-    from numpy.typing import DTypeLike, NDArray
+    from numpy.typing import NDArray
     from scipy.sparse import spmatrix
 
     from ehrapy._types import AnyRandom, CSBase, Empty, RNGLike, SeedLike
@@ -30,7 +30,7 @@ def pca(
     random_state: AnyRandom = 0,
     mask_var: NDArray[np.bool_] | str | Empty | None = _empty,
     return_info: bool = False,
-    dtype: DTypeLike = "float32",
+    dtype: str = "float32",
     layer: str | None = None,
     obsm: str | None = None,
     key_added: str | None = None,

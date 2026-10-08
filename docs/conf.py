@@ -113,9 +113,12 @@ intersphinx_mapping = {
     "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
     "holoviews": ("https://holoviews.org/", None),
     "dask": ("https://docs.dask.org/en/stable/", None),
+    "igraph": ("https://python.igraph.org/en/stable/api/", None),
 }
 nitpick_ignore = [
     ("py:class", "matplotlib.axes.Axes"),
+    ("py:class", "seaborn.matrix.ClusterGrid"),
+    ("py:class", "ehrapy._types.Empty"),
     ("py:class", "cycler.Cycler"),
     ("py:class", "tableone.TableOne"),
     ("py:class", "DotPlot"),
