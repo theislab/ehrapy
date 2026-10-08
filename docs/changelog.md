@@ -16,6 +16,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 💥 Breaking changes
 
+* Survival analysis and regression models take their columns from `edata.obs` or variables and only drop observations missing a column the model uses ([#1133](https://github.com/theislab/ehrapy/pull/1133)) @Zethson
+
+  {func}`ep.tl.kaplan_meier <ehrapy.tools.kaplan_meier>`, {func}`ep.tl.cox_ph <ehrapy.tools.cox_ph>` and the other survival fitters, {func}`ep.tl.ols <ehrapy.tools.ols>` and {func}`ep.tl.glm <ehrapy.tools.glm>` accept obs columns wherever they accept variables, and work on longitudinal data when every column they use lives in `obs`.
+  Previously, every observation with a missing value in any variable was silently dropped, even in variables the model did not use.
+  Regression fitters gained `covariates`, the univariate fitters take `entry_col` and `weights_col` instead of the `entry` and `weights` arrays, and numeric columns are passed to the models as numbers, so a binomial {func}`ep.tl.glm <ehrapy.tools.glm>` on a 0/1 outcome models the probability of 1.
 * Normalization functions take explicit parameters instead of forwarding `**kwargs` to scikit-learn or dask-ml ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
   {func}`ep.pp.scale_norm <ehrapy.preprocessing.scale_norm>` takes `with_mean` and `with_std`, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` `feature_range`, {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` `with_centering`, `with_scaling`, `quantile_range` and `unit_variance`, {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` `n_quantiles`, `output_distribution`, `subsample` and `random_state`, and {func}`ep.pp.power_norm <ehrapy.preprocessing.power_norm>` `method` and `standardize`.
@@ -67,7 +72,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Refresh the README and installation guide (optional extras, install from GitHub) and drop dead Sphinx extensions ([#1128](https://github.com/theislab/ehrapy/pull/1128)) @Zethson
 * Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
 * Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
-* Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example and title the NCP API sections "Non-negative CP Decomposition" ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Describe {func}`ep.tl.ncp <ehrapy.tools.ncp>` in plain words and drop the doubled period in the docs footer ([#1131](https://github.com/theislab/ehrapy/pull/1131)) @Zethson
 
 ### 🧰 Maintenance
 
