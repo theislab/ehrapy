@@ -104,7 +104,9 @@ Two diagnostics — covariate balance and positivity — round out the toolkit.
     tools.CausalEstimate
 ```
 
-## Non-negative CP Decomposition
+## Patterns across patients, variables and time
+
+Finds groups of patients whose variables follow a similar course over time.
 
 ```{eval-rst}
 .. autosummary::
