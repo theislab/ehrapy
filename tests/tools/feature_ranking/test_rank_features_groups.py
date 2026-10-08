@@ -113,7 +113,6 @@ class TestHelperFunctions:
         assert "scores" in edata_only_required.uns["rank_features_groups"]
         assert "log2foldchanges" not in edata_only_required.uns["rank_features_groups"]
         assert "pvals_adj" not in edata_only_required.uns["rank_features_groups"]
-        assert "pts" not in edata_only_required.uns["rank_features_groups"]
         assert edata_only_required.uns["rank_features_groups"]["names"].dtype.names == groups
         assert (
             len(edata_only_required.uns["rank_features_groups"]["names"]) == 4
@@ -144,7 +143,6 @@ class TestHelperFunctions:
             scores=scores,
             pvals=pvals,
             pvals_adj=pvals.copy(),
-            pts=pvals.copy(),
             logfoldchanges=logfoldchanges,
         )
 
@@ -153,14 +151,12 @@ class TestHelperFunctions:
         assert "scores" in edata_all_keys.uns["rank_features_groups"]
         assert "logfoldchanges" in edata_all_keys.uns["rank_features_groups"]
         assert "pvals_adj" in edata_all_keys.uns["rank_features_groups"]
-        assert "pts" in edata_all_keys.uns["rank_features_groups"]
         assert edata_all_keys.uns["rank_features_groups"]["names"].dtype.names == groups
         assert len(edata_all_keys.uns["rank_features_groups"]["names"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["pvals"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["pvals_adj"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["logfoldchanges"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["scores"]) == 4
-        assert len(edata_all_keys.uns["rank_features_groups"]["pts"]) == 4
 
         # Check that passing empty objects doesn't add keys
         _utils._save_rank_features_result(
@@ -171,7 +167,6 @@ class TestHelperFunctions:
             scores=scores,
             pvals=pvals,
             pvals_adj=[],
-            pts=np.array([]),
             logfoldchanges=pd.DataFrame([]),
         )
         assert "names" in edata.uns["rank_features_groups"]
@@ -179,7 +174,6 @@ class TestHelperFunctions:
         assert "scores" in edata.uns["rank_features_groups"]
         assert "logfoldchanges" not in edata.uns["rank_features_groups"]
         assert "pvals_adj" not in edata.uns["rank_features_groups"]
-        assert "pts" not in edata.uns["rank_features_groups"]
 
     def test_get_groups_order(self):
         assert _utils._get_groups_order(groups_subset="all", group_names=("A", "B", "C"), reference="B") == (
@@ -446,6 +440,46 @@ def test_rank_features_group_column_to_rank():
         columns_to_rank={"obs_names": ["sys_bp_entry", "dia_bp_entry"]},
     )
     assert len(edata.uns["rank_features_groups"]["names"]) == 2
+
+
+def test_rank_features_groups_n_features(mimic_2_encoded):
+    edata_all = ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", copy=True)
+    ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", n_features=3)
+
+    result, result_all = mimic_2_encoded.uns["rank_features_groups"], edata_all.uns["rank_features_groups"]
+    for key in ("names", "scores", "pvals", "pvals_adj", "logfoldchanges"):
+        assert len(result[key]) == 3
+        for group in result[key].dtype.names:
+            np.testing.assert_array_equal(result[key][group], result_all[key][group][:3])
+
+
+def test_rank_features_groups_pts(mimic_2_encoded):
+    ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", pts=True)
+    result = mimic_2_encoded.uns["rank_features_groups"]
+
+    ranked_features = set(pd.DataFrame(result["names"]).to_numpy().ravel())
+    for key in ("pts", "pts_rest"):
+        assert set(result[key].index) == ranked_features
+        assert ((result[key] >= 0) & (result[key] <= 1)).all().all()
+
+    feature, group = "aline_flg", "MICU"
+    assert mimic_2_encoded.var.loc[feature, FEATURE_TYPE_KEY] == CATEGORICAL_TAG
+    in_group = (mimic_2_encoded.obs["service_unit"] == group).to_numpy()
+    values = mimic_2_encoded[:, feature].X.ravel()
+    assert result["pts"].loc[feature, group] == pytest.approx(np.mean(values[in_group] != 0))
+    assert result["pts_rest"].loc[feature, group] == pytest.approx(np.mean(values[~in_group] != 0))
+
+    df = ep.get.rank_features_groups_df(mimic_2_encoded, group=group)
+    assert len(df) == len(ranked_features)
+    assert df["pct_nz_group"].notna().all()
+
+    edata_without_pts = ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", copy=True)
+    filtered = ep.tl.filter_rank_features_groups(mimic_2_encoded, copy=True)
+    filtered_without_pts = ep.tl.filter_rank_features_groups(edata_without_pts, copy=True)
+    pd.testing.assert_frame_equal(
+        pd.DataFrame(filtered.uns["rank_features_groups_filtered"]["names"]),
+        pd.DataFrame(filtered_without_pts.uns["rank_features_groups_filtered"]["names"]),
+    )
 
 
 def test_rank_features_groups_3D_edata(edata_blob_small):

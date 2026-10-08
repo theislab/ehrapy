@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from enum import Enum
 from typing import Literal
 
 import numpy as np
@@ -14,6 +15,13 @@ CSBase = sp.csr_array | sp.csc_array
 RNGLike = np.random.Generator | np.random.BitGenerator
 SeedLike = int | np.integer | Sequence[int] | np.random.SeedSequence
 AnyRandom = int | np.random.RandomState | None
+
+
+class Empty(Enum):
+    token = 0
+
+
+_empty = Empty.token
 
 
 def asarray(a):

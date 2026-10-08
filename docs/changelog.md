@@ -39,6 +39,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.tl.stratified_table_one <ehrapy.tools.stratified_table_one>` stores its table with `variable` and `level` columns so that results can be written to h5ad ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` supports categorical features in sparse arrays ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * {func}`ep.pp.neighbors <ehrapy.preprocessing.neighbors>` with a time series metric no longer makes patients without comparable measurements everyone's nearest neighbours but leaves them unconnected ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Align all scanpy wrappers with scanpy 1.12: the `ep.pl.rank_features_groups_*` plots read the {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` results by default, which now honours `n_features` and stores `pts` per feature, {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses `var["highly_variable"]` by default as documented, every plot passes `feature_symbols` on to scanpy, and the deprecated `save`, `ep.tl.umap(method=...)` and the no-op `n_bins` of {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>` are removed ([#1130](https://github.com/theislab/ehrapy/pull/1130)) @Zethson
 
 ### 📖 Documentation
 

@@ -9,6 +9,24 @@ def test_pca(edata_blob_small):
     ep.pp.pca(edata_blob_small)
 
 
+def test_pca_mask_var_defaults_to_highly_variable(edata_blob_small):
+    edata_blob_small.var["highly_variable"] = [True] * 5 + [False] * 5
+
+    ep.pp.pca(edata_blob_small, n_comps=2)
+    used_features = np.abs(edata_blob_small.varm["PCs"]).sum(axis=1) > 0
+    np.testing.assert_array_equal(used_features, edata_blob_small.var["highly_variable"])
+
+    ep.pp.pca(edata_blob_small, n_comps=2, mask_var=None)
+    assert (np.abs(edata_blob_small.varm["PCs"]).sum(axis=1) > 0).all()
+
+
+def test_pca_key_added(edata_blob_small):
+    ep.pp.pca(edata_blob_small, n_comps=2, key_added="pca_custom")
+    assert edata_blob_small.obsm["pca_custom"].shape == (edata_blob_small.n_obs, 2)
+    assert "pca_custom" in edata_blob_small.varm
+    assert "X_pca" not in edata_blob_small.obsm
+
+
 def test_pca_3D_edata(edata_blob_small):
     ep.pp.pca(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
