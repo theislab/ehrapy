@@ -7,7 +7,7 @@ from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Collection, Iterable
 
     import pandas as pd
     from ehrdata import EHRData
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def obs_df(
     edata: EHRData,
     *,
-    keys: Iterable[str] = (),
+    keys: Collection[str] = (),
     obsm_keys: Iterable[tuple[str, int]] = (),
     layer: str | None = None,
     feature_symbols: str | None = None,
@@ -26,8 +26,8 @@ def obs_df(
     Args:
         edata: Central data object.
         keys: Keys from either `.var_names`, `.var[feature_symbols]`, or `.obs.columns`.
-        obsm_keys: Tuple of `(key from obsm, column index of obsm[key])`.
-        layer: Layer of `edata`.
+        obsm_keys: Tuples of `(key from obsm, column index of obsm[key])`.
+        layer: Layer of `edata` to use as feature values.
         feature_symbols: Column of `edata.var` to search for `keys` in.
 
     Returns:
@@ -45,17 +45,17 @@ def obs_df(
 def var_df(
     edata: EHRData,
     *,
-    keys: Iterable[str] = (),
+    keys: Collection[str] = (),
     varm_keys: Iterable[tuple[str, int]] = (),
     layer: str | None = None,
 ) -> pd.DataFrame:
-    """Return values for observations in edata.
+    """Return values for features in edata.
 
     Args:
         edata: Central data object.
         keys: Keys from either `.obs_names`, or `.var.columns`.
-        varm_keys: Tuple of `(key from varm, column index of varm[key])`.
-        layer: Layer of `edata`.
+        varm_keys: Tuples of `(key from varm, column index of varm[key])`.
+        layer: Layer of `edata` to use as feature values.
 
     Returns:
         A DataFrame with `edata.var_names` as index, and values specified by `keys` and `varm_keys`.
@@ -85,20 +85,21 @@ def rank_features_groups_df(
         edata: Central data object.
         group: Which group (as in :func:`ehrapy.tools.rank_features_groups`'s `groupby` argument)
                to return results from. Can be a list. All groups are returned if groups is `None`.
-        key: Key differential groups were stored under.
-        pval_cutoff: Return only adjusted p-values below the  cutoff.
+        key: Key the :func:`ehrapy.tools.rank_features_groups` results were stored under.
+        pval_cutoff: Return only adjusted p-values below the cutoff.
         log2fc_min: Minimum logfc to return.
         log2fc_max: Maximum logfc to return.
         feature_symbols: Column name in `.var` DataFrame that stores feature symbols.
                          Specifying this will add that column to the returned DataFrame.
 
     Returns:
-        A Pandas DataFrame of all rank genes groups results.
+        A Pandas DataFrame of all rank features groups results.
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
+        >>> edata = ep.pp.encode(edata, autodetect=True)
         >>> ep.tl.rank_features_groups(edata, groupby="service_unit")
         >>> df = ep.get.rank_features_groups_df(edata, group="FICU")
     """

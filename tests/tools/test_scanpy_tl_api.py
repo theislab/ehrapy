@@ -7,8 +7,20 @@ def test_tsne(edata_blob_small):
     ep.tl.tsne(edata_blob_small, use_rep="X")
 
 
+def test_tsne_key_added(edata_blob_small):
+    ep.tl.tsne(edata_blob_small, use_rep="X", n_components=3, key_added="X_tsne_3d")
+    assert edata_blob_small.obsm["X_tsne_3d"].shape == (edata_blob_small.n_obs, 3)
+    assert "X_tsne" not in edata_blob_small.obsm
+
+
 def test_umap(edata_blob_small):
     ep.tl.umap(edata_blob_small)
+
+
+def test_umap_key_added(edata_blob_small):
+    ep.tl.umap(edata_blob_small, key_added="X_umap_custom")
+    assert "X_umap_custom" in edata_blob_small.obsm
+    assert "X_umap" not in edata_blob_small.obsm
 
 
 def test_umap_with_timeseries_metric_dtw(edata_and_distances_dtw):

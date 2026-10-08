@@ -32,6 +32,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>` no longer raises `KeyError: 'use_raw'` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 * {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` reports R² instead of accuracy for numeric targets ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 * `ep.tl` no longer leaks implementation details such as `np` and `sc`, and its `__all__` now lists `leiden`, `dendrogram`, `dpt`, `paga` and `ingest`; `ep.pl` gained an `__all__` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* Align all scanpy wrappers with scanpy 1.12: the `ep.pl.rank_features_groups_*` plots read the {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` results by default, which now honours `n_features` and stores `pts` per feature, {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses `var["highly_variable"]` by default as documented, every plot passes `feature_symbols` on to scanpy, and the deprecated `save`, `ep.tl.umap(method=...)` and the no-op `n_bins` of {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>` are removed ([#1130](https://github.com/theislab/ehrapy/pull/1130)) @Zethson
 
 ### 📖 Documentation
 

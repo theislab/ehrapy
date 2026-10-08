@@ -11,10 +11,16 @@ from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import function_2D_only
+from ehrapy._types import asarray
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ehrapy.tools import _method_options
+
+# params is metadata and pts/pts_rest are tables indexed by feature name, not per-group rankings
+_UNRANKED_KEYS = frozenset({"params", "pts", "pts_rest"})
 
 
 def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
@@ -76,8 +82,7 @@ def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> N
         sorted_indexes = np.argsort(group_pvals)
 
         for key in edata.uns[key_added].keys():
-            if key == "params":
-                # This key only stores technical information, nothing to sort here
+            if key in _UNRANKED_KEYS:
                 continue
 
             # Sort every key (e.g. pvals, names) by adjusted p-value in an increasing order
@@ -92,7 +97,6 @@ def _save_rank_features_result(
     pvals,
     pvals_adj=None,
     logfoldchanges=None,
-    pts=None,
     groups_order=None,
 ) -> None:
     """Write keys with statistical test results to edata.uns.
@@ -105,11 +109,10 @@ def _save_rank_features_result(
         pvals: p-values of a statistical test
         pvals_adj: Adjusted p-values of a statistical test
         logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
-        pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
     """
-    fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
-    field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
+    fields = (names, scores, pvals, pvals_adj, logfoldchanges)
+    field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges")
 
     for values, key in zip(fields, field_names, strict=False):
         if values is None or not len(values):
@@ -261,6 +264,19 @@ def _evaluate_categorical_features(
     )
 
 
+def _nonzero_fractions(
+    edata: EHRData, features: Sequence[str], *, groupby: str, reference: str
+) -> dict[str, pd.DataFrame]:
+    """Fractions of observations with non-zero values per feature (rows) and group (columns), as `pts` of :func:`scanpy.tl.rank_genes_groups`."""
+    nonzero = pd.DataFrame(asarray(edata[:, features].X) != 0, columns=features)
+    grouped = nonzero.groupby(edata.obs[groupby].astype(str).to_numpy())
+    fractions = {"pts": grouped.mean().T}
+    if reference == "rest":
+        n_nonzero, n_obs = grouped.sum(), grouped.size()
+        fractions["pts_rest"] = (n_nonzero.sum() - n_nonzero).div(len(nonzero) - n_obs, axis=0).T
+    return fractions
+
+
 def _check_no_datetime_columns(df):
     datetime_cols = [
         col
@@ -320,7 +336,7 @@ def rank_features_groups(
     n_features: int | None = None,
     rankby_abs: bool = False,
     pts: bool = False,
-    key_added: str | None = "rank_features_groups",
+    key_added: str = "rank_features_groups",
     copy: bool = False,
     num_cols_method: _method_options._rank_features_groups_method = None,
     cat_cols_method: _method_options._rank_features_groups_cat_method = "g-test",
@@ -340,10 +356,11 @@ def rank_features_groups(
                 shall be restricted, or `'all'` (default), for all groups.
         reference: If `'rest'`, compare each group to the union of the rest of the group.
                    If a group identifier, compare with respect to this group.
-        n_features: The number of features that appear in the returned tables. Defaults to all features if `None`.
-        rankby_abs: Rank genes by the absolute value of the score, not by the score.
+        n_features: The number of features with the lowest adjusted p-values that appear in the returned tables per group.
+                    Defaults to all features if `None`.
+        rankby_abs: Rank features by the absolute value of the score, not by the score.
                     The returned scores are never the absolute values.
-        pts: Compute the fraction of observations containing the features.
+        pts: Compute the fraction of observations with non-zero values of the features.
         key_added: The key in `edata.uns` information is saved to.
         copy: Whether to return a copy of the data object.
         num_cols_method:  Statistical method to rank numerical features. The default method is `'t-test'`,
@@ -368,18 +385,25 @@ def rank_features_groups(
         **kwds: Are passed to test methods. Currently, this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
-                minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
+                minimal set of features that are good predictors (sparse solution meaning few non-zero fitted coefficients).
 
     Returns:
         Depending on `copy`, returns or updates `edata` with the results stored in `edata.uns[key_added]`, which include:
 
-        - names (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the gene names. Ordered according to scores.
-        - scores (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the z-score underlying the computation of a p-value for each gene for each group. Ordered according to scores.
-        - logfoldchanges (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the log2 fold change for each gene for each group. Ordered according to scores. Only provided if method is ‘t-test’ like. Note: this is an approximation calculated from mean-log values.
+        - names (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the feature names.
+          Ordered according to adjusted p-values.
+        - scores (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the z-score underlying the computation of a p-value for each feature for each group.
+          Ordered according to adjusted p-values.
+        - logfoldchanges (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the log2 fold change for each feature for each group.
+          Ordered according to adjusted p-values.
+          Only provided if method is ‘t-test’ like.
+          Note: this is an approximation calculated from mean-log values.
         - pvals (:class:`numpy.ndarray`): p-values.
         - pvals_adj (:class:`numpy.ndarray`): Corrected p-values.
-        - pts (:class:`pandas.DataFrame`): Fraction of cells expressing the genes for each group.
-        - pts_rest (:class:`pandas.DataFrame`): Only if reference is set to ‘rest’. Fraction of observations from the union of the rest of each group containing the features.
+        - pts (:class:`pandas.DataFrame`): Only if `pts=True`.
+          Fraction of observations with non-zero values of the features (rows) for each group (columns).
+        - pts_rest (:class:`pandas.DataFrame`): Only if `pts=True` and `reference='rest'`.
+          Fraction of observations from the union of the rest of each group with non-zero values of the features.
 
     Examples:
         >>> import ehrdata as ed
@@ -534,7 +558,6 @@ def rank_features_groups(
             groupby,
             groups=groups,
             reference=reference,
-            n_features=n_features,
             rankby_abs=rankby_abs,
             pts=pts,
             key_added=key_added,
@@ -555,9 +578,11 @@ def rank_features_groups(
             pvals=numerical_edata.uns[key_added]["pvals"],
             pvals_adj=numerical_edata.uns[key_added].get("pvals_adj", None),
             logfoldchanges=numerical_edata.uns[key_added].get("logfoldchanges", None),
-            pts=numerical_edata.uns[key_added].get("pts", None),
             groups_order=group_names,
         )
+        for fraction_key in ("pts", "pts_rest"):
+            if fraction_key in numerical_edata.uns[key_added]:
+                edata.uns[key_added][fraction_key] = numerical_edata.uns[key_added][fraction_key]
 
     if list(edata.var_names[edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]):
         (
@@ -583,9 +608,13 @@ def rank_features_groups(
             pvals=categorical_pvals,
             pvals_adj=categorical_pvals.copy(),
             logfoldchanges=categorical_logfoldchanges,
-            pts=categorical_pts,
             groups_order=group_names,
         )
+        if pts and len(categorical_names):
+            for fraction_key, fractions in _nonzero_fractions(
+                edata, categorical_names[:, 0], groupby=groupby, reference=reference
+            ).items():
+                edata.uns[key_added][fraction_key] = pd.concat([edata.uns[key_added].get(fraction_key), fractions])
 
     # if field_to_rank was obs or layer_and_obs, the edata object we have been working with is edata_minimal
     edata_orig.uns[key_added] = edata.uns[key_added]
@@ -596,11 +625,11 @@ def rank_features_groups(
             edata.uns[key_added]["pvals"], corr_method=correction_method
         )
 
-    # For some reason, pts should be a DataFrame
-    if "pts" in edata.uns[key_added]:
-        edata.uns[key_added]["pts"] = pd.DataFrame(edata.uns[key_added]["pts"])
-
     _sort_features(edata, key_added)
+
+    if n_features is not None:
+        for key in edata.uns[key_added].keys() - _UNRANKED_KEYS:
+            edata.uns[key_added][key] = edata.uns[key_added][key][:n_features]
 
     return edata if copy else None
 
@@ -613,28 +642,28 @@ def filter_rank_features_groups(
     groupby: str | None = None,
     key_added: str = "rank_features_groups_filtered",
     min_in_group_fraction: float = 0.25,
-    min_fold_change: int = 1,
+    min_fold_change: float = 1,
     max_out_group_fraction: float = 0.5,
+    compare_abs: bool = False,
     copy: bool = False,
 ) -> EHRData | None:  # pragma: no cover
-    """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
+    """Filters out features based on fold change and fraction of observations with the feature within and outside the `groupby` categories.
 
     See :func:`~ehrapy.tools.rank_features_groups`.
 
-    Results are stored in `edata.uns[key_added]`
-    (default: 'rank_genes_groups_filtered').
-
-    To preserve the original structure of edata.uns['rank_genes_groups'],
-    filtered genes are set to `NaN`.
+    Results are stored in `edata.uns[key_added]` (default: 'rank_features_groups_filtered').
+    To preserve the original structure of `edata.uns[key]`, filtered features are set to `NaN`.
 
     Args:
         edata: Central data object.
-        key: Key previously added by :func:`~ehrapy.tools.rank_features_groups`
+        key: Key previously added by :func:`~ehrapy.tools.rank_features_groups`.
         groupby: The key of the observations grouping to consider.
+                 Defaults to the `groupby` used in :func:`~ehrapy.tools.rank_features_groups`.
         key_added: The key in `edata.uns` information is saved to.
-        min_in_group_fraction: Minimum in group fraction (default: 0.25).
-        min_fold_change: Miniumum fold change (default: 1).
-        max_out_group_fraction: Maximum out group fraction (default: 0.5).
+        min_in_group_fraction: Minimum fraction of observations in the group with non-zero values of the feature.
+        min_fold_change: Minimum fold change.
+        max_out_group_fraction: Maximum fraction of observations outside the group with non-zero values of the feature.
+        compare_abs: If `True`, compare absolute values of log fold change with `min_fold_change`.
         copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
@@ -658,5 +687,6 @@ def filter_rank_features_groups(
         min_in_group_fraction=min_in_group_fraction,
         min_fold_change=min_fold_change,
         max_out_group_fraction=max_out_group_fraction,
+        compare_abs=compare_abs,
     )
     return edata if copy else None

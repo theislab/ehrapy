@@ -393,6 +393,65 @@ def test_rank_features_groups_plots(mimic_2_encoded, plotter):
     assert any(labels)
 
 
+@pytest.fixture
+def edata_ranked(mimic_2_encoded):
+    edata = mimic_2_encoded[:200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]].copy()
+    edata.var["symbol"] = [f"symbol_{name}" for name in edata.var_names]
+    ep.tl.rank_features_groups(edata, groupby="service_unit")
+    return edata
+
+
+@pytest.mark.parametrize(
+    "plotter",
+    [
+        "rank_features_groups",
+        "rank_features_groups_violin",
+        "rank_features_groups_stacked_violin",
+        "rank_features_groups_heatmap",
+        "rank_features_groups_dotplot",
+        "rank_features_groups_matrixplot",
+        "rank_features_groups_tracksplot",
+    ],
+)
+def test_rank_features_groups_plots_default_key(edata_ranked, plotter):
+    getattr(ep.pl, plotter)(edata_ranked, show=False)
+    plt.close("all")
+
+
+def test_rank_features_groups_tracksplot_feature_symbols(edata_ranked):
+    ep.pl.rank_features_groups_tracksplot(edata_ranked, n_features=2, feature_symbols="symbol", show=False)
+    track_labels = {ax.get_ylabel() for ax in plt.gcf().axes} - {""}
+    assert track_labels
+    assert all(label.startswith("symbol_") for label in track_labels)
+    plt.close("all")
+
+
+def test_rank_features_groups_dotplot_titles(edata_ranked):
+    dp = ep.pl.rank_features_groups_dotplot(edata_ranked, return_fig=True)
+    assert dp.color_legend_title == "Mean value in group"
+    assert dp.size_title == "Fraction of observations\nin group (%)"
+
+    dp = ep.pl.rank_features_groups_dotplot(edata_ranked, values_to_plot="logfoldchanges", return_fig=True)
+    assert dp.color_legend_title == "log fold change"
+
+    dp = ep.pl.rank_features_groups_dotplot(edata_ranked, colorbar_title="custom", return_fig=True)
+    assert dp.color_legend_title == "custom"
+    plt.close("all")
+
+
+@pytest.mark.parametrize(
+    ("plotter", "compute"),
+    [("pca", ep.pp.pca), ("tsne", ep.tl.tsne), ("umap", ep.tl.umap), ("diffmap", ep.tl.diffmap)],
+)
+def test_embedding_plots_feature_symbols(edata_blob_small, plotter, compute):
+    edata_blob_small.var["symbol"] = [f"symbol_{name}" for name in edata_blob_small.var_names]
+    compute(edata_blob_small)
+
+    ax = getattr(ep.pl, plotter)(edata_blob_small, color="symbol_feature_0", feature_symbols="symbol", show=False)
+    assert ax.get_title() == "symbol_feature_0"
+    plt.close("all")
+
+
 def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     edata_sample = mimic_2_encoded[
         :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first", "pco2_first"]

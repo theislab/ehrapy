@@ -11,6 +11,11 @@ def test_neighbors_simple(edata_blob_small):
     ep.pp.neighbors(edata_blob_small, n_neighbors=5)
 
 
+def test_neighbors_jaccard(edata_blob_small):
+    ep.pp.neighbors(edata_blob_small, n_neighbors=5, method="jaccard")
+    assert edata_blob_small.uns["neighbors"]["params"]["method"] == "jaccard"
+
+
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
 def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
     """Test neighbors computation with timeseries metrics."""

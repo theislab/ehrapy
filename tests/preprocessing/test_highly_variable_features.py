@@ -28,6 +28,12 @@ def test_highly_variable_features_copy(edata_blob_small):
     assert "highly_variable" in edata_blob_small.var
 
 
+def test_highly_variable_features_batch_key(edata_blob_small):
+    edata_blob_small.X = np.abs(edata_blob_small.X)
+    highly_variable_features(edata_blob_small, span=1, batch_key="cluster")
+    assert "highly_variable_nbatches" in edata_blob_small.var
+
+
 def test_highly_variable_features(clean_up_plots):
     try:
         edata = ed.dt.diabetes_130_fairlearn()
