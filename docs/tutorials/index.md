@@ -16,7 +16,7 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
 ```{eval-rst}
 .. nbgallery::
 
-   notebooks/ehrapy_introduction
+   notebooks/data
    notebooks/cohort
    notebooks/subgroups
    notebooks/trajectories
