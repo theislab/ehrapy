@@ -8,6 +8,7 @@ import pandas as pd
 import scanpy as sc
 from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
+from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
@@ -15,6 +16,8 @@ from fast_array_utils.types import DaskArray
 
 from ehrapy._compat import _materialize, _raise_if_3D, function_2D_only
 from ehrapy.preprocessing import encode
+from ehrapy.preprocessing._imputation import _fill_missing
+from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -303,14 +306,73 @@ def _log2_ratio(means: np.ndarray | float, rest_means: np.ndarray | float) -> np
 def _log2_fold_changes(
     edata: EHRData, names: np.recarray, *, groupby: str, groups_order: Sequence[str], reference: str
 ) -> np.recarray:
-    """log2 ratios of each group's mean to the mean of `reference` or of all other observations, aligned with `names`."""
-    means, rest_means = _group_means(edata.X, edata.obs[groupby].astype(str).to_numpy(), groups_order)
+    """log2 ratios of each group's mean of the observed values to that of `reference` or of all other observations, aligned with `names`."""
+    groups = edata.obs[groupby].astype(str).to_numpy()
+    filled = _group_means(_fill_missing(edata.X, np.zeros(edata.n_vars)), groups, groups_order)
+    missing = _group_means(_missing_mask(edata.X), groups, groups_order)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        means, rest_means = (mean / (1 - fraction) for mean, fraction in zip(filled, missing, strict=True))
     if reference != "rest":
         rest_means = means[list(groups_order).index(reference)]
     log2_ratios = pd.DataFrame(_log2_ratio(means, rest_means).T, index=edata.var_names, columns=groups_order)
     return pd.DataFrame(
         {group: log2_ratios.loc[names[group], group].to_numpy() for group in names.dtype.names}
     ).to_records(index=False)
+
+
+def _observed_value_tests(
+    X: np.ndarray,
+    var_names: pd.Index,
+    groups: np.ndarray,
+    compared_groups: Sequence[str],
+    *,
+    reference: str,
+    method: _method_options._rank_features_groups_method,
+    tie_correct: bool,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Scores and p-values of the numeric tests of every group (rows) and variable (columns) on the observed values of each variable."""
+    from scipy import stats
+
+    scores, pvals, untestable = [], [], np.zeros(X.shape[1], dtype=bool)
+    min_observed = 1 if method == "wilcoxon" else 2
+    for group in compared_groups:
+        in_group, rest = X[groups == group], X[groups != group] if reference == "rest" else X[groups == reference]
+        n, n_rest = (~np.isnan(in_group)).sum(axis=0), (~np.isnan(rest)).sum(axis=0)
+        untestable |= (n < min_observed) | (n_rest < min_observed)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            if method == "wilcoxon":
+                ranks = stats.rankdata(np.vstack([in_group, rest]), axis=0, nan_policy="omit")
+                n_all = n + n_rest
+                tie_coefficients = (
+                    np.array([stats.tiecorrect(column[~np.isnan(column)]) for column in ranks.T]) if tie_correct else 1
+                )
+                score = (np.nansum(ranks[: len(in_group)], axis=0) - n * (n_all + 1) / 2) / np.sqrt(
+                    tie_coefficients * n * n_rest * (n_all + 1) / 12
+                )
+                pval = 2 * stats.norm.sf(np.abs(score))
+            else:
+                mean, mean_rest = np.nansum(in_group, axis=0) / n, np.nansum(rest, axis=0) / n_rest
+                std, std_rest = (
+                    np.sqrt(np.nansum((values - center) ** 2, axis=0) / (counts - 1))
+                    for values, center, counts in ((in_group, mean, n), (rest, mean_rest, n_rest))
+                )
+                score, pval = stats.ttest_ind_from_stats(
+                    mean,
+                    std,
+                    n,
+                    mean_rest,
+                    std_rest,
+                    n if method == "t-test_overestim_var" else n_rest,
+                    equal_var=False,
+                )
+        scores.append(np.nan_to_num(score, nan=0.0))
+        pvals.append(np.nan_to_num(pval, nan=1.0))
+    if untestable.any():
+        logger.warning(
+            f"Variables {list(var_names[untestable])} have fewer than {min_observed} observed values in a compared group "
+            "and get a score of 0 and a p-value of 1 there."
+        )
+    return np.array(scores), np.array(pvals)
 
 
 def _ranked_features(result: Mapping) -> list[str]:
@@ -391,6 +453,7 @@ def rank_features_groups(
     """Rank features for characterizing groups.
 
     Numeric and categorical features are ranked together by their adjusted p-values, and by their p-values among equal adjusted p-values, because the scores of their tests are not comparable.
+    Missing values are left out of the tests and log fold changes of every variable.
 
     Args:
         edata: Central data object.
@@ -617,6 +680,23 @@ def rank_features_groups(
                 layer=layer,
                 **kwds,
             )
+        incomplete = np.flatnonzero(stats.sum(_missing_mask(numerical_edata.X), axis=0))
+        if len(incomplete) and num_cols_method != "logreg":
+            result = numerical_edata.uns[key_added]
+            incomplete_names = numerical_edata.var_names[incomplete]
+            observed_scores, observed_pvals = _observed_value_tests(
+                to_dense(numerical_edata.X[:, incomplete], to_cpu_memory=True),
+                incomplete_names,
+                numerical_edata.obs[groupby].astype(str).to_numpy(),
+                result["names"].dtype.names,
+                reference=reference,
+                method=num_cols_method or "t-test",
+                tie_correct=tie_correct,
+            )
+            for i, group in enumerate(result["names"].dtype.names):
+                rows = pd.Index(result["names"][group]).get_indexer(incomplete_names)
+                result["scores"][group][rows] = observed_scores[i]
+                result["pvals"][group][rows] = observed_pvals[i]
         if "logfoldchanges" in numerical_edata.uns[key_added]:
             numerical_edata.uns[key_added]["logfoldchanges"] = _log2_fold_changes(
                 numerical_edata,

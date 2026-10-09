@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 import scanpy as sc
 import scipy.sparse as sp
+from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
 from scipy.stats import chi2_contingency
@@ -639,6 +640,41 @@ def test_rank_features_groups_df_orders_by_pvals(mimic_2_encoded):
     for group, df in ep.get.rank_features_groups_df(mimic_2_encoded, group=None).groupby("group", observed=True):
         order = df.sort_values(["pvals_adj", "pvals"], kind="stable")
         assert df.index.equals(order.index), group
+
+
+@pytest.mark.parametrize(
+    ("method", "tie_correct"),
+    [("t-test", False), ("t-test_overestim_var", False), ("wilcoxon", False), ("wilcoxon", True)],
+)
+@pytest.mark.parametrize("reference", ["rest", "b"])
+def test_rank_features_groups_missing_values(method, tie_correct, reference, rng):
+    X = _ranking_data(rng)
+    X[[0, 1, 12, 25, 38], 0] = np.nan
+    kwargs = {"reference": reference, "num_cols_method": method, "tie_correct": tie_correct, "copy": True}
+
+    edata = _ranking_edata(X)
+    result = ep.tl.rank_features_groups(edata, "group", **kwargs).uns["rank_features_groups"]
+    observed = edata[~np.isnan(X[:, 0])].copy()
+    expected = ep.tl.rank_features_groups(observed, "group", **kwargs).uns["rank_features_groups"]
+
+    for group in result["names"].dtype.names:
+        for key in ("scores", "pvals", "logfoldchanges"):
+            value = pd.Series(result[key][group], index=result["names"][group])["n0"]
+            assert value == pytest.approx(pd.Series(expected[key][group], index=expected["names"][group])["n0"])
+            assert np.isfinite(value)
+
+
+def test_rank_features_groups_warns_for_untestable_variables(rng, monkeypatch):
+    messages = []
+    monkeypatch.setattr(logger, "warning", lambda msg, **kwargs: messages.append(msg))
+    X = _ranking_data(rng)
+    X[:10, 0] = np.nan
+
+    ep.tl.rank_features_groups(edata := _ranking_edata(X), "group")
+
+    result = edata.uns["rank_features_groups"]
+    assert pd.Series(result["pvals"]["a"], index=result["names"]["a"])["n0"] == 1
+    assert any("['n0'] have fewer than 2 observed values" in message for message in messages)
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
