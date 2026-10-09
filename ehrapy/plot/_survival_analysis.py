@@ -392,8 +392,8 @@ def cox_ph_forestplot(
     upper = coxph_fitting_summary["coef upper 95%"].values
     y_positions = np.arange(len(coxph_fitting_summary))
 
-    x_axis_upper_bound = float(pd.to_numeric(coxph_fitting_summary["coef upper 95%"]).max())
-    x_axis_lower_bound = float(pd.to_numeric(coxph_fitting_summary["coef lower 95%"]).min())
+    x_axis_upper_bound = max(float(pd.to_numeric(coxph_fitting_summary["coef upper 95%"]).max()), 0.0)
+    x_axis_lower_bound = min(float(pd.to_numeric(coxph_fitting_summary["coef lower 95%"]).min()), 0.0)
 
     data_range = x_axis_upper_bound - x_axis_lower_bound
     plot_padding = data_range * 0.1
@@ -414,8 +414,9 @@ def cox_ph_forestplot(
 
     error_bars = hv.ErrorBars(
         error_data,
-        kdims=["Coefficient", "Variable"],
-        vdims=["negative_error", "positive_error"],
+        kdims=["Coefficient"],
+        vdims=["Variable", "negative_error", "positive_error"],
+        horizontal=True,
     ).opts(color=ecolor, line_width=2)
 
     points = hv.Scatter(
@@ -424,7 +425,7 @@ def cox_ph_forestplot(
         vdims=["Variable"],
     ).opts(color=color, size=size * 5, marker=marker, tools=["hover"])
 
-    vline = hv.VLine(1).opts(color="gray", line_width=1)
+    vline = hv.VLine(0).opts(color="gray", line_width=1)
 
     text_labels = []
     for coef_val, low_val, upp_val, y_pos in zip(coefs, lower, upper, y_positions, strict=False):
@@ -443,7 +444,7 @@ def cox_ph_forestplot(
         text_font_size=f"{text_size}pt", text_align="left", text_color="black"
     )
 
-    header_y = len(coxph_fitting_summary) - 0.7
+    header_y = len(coxph_fitting_summary)
     header_labels = hv.Labels(
         [
             (text_start_x, header_y, "coef"),
@@ -457,7 +458,7 @@ def cox_ph_forestplot(
         width=width,
         height=height,
         xlim=(plot_x_min, total_x_max),
-        ylim=(len(coxph_fitting_summary) - 0.5, -0.5),
+        ylim=(len(coxph_fitting_summary) + 0.5, -0.5),
         invert_yaxis=True,
         yticks=list(zip(y_positions, labels, strict=False)),
         xlabel="Coefficient",

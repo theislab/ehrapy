@@ -74,8 +74,15 @@ def test_coxph_forestplot(mimic_2: EHRData):
     ].copy()
     ep.tl.cox_ph(edata_subset, duration_col="mort_day_censored", event_col="censor_flg")
     plot = ep.pl.cox_ph_forestplot(edata_subset)
-    assert plot is not None
     assert isinstance(plot, hv.Overlay)
+
+    (vline,) = (element for element in plot if isinstance(element, hv.VLine))
+    assert vline.data == 0
+    (error_bars,) = (element for element in plot if isinstance(element, hv.ErrorBars))
+    assert error_bars.horizontal
+    np.testing.assert_allclose(error_bars.dimension_values("Variable"), [0, 1, 2])
+    labels, header = (element for element in plot if isinstance(element, hv.Labels))
+    assert header.dimension_values("y").min() - labels.dimension_values("y").max() >= 1
 
 
 def test_ols(mimic_2: EHRData):
