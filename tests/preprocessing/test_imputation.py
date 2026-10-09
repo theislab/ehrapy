@@ -585,6 +585,17 @@ def test_explicit_impute_array_types(array_type, ndim, replacement, rng):
     np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
 
 
+def test_explicit_impute_mapping_subset_is_silent(monkeypatch):
+    messages = []
+    monkeypatch.setattr(logger, "warning", lambda msg, **kwargs: messages.append(msg))
+    X = np.array([[1.0, np.nan, np.nan], [np.nan, 2.0, 3.0]])
+
+    imputed = explicit_impute(_numeric_edata(X), replacement={"0": 5.0}, copy=True).X
+
+    np.testing.assert_array_equal(imputed, np.array([[1.0, np.nan, np.nan], [5.0, 2.0, 3.0]]))
+    assert messages == []
+
+
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize(
     "impute",
