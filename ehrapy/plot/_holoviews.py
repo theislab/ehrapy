@@ -24,8 +24,7 @@ def load_hv_extensions() -> Callable[[Callable[P, R]], Callable[P, R]]:
                 # hv.extension switches to its first backend, so restore one the user already selected
                 current_backend = hv.Store.current_backend if hv.Store.renderers else "bokeh"
                 mpl_backend = mpl.get_backend()
-                # the inline backend registers its IPython display hooks on import only if rcParams still names it,
-                # so load it before holoviews switches matplotlib to agg and restore it afterwards
+                # the inline backend registers its IPython display hooks on import only while rcParams names it
                 plt.switch_backend(mpl_backend)
                 hv.extension(*missing)
                 hv.Store.set_current_backend(current_backend)
