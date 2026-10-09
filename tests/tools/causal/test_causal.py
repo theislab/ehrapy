@@ -98,6 +98,14 @@ class TestATE:
         )
         assert est.method.endswith("_ate")
 
+    @pytest.mark.parametrize(("target", "estimand"), [("att", "ATT"), ("ate", "ATE")])
+    def test_propensity_score_matching_summary_names_estimand(self, target, estimand):
+        est = ep.tl.propensity_score_matching(
+            self.edata, treatment="tx", outcome="y", covariates=self.covariates, target=target, n_bootstrap=0
+        )
+        assert est.estimand == estimand
+        assert f"  {estimand}:    {est.value:.4f}" in est.summary()
+
 
 class TestHTE:
     def setup_method(self):

@@ -400,7 +400,7 @@ def propensity_score_matching(
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: propensity_score_matching_att
-          ATE:    -0.0511
+          ATT:    -0.0511
           SE:     0.0337
           95% CI: [-0.1209, 0.0051]
           n:      1776
@@ -442,6 +442,7 @@ def propensity_score_matching(
         ci_lower=ci_lower,
         ci_upper=ci_upper,
         n=int(len(design.T)),
+        estimand="ATT" if target == "att" else "ATE",
         params={
             "propensity_scores": ps,
             "matches": match_info,

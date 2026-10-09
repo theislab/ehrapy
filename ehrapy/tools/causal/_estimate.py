@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 
 @dataclass(frozen=True)
@@ -14,7 +14,7 @@ class CausalEstimate:
     treatment: str
     #: Outcome variable name.
     outcome: str
-    #: Point estimate of the average treatment effect (ATE).
+    #: Point estimate of the effect named by ``estimand``.
     value: float
     #: Standard error of the estimate, when available.
     se: float | None = None
@@ -24,6 +24,8 @@ class CausalEstimate:
     ci_upper: float | None = None
     #: Number of observations used to compute the estimate.
     n: int | None = None
+    #: The estimated effect, the average treatment effect (``'ATE'``) or the average treatment effect on the treated (``'ATT'``).
+    estimand: Literal["ATE", "ATT"] = "ATE"
     #: Estimator-specific metadata such as fitted propensity scores or effective sample size.
     params: dict[str, Any] = field(default_factory=dict)
 
@@ -47,7 +49,7 @@ class CausalEstimate:
         lines = [
             f"Causal effect of '{self.treatment}' on '{self.outcome}'",
             f"  method: {self.method}",
-            f"  ATE:    {self.value:.4f}",
+            f"  {self.estimand}:    {self.value:.4f}",
         ]
         if self.se is not None:
             lines.append(f"  SE:     {self.se:.4f}")
