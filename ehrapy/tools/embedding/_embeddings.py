@@ -75,7 +75,7 @@ def tsne(
         random_state: Change this to use different intial states for the optimization.
                       If `None`, the initial state is not reproducible.
         n_jobs: Number of jobs for parallel computation.
-                `None` means using :attr:`scanpy.settings.n_jobs`.
+                `None` uses a single job.
         key_added: If not specified, the embedding is stored in `obsm['X_tsne']` and the parameters in `uns['tsne']`.
                    If specified, the embedding is stored in `obsm[key_added]` and the parameters in `uns[key_added]`.
         copy: Return a copy instead of writing to `edata`.

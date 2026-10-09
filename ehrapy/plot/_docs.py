@@ -121,7 +121,6 @@ doc_plot_params = {
         "Color map to use for continuous variables.",
         'Can be a name or a :class:`~matplotlib.colors.Colormap` instance (e.g. `"magma"`, `"viridis"` or `mpl.cm.cividis`), see :meth:`~matplotlib.cm.ColormapRegistry.get_cmap`.',
         'If `None`, the value of `mpl.rcParams["image.cmap"]` is used.',
-        "The default `color_map` can be set using :func:`~scanpy.set_figure_params`.",
     ),
     "palette": _lines(
         "Colors to use for plotting categorical annotation groups.",
@@ -132,7 +131,7 @@ doc_plot_params = {
     ),
     "frameon": _lines(
         "Draw a frame around the scatter plot.",
-        "Defaults to the value set in :func:`~scanpy.set_figure_params`, which defaults to `True`.",
+        "Defaults to `True`.",
     ),
     "size": _lines(
         "Point size.",

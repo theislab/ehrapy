@@ -58,8 +58,6 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.Colormaps
 ```
 
-Please refer to [Scanpy's plotting classes documentation](https://scanpy.readthedocs.io/en/stable/api.html#classes).
-
 ## Tools
 
 Methods that extract and visualize tool-specific annotation in an EHRData object.
