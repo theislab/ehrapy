@@ -22,7 +22,7 @@ jobs:
                         "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
                         "docs/tutorials/notebooks/subgroups.ipynb",
                         "docs/tutorials/notebooks/survival.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_fate.ipynb",
+                        "docs/tutorials/notebooks/trajectories.ipynb",
                         "docs/tutorials/notebooks/cohort.ipynb",
                         "docs/tutorials/notebooks/longitudinal_with_ehrapy.ipynb",
                         "docs/tutorials/notebooks/bias.ipynb",

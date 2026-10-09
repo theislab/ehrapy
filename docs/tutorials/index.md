@@ -17,7 +17,7 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
 .. nbgallery::
 
    notebooks/ehrapy_introduction
-   notebooks/mimic_2_fate
+   notebooks/trajectories
    notebooks/survival
    notebooks/causal
    notebooks/longitudinal_with_ehrapy
