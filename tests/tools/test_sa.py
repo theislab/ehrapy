@@ -297,6 +297,17 @@ def test_survival_models_obs_columns(survival_obs_edata, sa_function):
     assert len(model.durations) == survival_obs_edata.n_obs
 
 
+def test_weibull_aft_defaults_match_log_logistic_aft(survival_obs_edata):
+    frame = pd.concat([survival_obs_edata.obs[["duration", "event"]], survival_obs_edata[:, ["age"]].to_df()], axis=1)
+    expected = WeibullAFTFitter().fit(frame, duration_col="duration", event_col="event")
+
+    aft = ep.tl.weibull_aft(survival_obs_edata, "duration", event_col="event", covariates=["age"])
+
+    pd.testing.assert_series_equal(aft.params_, expected.params_)
+    with pytest.raises(TypeError):
+        ep.tl.weibull_aft(survival_obs_edata, "duration", "event")
+
+
 def test_cox_ph_only_drops_rows_missing_model_columns(survival_obs_edata):
     cph = ep.tl.cox_ph(survival_obs_edata, "duration", event_col="event", formula="age + bmi + C(sex)")
     assert len(cph.durations) == survival_obs_edata.n_obs

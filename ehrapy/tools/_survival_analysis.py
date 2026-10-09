@@ -555,15 +555,15 @@ def cox_ph(
 
 def weibull_aft(
     edata: EHRData,
-    duration_col: str | None,
-    event_col: str,
+    duration_col: str | None = None,
     *,
+    event_col: str | None = None,
     key_added: str = "weibull_aft",
     alpha: float = 0.05,
     fit_intercept: bool = True,
     penalizer: float | np.ndarray = 0.0,
     l1_ratio: float = 0.0,
-    model_ancillary: bool = True,
+    model_ancillary: bool = False,
     ancillary: bool | pd.DataFrame | str | None = None,
     show_progress: bool = False,
     weights_col: str | None = None,
