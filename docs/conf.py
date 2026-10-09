@@ -87,6 +87,10 @@ redirects = {
     },
     **{f"tutorials/notebooks/{name}": "cohort.html" for name in ("cohort_tracking", "imputation_nb")},
     "tutorials/notebooks/mimic_2_introduction": "subgroups.html",
+    **{
+        f"tutorials/notebooks/{name}": "causal.html"
+        for name in ("mimic_2_causal_inference", "mimic_2_effect_estimation")
+    },
 }
 
 nbsphinx_execute = "never"
@@ -190,8 +194,7 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
-    "tutorials/notebooks/mimic_2_effect_estimation": "_static/tutorials/effect_estimation.png",
-    "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
+    "tutorials/notebooks/causal": "_static/tutorials/causal_inference.png",
     "tutorials/notebooks/cohort": "_static/tutorials/cohort_tracking.png",
     "tutorials/notebooks/subgroups": "_static/tutorials/subgroups.png",
     "tutorials/notebooks/bias": "_static/tutorials/bias.png",
