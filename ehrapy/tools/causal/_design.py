@@ -44,7 +44,7 @@ def _collect_columns(
 ) -> pd.DataFrame:
     """Pull ``columns`` from either ``edata.var_names`` or ``edata.obs.columns`` into a single DataFrame.
 
-    Var-side columns are read from ``edata.X`` (or the named layer).
+    Var-side columns are read from ``edata.X`` (or the named layer), and those of an object ``edata.X`` become numeric where all their values are numbers.
     Obs-side columns are read from ``edata.obs`` and preserve their original dtype.
     """
     var_set = set(edata.var_names)
@@ -61,12 +61,19 @@ def _collect_columns(
 
     parts: list[pd.DataFrame] = []
     if var_cols:
-        parts.append(obs_df(edata, keys=var_cols, layer=layer))
+        parts.append(obs_df(edata, keys=var_cols, layer=layer).apply(_numeric_if_possible))
     if obs_cols:
         parts.append(edata.obs[obs_cols])
 
     df = pd.concat(parts, axis=1) if len(parts) > 1 else parts[0] if parts else pd.DataFrame(index=edata.obs.index)
     return df.loc[:, list(columns)].copy()
+
+
+def _numeric_if_possible(column: pd.Series) -> pd.Series:
+    try:
+        return pd.to_numeric(column)
+    except (TypeError, ValueError):
+        return column
 
 
 def build_design(
