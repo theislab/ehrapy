@@ -155,7 +155,7 @@ def test_cox_ph_adjusted_curves(mimic_2_adjusted_sa):
         edata_sample,
         duration_col=duration_col,
         event_col=event_col,
-        formula="sapsi_first + afib_flg",
+        formula="sapsi_first + afib_flg + aline_flg",
         layer="layer_2",
     )
     ep.tl.cox_ph_adjusted_curves(

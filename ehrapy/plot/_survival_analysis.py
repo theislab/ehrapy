@@ -526,7 +526,7 @@ def cox_ph_adjusted_curves(
         ...     edata,
         ...     duration_col="mort_day_censored",
         ...     event_col="censor_flg",
-        ...     formula="gender_num + afib_flg + day_icu_intime_num",
+        ...     formula="aline_flg + gender_num + afib_flg + day_icu_intime_num",
         ... )
         >>> ep.tl.cox_ph_adjusted_curves(
         ...     edata,

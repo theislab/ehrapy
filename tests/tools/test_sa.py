@@ -205,7 +205,7 @@ def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
         edata,
         duration_col=duration_col,
         event_col=event_col,
-        formula="sapsi_first + afib_flg",
+        formula="sapsi_first + afib_flg + aline_flg",
         layer=layer,
     )
     ep.tl.cox_ph_adjusted_curves(
@@ -258,7 +258,9 @@ def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
 def test_cox_ph_adjusted_curves_copy(mimic_2_adjusted_sa):
     edata = mimic_2_adjusted_sa
     duration_col, event_col = "mort_day_censored", "censor_flg"
-    cph = ep.tl.cox_ph(edata, duration_col=duration_col, event_col=event_col, formula="sapsi_first + afib_flg")
+    cph = ep.tl.cox_ph(
+        edata, duration_col=duration_col, event_col=event_col, formula="sapsi_first + afib_flg + aline_flg"
+    )
     kwargs = {"cph": cph, "strata": "aline_flg", "duration_col": duration_col, "event_col": event_col}
 
     edata_copy = ep.tl.cox_ph_adjusted_curves(edata, method="conditional", copy=True, **kwargs)
@@ -267,6 +269,24 @@ def test_cox_ph_adjusted_curves_copy(mimic_2_adjusted_sa):
 
     assert ep.tl.cox_ph_adjusted_curves(edata, method="conditional", **kwargs) is None
     assert "cox_ph_adjusted_curves" in edata.uns
+
+
+@pytest.mark.parametrize("in_model", ["formula", "strata", None])
+def test_cox_ph_adjusted_curves_strata_in_model(mimic_2_adjusted_sa, in_model):
+    edata = mimic_2_adjusted_sa
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+    formula = "sapsi_first + afib_flg" + (" + aline_flg" if in_model == "formula" else "")
+    strata = "aline_flg" if in_model == "strata" else None
+    cph = ep.tl.cox_ph(edata, duration_col=duration_col, event_col=event_col, formula=formula, strata=strata)
+    kwargs = {"cph": cph, "strata": "aline_flg", "duration_col": duration_col, "event_col": event_col}
+
+    if in_model is None:
+        with pytest.raises(ValueError, match="'aline_flg' is neither a covariate nor one of the `strata`"):
+            ep.tl.cox_ph_adjusted_curves(edata, method="conditional", **kwargs)
+        return
+    ep.tl.cox_ph_adjusted_curves(edata, method="conditional", **kwargs)
+    result = edata.uns["cox_ph_adjusted_curves"]
+    assert not np.allclose(result["0"]["survival"], result["1"]["survival"])
 
 
 @pytest.fixture
