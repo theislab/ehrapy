@@ -39,23 +39,21 @@ def _features(
     X = edata.X if layer is None else edata.layers[layer]
     if task.rolling:
         windows = task._windows(X.shape[2])
-        summaries = {
-            timepoint: summarize_measurements(
-                edata[:, :, window], layer=layer, var_names=var_names, statistics=statistics
-            )
-            for timepoint, window in enumerate(windows)
-            if window is not None
-        }
-        if not summaries:
+        observed = {str(t): window for t, window in enumerate(windows) if window is not None}
+        if not observed:
             raise ValueError(f"No timepoint lies more than {task.gap} timepoints after another.")
-        first = next(iter(summaries.values()))
-        xp = array_namespace(first.X)
-        missing = xp.full_like(first.X, np.nan)
-        values = xp.stack([summaries[t].X if t in summaries else missing for t in range(len(windows))], axis=2)
-        names = list(first.var_names)
+        summary = summarize_measurements(
+            edata, layer=layer, var_names=var_names, statistics=statistics, tem_names=observed
+        )
+        xp = array_namespace(summary.X)
+        names = [f"{var}_{statistic}" for var in var_names for statistic in statistics]
+        values = xp.reshape(summary.X, (summary.shape[0], len(names), len(observed)))
+        # Only the first timepoints lack a window.
+        missing = xp.full((*values.shape[:2], len(windows) - len(observed)), np.nan, dtype=values.dtype)
+        values = xp.concat([missing, values], axis=2)
     elif X.ndim == 3:
         summary = summarize_measurements(
-            edata[:, :, task._window(X.shape[2])], layer=layer, var_names=var_names, statistics=statistics
+            edata, layer=layer, var_names=var_names, statistics=statistics, tem_names=task._window(X.shape[2])
         )
         values, names = summary.X, list(summary.var_names)
     elif task.prediction_time is not None or task.observation_window is not None or task.gap:

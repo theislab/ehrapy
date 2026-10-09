@@ -103,8 +103,8 @@ def test_summarize_measurements_unknown_var(edata_blob_small):
 
 @pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
-@pytest.mark.parametrize("ndim", [2, 3])
-def test_summarize_measurements_array_types(array_type, ndim, rng):
+@pytest.mark.parametrize(("ndim", "tem_names"), [(2, None), (3, None), (3, {"early": slice(0, 2), "late": ["2", "3"]})])
+def test_summarize_measurements_array_types(array_type, ndim, tem_names, rng):
     if ndim == 3 and array_type.flags & Flags.Sparse:
         pytest.skip("sparse arrays are 2D")
     shape = (12, 3) if ndim == 2 else (6, 3, 4)
@@ -118,11 +118,12 @@ def test_summarize_measurements_array_types(array_type, ndim, rng):
         return ed.EHRData(shape=shape[:2], obs=obs, layers={DEFAULT_TEM_LAYER_NAME: X})
 
     statistics = STATISTICS if ndim == 2 else [*STATISTICS, "slope"]
-    expected = summarize_measurements(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, statistics=statistics)
+    kwargs = {"layer": DEFAULT_TEM_LAYER_NAME, "statistics": statistics, "tem_names": tem_names}
+    expected = summarize_measurements(make_edata(X), **kwargs)
     edata = make_edata(array_type(X))
 
     with forbid_dask_compute():
-        result = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=statistics)
+        result = summarize_measurements(edata, **kwargs)
 
     assert type(result.X) is type(edata.layers[DEFAULT_TEM_LAYER_NAME])
     if array_type.flags & Flags.Dask:
@@ -145,3 +146,49 @@ def test_summarize_measurements_2D_count_std(edata_to_expand):
 def test_summarize_measurements_slope_needs_3D(edata_to_expand):
     with pytest.raises(ValueError, match="needs 3D data"):
         summarize_measurements(edata_to_expand, statistics=["slope"])
+
+
+@pytest.fixture
+def edata_hourly():
+    X = np.array([[[1.0, 2.0, np.nan, 4.0, 5.0, 6.0], [10.0, np.nan, np.nan, 40.0, 50.0, np.nan]]])
+    tem = pd.DataFrame(index=[f"h{hour}" for hour in range(6)])
+    return ed.EHRData(shape=(1, 2), var=pd.DataFrame(index=["hr", "lactate"]), tem=tem, layers={"tem": X})
+
+
+@pytest.mark.parametrize("tem_names", [slice(3, None), ["h3", "h4", "h5"]])
+def test_summarize_measurements_tem_names(edata_hourly, tem_names):
+    summary = summarize_measurements(
+        edata_hourly, layer="tem", statistics=["mean", "count", "first"], tem_names=tem_names
+    )
+
+    assert summary.var_names.tolist() == [
+        f"{var}_{stat}" for var in ["hr", "lactate"] for stat in ["mean", "count", "first"]
+    ]
+    np.testing.assert_array_equal(summary.X, [[5.0, 3.0, 4.0, 45.0, 2.0, 40.0]])
+
+
+def test_summarize_measurements_windows(edata_hourly):
+    summary = summarize_measurements(
+        edata_hourly,
+        layer="tem",
+        var_names=["lactate", "hr"],
+        statistics=["max", "count"],
+        tem_names={"first_3h": slice(0, 3), "last_2h": slice(-2, None), "h2": "h2"},
+    )
+
+    assert summary.var_names.tolist() == [
+        f"{var}_{stat}_{window}"
+        for var in ["lactate", "hr"]
+        for stat in ["max", "count"]
+        for window in ["first_3h", "last_2h", "h2"]
+    ]
+    np.testing.assert_array_equal(summary.X, [[10.0, 50.0, np.nan, 1.0, 1.0, 0.0, 2.0, 6.0, np.nan, 2.0, 2.0, 0.0]])
+
+
+def test_summarize_measurements_tem_names_errors(edata_hourly, edata_to_expand):
+    with pytest.raises(ValueError, match="needs 3D data"):
+        summarize_measurements(edata_to_expand, tem_names=slice(0, 1))
+    with pytest.raises(ValueError, match="No timepoints selected"):
+        summarize_measurements(edata_hourly, layer="tem", tem_names={"empty": slice(6, None)})
+    with pytest.raises(KeyError, match="h9 not found"):
+        summarize_measurements(edata_hourly, layer="tem", tem_names=["h9"])
