@@ -118,6 +118,7 @@ doc = [
     "sphinxext-opengraph",
     "sphinx-llms-txt",
     "sphinx-sitemap",
+    "sphinx-reredirects",
     "pygments",
     "nbsphinx",
     "nbsphinx-link",
