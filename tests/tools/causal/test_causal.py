@@ -135,6 +135,25 @@ class TestHTE:
         assert "cate_tlearner" in self.edata.obs.columns
         assert not self.edata.obs["cate_tlearner"].isna().any()
 
+    @pytest.mark.parametrize(
+        ("learner", "models"),
+        [
+            (ep.tl.s_learner, {"outcome_model": "random_forest"}),
+            (ep.tl.t_learner, {"outcome_model": "random_forest"}),
+            (ep.tl.x_learner, {"propensity_model": "random_forest", "cate_model": "random_forest"}),
+        ],
+    )
+    def test_random_state_makes_learners_reproducible(self, learner, models):
+        edata = self.edata[:500].copy()
+        kwargs = {"treatment": "tx", "outcome": "y", "covariates": self.covariates, **models}
+
+        first = learner(edata, **kwargs, random_state=0)
+        second = learner(edata, **kwargs, random_state=0)
+        other = learner(edata, **kwargs, random_state=1)
+
+        np.testing.assert_allclose(first.params["cate"], second.params["cate"])
+        assert not np.allclose(first.params["cate"], other.params["cate"])
+
     def test_x_learner_rejects_classifier_for_cate(self):
         from sklearn.linear_model import LogisticRegression
 
