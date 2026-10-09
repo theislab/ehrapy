@@ -580,6 +580,8 @@ def violin(
     Preview:
         .. image:: /_static/docstring_previews/violin.png
     """
+    if groupby is not None:
+        kwds.setdefault("legend", False)
     violin_partial = partial(
         sc.pl.violin,
         keys=keys,

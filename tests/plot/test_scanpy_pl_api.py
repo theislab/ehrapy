@@ -216,6 +216,17 @@ def test_violin_plot(mimic_2, check_same_image):
     plt.close("all")
 
 
+def test_violin_plot_without_legend(mimic_2):
+    edata_sample = mimic_2[:200, ["age"]].copy()
+    edata_sample.obs["aline_flg"] = mimic_2[:200, "aline_flg"].X.toarray().ravel().astype(int)
+    edata_sample.obs["aline_flg"] = edata_sample.obs["aline_flg"].astype("category")
+
+    ax = ep.pl.violin(edata_sample, keys="age", groupby="aline_flg", show=False)
+
+    assert ax.get_legend() is None
+    plt.close("all")
+
+
 def test_violin_plot_3D(edata_blob_small):
     ep.pl.violin(edata_blob_small, keys=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
