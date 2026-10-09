@@ -222,11 +222,7 @@ def kaplan_meier(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> edata[:, ["censor_flg"]].X = np.where(
-        ...     edata[:, ["censor_flg"]].X == 0, 1, 0
-        ... )  # MIMIC-II uses 0=death while KaplanMeierFitter expects True=death
         >>> kmf = ep.tl.kaplan_meier(edata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> ep.pl.kaplan_meier(
         ...     [kmf], color=["r"], xlim=(0, 700), ylim=(0, 1), xlabel="Days", ylabel="Proportion Survived"
