@@ -72,12 +72,20 @@ exclude_patterns = [
     "auto_*/**.py",
     "**.ipynb_checkpoints",
     "tutorials/notebooks/README.md",
-    "tutorials/notebooks/diabetic_retinopathy_fate_mapping.ipynb",
+    "tutorials/notebooks/imputation_nb.ipynb",
 ]
 redirects = {
-    f"tutorials/notebooks/{name}": "../index.html"
-    for name in ("fhir", "out_of_core", "patient_trajectory", "ontology_mapping", "diabetic_retinopathy_fate_mapping")
-    if not (HERE / "tutorials" / "notebooks" / f"{name}.ipynb").exists()
+    **{
+        f"tutorials/notebooks/{name}": "../index.html"
+        for name in (
+            "fhir",
+            "out_of_core",
+            "patient_trajectory",
+            "ontology_mapping",
+            "diabetic_retinopathy_fate_mapping",
+        )
+    },
+    **{f"tutorials/notebooks/{name}": "cohort.html" for name in ("cohort_tracking", "imputation_nb")},
 }
 
 nbsphinx_execute = "never"
@@ -184,13 +192,10 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
     "tutorials/notebooks/mimic_2_effect_estimation": "_static/tutorials/effect_estimation.png",
     "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
-    "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
-    "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
-    "tutorials/notebooks/cohort_tracking": "_static/tutorials/cohort_tracking.png",
+    "tutorials/notebooks/cohort": "_static/tutorials/cohort_tracking.png",
     "tutorials/notebooks/bias": "_static/tutorials/bias.png",
-    "tutorials/notebooks/out_of_core": "_static/tutorials/out_of_core.png",
-    "tutorials/notebooks/patient_trajectory": "_static/tutorials/patient_trajectory.png",
-    "tutorials/notebooks/longitudinal_with_ehrapy": "_static/tutorials/longitudinal.png",
+    "tutorials/notebooks/longitudinal_with_ehrapy": "_static/tutorials/longitudinal_with_ehrapy.png",
+    "tutorials/notebooks/prediction": "_static/tutorials/machine_learning.png",
 }
 
 
