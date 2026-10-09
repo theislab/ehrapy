@@ -651,9 +651,28 @@ def test_mcar_identification(mcar_edata):
     assert p_value > 0.05
 
 
-def test_mcar_test_multi_timepoint_3d_raises(mcar_edata):
-    with pytest.raises(ValueError, match="only supports 2D data"):
+def test_mcar_test_multi_timepoint_3d_needs_agg(mcar_edata):
+    with pytest.raises(ValueError, match="needs `agg`"):
         mcar_test(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+
+def test_mcar_test_3d_selects_and_aggregates_timepoints(mcar_edata):
+    X = mcar_edata.layers[DEFAULT_TEM_LAYER_NAME]
+
+    at_timepoint = mcar_test(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME, tem_names=mcar_edata.tem.index[1])
+    aggregated = mcar_test(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME, tem_names=slice(0, 2), agg="max")
+
+    assert at_timepoint == mcar_test(ed.EHRData(X=X[:, :, 1]))
+    assert aggregated == mcar_test(ed.EHRData(X=np.nanmax(X[:, :, :2], axis=2)))
+
+
+def test_mcar_test_little_raises_for_variables_never_observed_together(rng):
+    X = rng.normal(size=(100, 3))
+    X[:50, 0] = np.nan
+    X[50:, 1] = np.nan
+
+    with pytest.raises(ValueError, match="'0' and '1'"):
+        mcar_test(ed.EHRData(X=X), method="little")
 
 
 def test_mcar_test_ttest_detects_mar(mar_edata):
