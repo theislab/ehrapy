@@ -19,8 +19,7 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/ehrapy_introduction
    notebooks/mimic_2_fate
    notebooks/mimic_2_survival_analysis
-   notebooks/mimic_2_effect_estimation
-   notebooks/mimic_2_causal_inference
+   notebooks/causal
    notebooks/longitudinal_with_ehrapy
    notebooks/prediction
    notebooks/cohort
