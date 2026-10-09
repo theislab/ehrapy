@@ -158,6 +158,6 @@ def subgroup_performance(
         points = hv.Scatter((names, values["value"]), kdims=[str(groupby)], vdims=[metric]).opts(
             size=8, tools=["hover"]
         )
-        title = f"{metric} (difference {differences[metric]:.2f})"
+        title = f"{metric}\ndifference {differences[metric]:.2f}"
         panels.append((error_bars * points).opts(title=title, width=width, height=height))
     return hv.Layout(panels).cols(3)
