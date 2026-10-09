@@ -131,7 +131,8 @@ def neighbors(
                 f"If metric is {metric}, use_rep must be a 3D array with shape (n_obs, n_vars, n_timepoints), but it has shape {np.shape(arr)}."
             )
 
-        metric = partial(timeseries_distance, arr=arr, metric=metric)  # type: ignore
+        timeseries_metric = metric
+        metric = partial(timeseries_distance, arr=arr, metric=timeseries_metric)  # type: ignore
 
         # the metric will use arr, but we need to hide this fact from scanpy;
         # this is a hack to do so. It tricks scanpy's checks for the use_rep shap, while the metric brings along its array       use_rep = None
@@ -173,6 +174,7 @@ def neighbors(
     if use_rep == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY:
         result = edata if edata_returned is None else edata_returned
         neighbors_params = result.uns["neighbors" if key_added is None else key_added]
+        neighbors_params["params"]["metric"] = timeseries_metric
         # incomparable patients have infinite distances, which turn their UMAP connectivities into NaN
         for graph_key in ("distances_key", "connectivities_key"):
             graph = result.obsp[neighbors_params[graph_key]]

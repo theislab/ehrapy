@@ -17,7 +17,7 @@ def test_neighbors_jaccard(edata_blob_small):
 
 
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
-def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
+def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric, tmp_path):
     """Test neighbors computation with timeseries metrics."""
     edata, _ = edata_and_distances_dtw
 
@@ -29,6 +29,10 @@ def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
     assert edata.obsp["distances"].shape == (5, 5)
     assert edata.obsp["connectivities"].shape == (5, 5)
     assert TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY not in edata.obsm
+    assert edata.uns["neighbors"]["params"]["metric"] == metric
+
+    ed.io.write_h5ed(edata, tmp_path / "neighbors.h5ed")
+    assert ed.io.read_h5ed(tmp_path / "neighbors.h5ed").uns["neighbors"]["params"]["metric"] == metric
 
 
 def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw):
