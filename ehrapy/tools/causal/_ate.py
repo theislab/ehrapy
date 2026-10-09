@@ -99,9 +99,9 @@ def iptw(
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: iptw_stabilized
-          ATE:    -0.0644
-          SE:     0.0332
-          95% CI: [-0.1313, -0.0089]
+          ATE:    -0.0639
+          SE:     0.0330
+          95% CI: [-0.1303, -0.0087]
           n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
@@ -290,9 +290,9 @@ def aipw(
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: aipw
-          ATE:    -0.0349
-          SE:     0.0365
-          95% CI: [-0.1065, 0.0367]
+          ATE:    -0.0347
+          SE:     0.0362
+          95% CI: [-0.1056, 0.0361]
           n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
@@ -400,9 +400,9 @@ def propensity_score_matching(
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: propensity_score_matching_att
-          ATT:    -0.0511
-          SE:     0.0337
-          95% CI: [-0.1209, 0.0051]
+          ATT:    -0.0450
+          SE:     0.0341
+          95% CI: [-0.1250, 0.0020]
           n:      1776
     """
     if target not in {"att", "ate"}:

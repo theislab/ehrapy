@@ -19,8 +19,10 @@ def resolve_propensity_model(spec: str | BaseEstimator, *, random_state: int | N
     if isinstance(spec, str):
         if spec == "logistic":
             from sklearn.linear_model import LogisticRegression
+            from sklearn.pipeline import make_pipeline
+            from sklearn.preprocessing import StandardScaler
 
-            return LogisticRegression(max_iter=1000)
+            return make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
         if spec == "gradient_boosting":
             from sklearn.ensemble import GradientBoostingClassifier
 
