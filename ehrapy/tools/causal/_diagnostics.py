@@ -61,9 +61,9 @@ def covariate_balance(
         ... )
         >>> print(bal.round(3).to_string())
                      smd_unweighted  smd_weighted  var_ratio_unweighted  var_ratio_weighted
-        age                   0.117        -0.044                 0.896               1.018
-        sofa_first            0.818        -0.220                 1.135               0.480
-        sapsi_first           0.627        -0.157                 1.112               0.781
+        age                   0.117        -0.044                 0.896               1.017
+        sofa_first            0.818        -0.215                 1.135               0.481
+        sapsi_first           0.627        -0.153                 1.112               0.782
     """
     design = _build_design_no_outcome(edata, treatment=treatment, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)

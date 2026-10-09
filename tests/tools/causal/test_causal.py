@@ -92,6 +92,14 @@ class TestATE:
         assert est.value == pytest.approx(3.0, abs=0.6)
         assert est.params["matches"]["n_matched_pairs"] > 0
 
+    @pytest.mark.parametrize("estimator", [ep.tl.iptw, ep.tl.propensity_score_matching])
+    def test_propensity_estimators_ignore_covariate_units(self, estimator):
+        rescaled = self.edata.copy()
+        rescaled.X[:, 0] *= 1e4
+        kwargs = {"treatment": "tx", "outcome": "y", "covariates": self.covariates, "n_bootstrap": 0}
+
+        assert estimator(rescaled, **kwargs).value == pytest.approx(estimator(self.edata, **kwargs).value)
+
     def test_propensity_score_matching_ate_target(self):
         est = ep.tl.propensity_score_matching(
             self.edata, treatment="tx", outcome="y", covariates=self.covariates, target="ate", n_bootstrap=0
