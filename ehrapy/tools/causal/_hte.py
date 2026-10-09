@@ -39,6 +39,7 @@ def t_learner(
     covariates: Sequence[str],
     *,
     outcome_model: str | BaseEstimator = "auto",
+    random_state: int = 0,
     key_added: str | None = None,
     layer: str | None = None,
 ) -> CausalEstimate:
@@ -54,6 +55,7 @@ def t_learner(
         covariates: Adjustment set used for the outcome models.
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
         outcome_model: Outcome model specification (see :func:`~ehrapy.tools.g_computation` for the accepted values).
+        random_state: Seed for the built-in gradient boosting and random forest models.
         key_added: Optional ``edata.obs`` column name into which the per-observation CATE vector is written.
             Observations dropped during NaN filtering are filled with ``NaN``.
         layer: Layer of ``edata`` to draw the var-side variables from.
@@ -79,8 +81,8 @@ def t_learner(
     assert_binary_treatment(design.T, treatment)
 
     treated = design.T == 1
-    m1 = resolve_outcome_model(outcome_model, y=design.Y[treated])
-    m0 = resolve_outcome_model(outcome_model, y=design.Y[~treated])
+    m1 = resolve_outcome_model(outcome_model, y=design.Y[treated], random_state=random_state)
+    m0 = resolve_outcome_model(outcome_model, y=design.Y[~treated], random_state=random_state)
 
     m1.fit(design.X[treated], _y_for_fit(m1, design.Y[treated]))
     m0.fit(design.X[~treated], _y_for_fit(m0, design.Y[~treated]))
@@ -107,6 +109,7 @@ def s_learner(
     covariates: Sequence[str],
     *,
     outcome_model: str | BaseEstimator = "auto",
+    random_state: int = 0,
     key_added: str | None = None,
     layer: str | None = None,
 ) -> CausalEstimate:
@@ -122,6 +125,7 @@ def s_learner(
         covariates: Adjustment set used for the outcome model.
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
         outcome_model: Outcome model specification (see :func:`~ehrapy.tools.g_computation` for the accepted values).
+        random_state: Seed for the built-in gradient boosting and random forest models.
         key_added: Optional ``edata.obs`` column name into which the per-observation CATE vector is written.
             Observations dropped during NaN filtering are filled with ``NaN``.
         layer: Layer of ``edata`` to draw the var-side variables from.
@@ -146,7 +150,7 @@ def s_learner(
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
 
-    model = resolve_outcome_model(outcome_model, y=design.Y)
+    model = resolve_outcome_model(outcome_model, y=design.Y, random_state=random_state)
     XT = np.column_stack([design.T, design.X])
     model.fit(XT, _y_for_fit(model, design.Y))
     X1 = np.column_stack([np.ones_like(design.T), design.X])
@@ -174,6 +178,7 @@ def x_learner(
     propensity_model: str | BaseEstimator = "logistic",
     cate_model: str | BaseEstimator = "auto",
     clip: tuple[float, float] | None = (0.01, 0.99),
+    random_state: int = 0,
     key_added: str | None = None,
     layer: str | None = None,
 ) -> CausalEstimate:
@@ -200,6 +205,7 @@ def x_learner(
             Classifiers are rejected because the imputed effects are continuous.
         clip: ``(lo, hi)`` propensity-score clipping range for the combination weight ``g``.
             Use ``None`` to disable clipping.
+        random_state: Seed for the built-in gradient boosting and random forest models.
         key_added: Optional ``edata.obs`` column name into which the per-observation CATE vector is written.
             Observations dropped during NaN filtering are filled with ``NaN``.
         layer: Layer of ``edata`` to draw the var-side variables from.
@@ -227,8 +233,8 @@ def x_learner(
     treated = design.T == 1
     untreated = ~treated
 
-    mu0_model = resolve_outcome_model(outcome_model, y=design.Y[untreated])
-    mu1_model = resolve_outcome_model(outcome_model, y=design.Y[treated])
+    mu0_model = resolve_outcome_model(outcome_model, y=design.Y[untreated], random_state=random_state)
+    mu1_model = resolve_outcome_model(outcome_model, y=design.Y[treated], random_state=random_state)
     mu0_model.fit(design.X[untreated], _y_for_fit(mu0_model, design.Y[untreated]))
     mu1_model.fit(design.X[treated], _y_for_fit(mu1_model, design.Y[treated]))
 
@@ -236,12 +242,12 @@ def x_learner(
     d0 = predict_mean(mu1_model, design.X[untreated]) - design.Y[untreated]
 
     # Stage 2 always uses regressors on continuous imputed effects.
-    tau1 = _resolve_regressor(cate_model)
-    tau0 = _resolve_regressor(cate_model)
+    tau1 = _resolve_regressor(cate_model, random_state=random_state)
+    tau0 = _resolve_regressor(cate_model, random_state=random_state)
     tau1.fit(design.X[treated], d1)
     tau0.fit(design.X[untreated], d0)
 
-    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=clip)
+    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=clip, random_state=random_state)
     cate = ps * tau0.predict(design.X) + (1 - ps) * tau1.predict(design.X)
     _store_cate(edata, design.index, cate, key_added)
 
@@ -260,7 +266,7 @@ def x_learner(
     )
 
 
-def _resolve_regressor(spec: str | BaseEstimator) -> BaseEstimator:
+def _resolve_regressor(spec: str | BaseEstimator, *, random_state: int | None) -> BaseEstimator:
     """Resolve a regressor for the X-learner stage 2; refuse classifiers."""
     if isinstance(spec, str) and spec == "auto":
         from sklearn.linear_model import LinearRegression
@@ -273,11 +279,11 @@ def _resolve_regressor(spec: str | BaseEstimator) -> BaseEstimator:
     if isinstance(spec, str) and spec == "gradient_boosting":
         from sklearn.ensemble import GradientBoostingRegressor
 
-        return GradientBoostingRegressor()
+        return GradientBoostingRegressor(random_state=random_state)
     if isinstance(spec, str) and spec == "random_forest":
         from sklearn.ensemble import RandomForestRegressor
 
-        return RandomForestRegressor(n_estimators=200, n_jobs=-1)
+        return RandomForestRegressor(n_estimators=200, n_jobs=-1, random_state=random_state)
 
     from sklearn.base import clone
 
