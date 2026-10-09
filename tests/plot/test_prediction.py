@@ -34,6 +34,18 @@ def test_prediction_performance(edata):
         ep.pl.prediction_performance(edata, ep.ml.Task("y", kind="regression"), split=None)
 
 
+def test_prediction_performance_calibration_range_follows_probabilities(edata):
+    edata.obs["prediction"] /= 10
+    edata.obs["y"] = np.random.default_rng(1).binomial(1, edata.obs["prediction"])
+
+    plot = ep.pl.prediction_performance(edata, ep.ml.Task("y"), split=None)
+
+    roc, _, calibration = (figure for figure, *_ in hv.render(plot, backend="bokeh").children)
+    assert calibration.x_range.end < 0.5
+    assert calibration.y_range.end < 0.5
+    assert roc.x_range.end == 1
+
+
 def test_prediction_performance_per_class(edata):
     roc, pr, calibration = ep.pl.prediction_performance(
         edata, ep.ml.Task("level", kind="multiclass"), key="levels", split=None
