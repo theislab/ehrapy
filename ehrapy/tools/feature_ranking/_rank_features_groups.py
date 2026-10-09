@@ -71,7 +71,7 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction
 
 
 def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> None:
-    """Sort results of :func:`~ehrapy.tools.rank_features_groups` by adjusted p-value.
+    """Sort results of :func:`~ehrapy.tools.rank_features_groups` by adjusted p-value and then p-value.
 
     Args:
         edata: Central data object after running :func:`~ehrapy.tools.rank_features_groups`
@@ -81,10 +81,10 @@ def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> N
         return
 
     pvals_adj = edata.uns[key_added]["pvals_adj"]
+    pvals = edata.uns[key_added]["pvals"]
 
     for group in pvals_adj.dtype.names:
-        group_pvals = pvals_adj[group]
-        sorted_indexes = np.argsort(group_pvals)
+        sorted_indexes = np.lexsort((pvals[group], pvals_adj[group]))
 
         for key in edata.uns[key_added].keys():
             if key in _UNRANKED_KEYS:
@@ -195,7 +195,7 @@ def _evaluate_categorical_features(
                   Array to be indexed by group id storing the statistic underlying
                   the computation of a p-value for each feature for each group.
         *logfoldchanges*: `np.array`
-                          Always equal to 1 for this function
+                          log2 ratios of the fractions of observations with value 1 for binary features, NaN otherwise
         *pvals*: `np.array`
                  p-values of a statistical test
         *pts*: `np.array`
@@ -232,30 +232,35 @@ def _evaluate_categorical_features(
 
         pvals = []
         scores = []
+        logfoldchanges = []
+        observed = ~pd.isna(feature_values)
+        binary = np.isin(feature_values[observed], (0, 1)).all()
 
         for group in groups_order:
             if group == reference:
                 continue
 
-            if reference == "rest":
-                contingency_table = pd.crosstab(feature_values, groups_values != group)
-            else:
-                obs_to_take = np.isin(groups_values, [group, reference])
-                reference_mask = groups_values[obs_to_take] == reference
-                contingency_table = pd.crosstab(feature_values[obs_to_take], reference_mask)
+            in_group = groups_values == group
+            rest = ~in_group if reference == "rest" else groups_values == reference
+            compared = in_group | rest
+            contingency_table = pd.crosstab(feature_values[compared], rest[compared])
 
             score, p_value, _, _ = chi2_contingency(
                 contingency_table.values, lambda_=tests_to_lambdas[categorical_method]
             )
             scores.append(score)
             pvals.append(p_value)
+            if binary:
+                logfoldchanges.append(
+                    _log2_ratio(*(feature_values[mask & observed].astype(float).mean() for mask in (in_group, rest)))
+                )
+            else:
+                logfoldchanges.append(np.nan)
 
         categorical_names.append([feature] * len(scores))
         categorical_scores.append(scores)
         categorical_pvals.append(pvals)
-        # It is not clear, how to interpret logFC or percentages for categorical data
-        # For now, leave some values so that plotting and sorting methods work
-        categorical_logfoldchanges.append(np.ones(len(scores)))
+        categorical_logfoldchanges.append(logfoldchanges)
         if pts:
             categorical_pts.append(np.ones(len(scores)))
 
@@ -289,6 +294,12 @@ def _nonzero_fractions(
     return fractions
 
 
+def _log2_ratio(means: np.ndarray | float, rest_means: np.ndarray | float) -> np.ndarray:
+    """log2 ratios of `means` to `rest_means`, NaN where either is not positive."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where((means > 0) & (rest_means > 0), np.log2(means) - np.log2(rest_means), np.nan)
+
+
 def _log2_fold_changes(
     edata: EHRData, names: np.recarray, *, groupby: str, groups_order: Sequence[str], reference: str
 ) -> np.recarray:
@@ -296,9 +307,7 @@ def _log2_fold_changes(
     means, rest_means = _group_means(edata.X, edata.obs[groupby].astype(str).to_numpy(), groups_order)
     if reference != "rest":
         rest_means = means[list(groups_order).index(reference)]
-    with np.errstate(divide="ignore", invalid="ignore"):
-        log2_ratios = np.where((means > 0) & (rest_means > 0), np.log2(means) - np.log2(rest_means), np.nan)
-    log2_ratios = pd.DataFrame(log2_ratios.T, index=edata.var_names, columns=groups_order)
+    log2_ratios = pd.DataFrame(_log2_ratio(means, rest_means).T, index=edata.var_names, columns=groups_order)
     return pd.DataFrame(
         {group: log2_ratios.loc[names[group], group].to_numpy() for group in names.dtype.names}
     ).to_records(index=False)
@@ -381,6 +390,8 @@ def rank_features_groups(
 ) -> EHRData | None:  # pragma: no cover
     """Rank features for characterizing groups.
 
+    Numeric and categorical features are ranked together by their adjusted p-values, and by their p-values among equal adjusted p-values, because the scores of their tests are not comparable.
+
     Args:
         edata: Central data object.
         groupby: The key of the observations grouping to consider.
@@ -428,6 +439,7 @@ def rank_features_groups(
           Ordered according to adjusted p-values.
         - logfoldchanges (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the log2 fold change for each feature for each group.
           For numeric features, this is the log2 ratio of the mean in the group to the mean in the `reference` group, or in all other observations if `reference='rest'`, and `NaN` where either mean is not positive.
+          For binary categorical features, this is the log2 ratio of the fractions of observations with value 1, and `NaN` for categorical features with more than two levels.
           Ordered according to adjusted p-values.
           Only provided if method is ‘t-test’ like.
         - pvals (:class:`numpy.ndarray`): p-values.
