@@ -103,7 +103,7 @@ def qc_metrics(
         - `entropy_of_missingness`: Entropy of the missingness pattern for each feature. Higher values indicate a more heterogeneous (less structured) missingness pattern.
         - `mean`: Mean value of the features.
         - `median`: Median value of the features.
-        - `std`: Standard deviation of the features.
+        - `standard_deviation`: Standard deviation of the features.
         - `min`: Minimum value of the features.
         - `max`: Maximum value of the features.
         - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.

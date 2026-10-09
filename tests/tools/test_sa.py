@@ -394,6 +394,19 @@ def test_survival_models_array_types(array_type, sa_function, rng):
     pd.testing.assert_frame_equal(edata.uns["test"], expected.uns["test"])
 
 
+@pytest.mark.parametrize("model", [ep.tl.ols, ep.tl.glm])
+def test_ols_glm_quoted_names(model, rng):
+    edata = ed.EHRData(
+        X=rng.normal(size=(50, 1)),
+        obs=pd.DataFrame({"Health Outcome": rng.normal(size=50)}, index=[str(i) for i in range(50)]),
+        var=pd.DataFrame(index=["Medication Effect"]),
+    )
+
+    result = model(edata, formula="Q('Health Outcome') ~ Q('Medication Effect')").fit()
+
+    assert list(result.params.index) == ["Intercept", "Q('Medication Effect')"]
+
+
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("model", [ep.tl.ols, ep.tl.glm])
 def test_ols_glm_array_types(array_type, model, rng):
