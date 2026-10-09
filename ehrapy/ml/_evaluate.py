@@ -56,6 +56,7 @@ def evaluate(
     - survival: Harrell's concordance index (`c_index`).
 
     With `groupby`, the subgroup `"difference"` holds the largest difference of every metric between subgroups.
+    Its confidence interval is that of the difference between the subgroups with the highest and the lowest value, so it includes 0 when they do not differ clearly.
     The difference of `positive_rate` is the demographic parity difference, and `equalized_odds` is the larger difference of `sensitivity` and `specificity`.
     The confidence intervals are percentiles of the metrics on patients resampled with replacement.
 
@@ -98,6 +99,9 @@ def evaluate(
     value = table(np.arange(len(y)))
     rng = np.random.default_rng(random_state)
     samples = pd.DataFrame([table(_resample(patients, rng)) for _ in range(n_bootstrap)], columns=value.index)
+    if groups is not None:
+        samples = _with_differences(samples, value, task.kind)
+        value = _with_differences(value.to_frame().T, value, task.kind).iloc[0]
     result = pd.DataFrame(
         {
             "value": value,
@@ -140,7 +144,7 @@ def _subgroups(column: pd.Series) -> pd.Index:
 def _table(
     y: np.ndarray, prediction: np.ndarray, groups: pd.Categorical | None, metrics: Mapping[str, Metric], kind: Kind
 ) -> pd.Series:
-    """The metrics, per subgroup with their largest differences if `groups` is given."""
+    """The metrics, per subgroup if `groups` is given."""
     if groups is None:
         return pd.Series(_values(y, prediction, metrics, kind), index=pd.Index(list(metrics), name="metric"))
     per_group = pd.DataFrame(
@@ -151,10 +155,21 @@ def _table(
         },
         index=pd.Index(list(metrics), name="metric"),
     )
-    difference = per_group.max(axis=1) - per_group.min(axis=1)
+    return per_group.unstack()
+
+
+def _with_differences(per_group: pd.DataFrame, reference: pd.Series, kind: Kind) -> pd.DataFrame:
+    """`per_group` with the difference of every metric between the subgroups with its highest and lowest value in `reference`."""
+    differences = {}
+    for metric in reference.index.unique("metric"):
+        values = reference.xs(metric, level="metric").dropna()
+        differences[metric] = (
+            per_group[(values.idxmax(), metric)] - per_group[(values.idxmin(), metric)] if len(values) else np.nan
+        )
+    difference = pd.DataFrame(differences, index=per_group.index)
     if kind == "binary":
-        difference["equalized_odds"] = difference[["sensitivity", "specificity"]].max()
-    return pd.concat([per_group.unstack(), pd.concat({"difference": difference})])
+        difference["equalized_odds"] = difference[["sensitivity", "specificity"]].max(axis=1)
+    return pd.concat([per_group, pd.concat({"difference": difference}, axis=1)], axis=1)
 
 
 def _values(y: np.ndarray, prediction: np.ndarray, metrics: Mapping[str, Metric], kind: Kind) -> list[float]:

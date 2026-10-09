@@ -70,6 +70,17 @@ def test_evaluate_subgroups():
     assert difference["equalized_odds"] == max(difference["sensitivity"], difference["specificity"])
 
 
+def test_evaluate_subgroup_difference_covers_no_difference():
+    covered = []
+    for seed in range(10):
+        edata = _calibrated(300, seed=seed)
+        result = ep.ml.evaluate(edata, ep.ml.Task("y"), split=None, groupby="group", n_bootstrap=100)
+        difference = result.loc["difference"].loc[["auroc", "positive_rate", "equalized_odds"]]
+        covered.append((difference["ci_lower"] <= 0) & (difference["ci_upper"] >= 0))
+
+    assert (pd.concat(covered, axis=1).mean(axis=1) >= 0.8).all()
+
+
 @pytest.mark.parametrize("categorical", [True, False])
 def test_evaluate_keeps_subgroup_order(categorical):
     edata = _calibrated()
