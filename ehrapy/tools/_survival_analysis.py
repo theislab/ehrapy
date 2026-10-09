@@ -275,8 +275,6 @@ def kaplan_meier(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kaplan_meier(edata, duration_col="mort_day_censored", event_col="censor_flg", label="Mortality")
 
         Cumulative incidence of death in hospital, with death after discharge as competing event:
@@ -481,10 +479,7 @@ def cox_ph(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(
         ...     edata,
         ...     duration_col="mort_day_censored",
@@ -628,9 +623,7 @@ def weibull_aft(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
         >>> aft = ep.tl.weibull_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> aft.print_summary()
@@ -742,10 +735,7 @@ def log_logistic_aft(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
         >>> llf = ep.tl.log_logistic_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
     """
@@ -909,10 +899,7 @@ def nelson_aalen(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_aalen(edata, duration_col="mort_day_censored", event_col="censor_flg")
     """
     return _univariate_model(
@@ -988,10 +975,7 @@ def weibull(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-        >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> wf = ep.tl.weibull(edata, duration_col="mort_day_censored", event_col="censor_flg")
     """
     return _univariate_model(

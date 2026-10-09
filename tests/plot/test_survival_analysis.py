@@ -18,9 +18,6 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
 def test_kaplan_meier(mimic_2: EHRData):
-    censor_idx = mimic_2.var_names.get_indexer(["censor_flg"])
-    mimic_2.X[:, censor_idx] = np.where(mimic_2.X[:, censor_idx] == 0, 1, 0)
-
     groups = mimic_2[:, ["service_unit"]].X
     edata_ficu = mimic_2[groups == "FICU"].copy()
     edata_micu = mimic_2[groups == "MICU"].copy()
