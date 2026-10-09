@@ -17,14 +17,12 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
 .. nbgallery::
 
    notebooks/ehrapy_introduction
+   notebooks/cohort
+   notebooks/subgroups
    notebooks/trajectories
    notebooks/survival
    notebooks/causal
-   notebooks/longitudinal_with_ehrapy
    notebooks/prediction
-   notebooks/cohort
-   notebooks/subgroups
-   notebooks/bias
 
 ```
 

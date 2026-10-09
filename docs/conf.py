@@ -89,6 +89,8 @@ redirects = {
     "tutorials/notebooks/mimic_2_introduction": "subgroups.html",
     "tutorials/notebooks/mimic_2_survival_analysis": "survival.html",
     "tutorials/notebooks/mimic_2_fate": "trajectories.html",
+    "tutorials/notebooks/bias": "prediction.html",
+    "tutorials/notebooks/longitudinal_with_ehrapy": "cohort.html",
     **{
         f"tutorials/notebooks/{name}": "causal.html"
         for name in ("mimic_2_causal_inference", "mimic_2_effect_estimation")
@@ -199,8 +201,6 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/causal": "_static/tutorials/causal_inference.png",
     "tutorials/notebooks/cohort": "_static/tutorials/cohort_tracking.png",
     "tutorials/notebooks/subgroups": "_static/tutorials/subgroups.png",
-    "tutorials/notebooks/bias": "_static/tutorials/bias.png",
-    "tutorials/notebooks/longitudinal_with_ehrapy": "_static/tutorials/longitudinal_with_ehrapy.png",
     "tutorials/notebooks/prediction": "_static/tutorials/machine_learning.png",
 }
 
