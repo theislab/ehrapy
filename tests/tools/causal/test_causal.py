@@ -85,6 +85,18 @@ class TestATE:
         )
         assert est.value == pytest.approx(3.0, abs=0.5)
 
+    def test_aipw_cross_fits_flexible_models(self):
+        from sklearn.tree import DecisionTreeRegressor
+
+        kwargs = {"treatment": "tx", "outcome": "y", "covariates": self.covariates}
+        linear = ep.tl.aipw(self.edata, **kwargs)
+        est = ep.tl.aipw(self.edata, **kwargs, outcome_model=DecisionTreeRegressor(random_state=0))
+        treated = self.edata[:, "tx"].X.ravel() == 1
+        y = self.edata[:, "y"].X.ravel()
+
+        assert np.abs(y - est.params["mu1"])[treated].mean() > 1
+        assert est.se > linear.se
+
     def test_propensity_score_matching_recovers_ate(self):
         est = ep.tl.propensity_score_matching(
             self.edata, treatment="tx", outcome="y", covariates=self.covariates, n_bootstrap=30, random_state=0
