@@ -10,8 +10,8 @@ from fast_array_utils.conv import to_dense
 from pandas.core.computation.parsing import BACKTICK_QUOTED_STRING, clean_column_name, tokenize_string
 
 from ehrapy._compat import _materialize, _var_indices
-from ehrapy._utils_axis import _resolve_axis
 from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
+from ehrapy.get._get import _resolve_axis
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 from ehrapy.preprocessing._summarize_measurements import _aggregate_time
 
