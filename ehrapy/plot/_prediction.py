@@ -38,6 +38,7 @@ def prediction_performance(
     Multiclass and multilabel tasks get a curve for every class or label against all others, labeled with its AUROC or AUPRC.
     The calibration curve compares the mean predicted probability with the observed frequency in `n_bins` bins with equally many observations.
     Dashed lines show a random model for the ROC curve, the frequency of the label for the precision-recall curve of binary tasks and perfect calibration for the calibration curve.
+    The axes of the calibration curve end at its largest probability or frequency, so that the curves of rare outcomes are not squeezed into a corner.
 
     Args:
         edata: Central data object.
@@ -100,8 +101,10 @@ def prediction_performance(
     if task.kind == "binary":
         titles[:2] = f"ROC (AUROC {auroc:.2f})", f"Precision-recall (AUPRC {auprc:.2f})"
         pr.append(hv.HLine(y.mean()).opts(**_GUIDE))
-    diagonal = hv.Curve([(0, 0), (1, 1)]).opts(**_GUIDE)
-    panels = (hv.Overlay([*roc, diagonal]), hv.Overlay(pr), hv.Overlay([*calibration, diagonal]))
+    upper = max((element.range(dim)[1] for element in calibration for dim in (0, 1)), default=1)
+    random = hv.Curve([(0, 0), (1, 1)], "False positive rate", "True positive rate").opts(**_GUIDE)
+    perfect = hv.Curve([(0, 0), (upper, upper)], "Mean predicted probability", "Observed frequency").opts(**_GUIDE)
+    panels = (hv.Overlay([*roc, random]), hv.Overlay(pr), hv.Overlay([*calibration, perfect]).opts(padding=0.05))
     return hv.Layout(
         [panel.opts(title=title, width=width, height=height) for panel, title in zip(panels, titles, strict=True)]
     ).cols(3)
