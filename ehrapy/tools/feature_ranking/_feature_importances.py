@@ -7,14 +7,14 @@ import pandas as pd
 from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
-from ehrapy._compat import function_2D_only
-from ehrapy.get import obs_df
+from ehrapy._compat import _var_indices, function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -44,6 +44,7 @@ def rank_features_supervised(
     Args:
         edata: Central data object.
         predicted_feature: The feature to predict by the model. Must be present in edata.var_names.
+            Observations without a value of this feature are left out.
         model: The model to use for prediction.
             Choose between 'regression', 'svm', or 'rf'.
             Multi-class classification is only possible with 'rf'.
@@ -96,7 +97,10 @@ def rank_features_supervised(
     if var_names == "all":
         var_names = [var_name for var_name in edata.var_names if var_name != predicted_feature]
     columns = list(dict.fromkeys([*var_names, predicted_feature]))
-    data = obs_df(edata, keys=columns, layer=layer)
+    X = edata.X if layer is None else edata.layers[layer]
+    values = to_dense(X[:, _var_indices(edata, columns)], to_cpu_memory=True)
+    data = pd.DataFrame(values, index=edata.obs_names, columns=columns)
+    data = data[data[predicted_feature].notna()]
 
     prediction_type = edata.var[FEATURE_TYPE_KEY].loc[predicted_feature]
 
