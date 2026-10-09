@@ -25,13 +25,14 @@ def calibrate(
     edata: EHRData,
     predictor: Predictor,
     *,
-    method: Literal["platt", "isotonic", "temperature"] = "isotonic",
+    method: Literal["platt", "isotonic", "temperature"] = "platt",
     split_key: str = "split",
     split: str = "tuning",
 ) -> Predictor:
     """Calibrate the predicted probabilities of a fitted model on held-out observations.
 
     Platt scaling fits a logistic regression to the log-odds of binary predictions, isotonic regression fits a monotonic function to them, and temperature scaling divides the log-odds or log-probabilities by a single temperature, which keeps the order of predictions and also applies to multiclass tasks.
+    Platt scaling is the default because isotonic regression overfits all but large held-out sets.
 
     Args:
         edata: Central data object.

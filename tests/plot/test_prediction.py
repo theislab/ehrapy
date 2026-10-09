@@ -49,3 +49,13 @@ def test_subgroup_performance(edata):
 
     assert len(plot) == 2
     assert all(isinstance(panel, hv.Overlay) for panel in plot)
+
+
+def test_subgroup_performance_keeps_subgroup_order(edata):
+    edata.obs["group"] = pd.Categorical(edata.obs["group"], categories=["b", "a"])
+    performance = ep.ml.evaluate(edata, ep.ml.Task("y"), split=None, groupby="group", n_bootstrap=0)
+
+    (panel,) = ep.pl.subgroup_performance(performance, metrics=["auroc"])
+
+    rendered = hv.render(panel, backend="bokeh")
+    assert list(rendered.x_range.factors) == ["b", "a"]

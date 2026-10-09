@@ -70,6 +70,19 @@ def test_evaluate_subgroups():
     assert difference["equalized_odds"] == max(difference["sensitivity"], difference["specificity"])
 
 
+@pytest.mark.parametrize("categorical", [True, False])
+def test_evaluate_keeps_subgroup_order(categorical):
+    edata = _calibrated()
+    edata.obs["group"] = edata.obs["group"].map({"a": "young", "b": "old"})
+    edata.obs.iloc[0, edata.obs.columns.get_loc("group")] = "young"
+    if categorical:
+        edata.obs["group"] = pd.Categorical(edata.obs["group"], categories=["young", "middle", "old"])
+
+    result = ep.ml.evaluate(edata, ep.ml.Task("y"), split=None, groupby="group", n_bootstrap=5)
+
+    assert result.index.get_level_values("group").unique().tolist() == ["young", "old", "difference"]
+
+
 def test_evaluate_resamples_patients():
     patients = np.repeat(np.arange(5), [1, 2, 3, 4, 5])
     rows = _resample(patients, np.random.default_rng(0))

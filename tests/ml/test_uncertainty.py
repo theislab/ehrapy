@@ -30,6 +30,17 @@ def test_calibrate_improves_calibration(edata, method):
         assert auroc[1] == pytest.approx(auroc[0])
 
 
+def test_calibrate_defaults_to_platt_scaling(edata):
+    predictor = ep.ml.fit(edata, ep.ml.Task("label", prediction_time=6, observation_window=4))
+    predictions = [
+        ep.ml.predict(edata, ep.ml.calibrate(edata, predictor, **kwargs), copy=True).obs["prediction"]
+        for kwargs in ({}, {"method": "platt"}, {"method": "isotonic"})
+    ]
+
+    np.testing.assert_array_equal(predictions[0], predictions[1])
+    assert not np.array_equal(predictions[0], predictions[2])
+
+
 def test_temperature_scaling_of_multiclass_predictions(edata):
     predictor = ep.ml.fit(edata, TASKS["multiclass"], model="random_forest")
     calibrated = ep.ml.calibrate(edata, predictor, method="temperature")
