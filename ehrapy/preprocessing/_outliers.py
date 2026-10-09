@@ -9,6 +9,7 @@ from fast_array_utils.types import CSBase, DaskArray
 
 from ehrapy._compat import (
     _broadcast_var_stat,
+    _ensure_feature_types,
     _has_sparse_chunks,
     _map_variable_blocks,
     _order_statistic,
@@ -16,6 +17,7 @@ from ehrapy._compat import (
     _set_columns,
     _sparse_columns,
 )
+from ehrapy.preprocessing._normalization import _numeric_var_names
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection
@@ -44,6 +46,7 @@ def winsorize(
     Args:
         edata: Central data object.
         var_names: The features to winsorize.
+            If `None` and no `obs_cols` are given, all numeric variables are winsorized.
         obs_cols: Columns in obs with features to winsorize.
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
         inclusive: Whether the number of values cut on each side is truncated (`True`) or rounded (`False`).
@@ -84,6 +87,7 @@ def clip_quantile(
         edata: Central data object.
         limits: Values outside the interval are clipped to the interval edges.
         var_names: Columns in var with features to clip.
+            If `None` and no `obs_cols` are given, all numeric variables are clipped.
         obs_cols: Columns in obs with features to clip
         layer: The layer to operate on.
         copy: Whether to return a copy of data or not
@@ -113,6 +117,9 @@ def _clip_features(
     if copy:
         edata = edata.copy()
 
+    if var_names is None and obs_cols is None:
+        _ensure_feature_types(edata, layer, name)
+        var_names = _numeric_var_names(edata, None)
     obs_cols, var_names = _validate_outlier_input(edata, obs_cols, var_names)  # type: ignore
 
     if var_names:

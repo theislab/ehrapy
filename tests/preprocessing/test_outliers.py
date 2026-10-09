@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import scipy.stats.mstats
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils.conv import to_dense
 from testing.fast_array_utils import Flags
 
@@ -136,3 +136,34 @@ def test_winsorize_default_limits_cut_one_percent_per_side():
     ep.pp.winsorize(edata, var_names=["value"])
 
     np.testing.assert_array_equal(edata.X[:, 0], np.clip(values, 1, 98))
+
+
+@pytest.mark.parametrize(
+    ("func", "kwargs"),
+    [(ep.pp.winsorize, {"limits": (0.1, 0.1)}), (ep.pp.clip_quantile, {"limits": (10, 80)})],
+    ids=["winsorize", "clip_quantile"],
+)
+def test_outliers_without_var_names_use_numeric_variables(func, kwargs):
+    values = np.arange(100, dtype=float)
+    edata = ed.EHRData(
+        X=np.column_stack([values, values, values % 2]),
+        var=pd.DataFrame({FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG]}, index=["a", "b", "c"]),
+    )
+    expected = func(edata, var_names=["a", "b"], copy=True, **kwargs).X
+
+    func(edata, **kwargs)
+
+    np.testing.assert_array_equal(edata.X, expected)
+    assert not np.array_equal(edata.X[:, 0], values)
+
+
+def test_outliers_with_obs_cols_only_leave_variables_unchanged():
+    values = np.arange(100, dtype=float)
+    edata = ed.EHRData(
+        X=values[:, None].copy(), obs=pd.DataFrame({"age": values}, index=values.astype(int).astype(str))
+    )
+
+    ep.pp.winsorize(edata, obs_cols=["age"], limits=(0.1, 0.1))
+
+    np.testing.assert_array_equal(edata.X[:, 0], values)
+    assert edata.obs["age"].max() < values.max()
