@@ -45,6 +45,7 @@ extensions = [
     "sphinxext.opengraph",
     "sphinx_sitemap",
     "sphinx_llms_txt",
+    "sphinx_reredirects",
 ]
 
 html_baseurl = "https://ehrapy.readthedocs.io/en/stable/"
@@ -73,6 +74,12 @@ exclude_patterns = [
     "tutorials/notebooks/README.md",
     "tutorials/notebooks/diabetic_retinopathy_fate_mapping.ipynb",
 ]
+redirects = {
+    f"tutorials/notebooks/{name}": "../index.html"
+    for name in ("fhir", "out_of_core", "patient_trajectory", "ontology_mapping", "diabetic_retinopathy_fate_mapping")
+    if not (HERE / "tutorials" / "notebooks" / f"{name}.ipynb").exists()
+}
+
 nbsphinx_execute = "never"
 nb_execution_mode = "off"
 

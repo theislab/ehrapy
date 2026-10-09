@@ -60,6 +60,8 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Survival Analysis
 
+Regression and survival models estimate how covariates relate to outcomes and to the time until an event.
+
 ```{eval-rst}
 .. autosummary::
     :toctree: tools
@@ -82,10 +84,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Causal Inference
 
-ehrapy ships a small, dependency-light set of causal inference estimators built directly on top of scikit-learn.
-ATE estimators handle binary treatments via inverse probability of treatment weighting (IPTW), parametric g-computation, the doubly-robust augmented IPW (AIPW), and propensity score matching.
-Heterogeneous treatment effects (CATE) are available via the T-, S-, and X-learner meta-learners.
-Two diagnostics — covariate balance and positivity — round out the toolkit.
+Causal estimators estimate the average and individual effects of a binary treatment from observational data, and diagnostics check their assumptions.
 
 ```{eval-rst}
 .. autosummary::
