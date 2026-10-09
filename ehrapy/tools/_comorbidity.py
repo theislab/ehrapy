@@ -28,7 +28,9 @@ def _variable_codes(var: pd.DataFrame) -> pd.DataFrame:
     """ICD revision and undotted code of the codes of every variable and of the ICD codes mapped to it, indexed by the position of the variable."""
     codes = pd.DataFrame({"vocabulary": var["vocabulary"].array, "code": var["code"].array})
     if MAPPED_CODES in var.columns:
-        mapped = pd.Series(var[MAPPED_CODES].to_numpy(), index=codes.index).explode().dropna().astype(str)
+        mapped = (
+            pd.Series(var[MAPPED_CODES].array, index=codes.index).astype("string").str.split("|").explode().dropna()
+        )
         if len(mapped):
             mapped = mapped.str.split("/", n=1, expand=True).reindex(columns=[0, 1])
             codes = pd.concat([codes, mapped.set_axis(["vocabulary", "code"], axis=1)])

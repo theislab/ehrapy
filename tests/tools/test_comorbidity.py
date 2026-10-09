@@ -30,8 +30,8 @@ VARIABLES = [
     ("ICD9CM", "250.40", None),
     ("ICD9", "4280", None),
     ("ICD9CM", "V42.7", None),
-    ("SNOMED", "22298006", ["ICD10CM/I21.9", "ICD9CM/410.90"]),
-    ("SNOMED", "94503003", ["ICD10CM/C78.0", "ICD10CM/E11.9"]),
+    ("SNOMED", "22298006", "ICD10CM/I219|ICD9CM/41090"),
+    ("SNOMED", "94503003", "ICD10CM/C780|ICD10CM/E119"),
     ("LOINC", "8480-6", None),
 ]
 CODES_OF_PATIENTS = [
@@ -60,7 +60,7 @@ def _var() -> pd.DataFrame:
         {
             "vocabulary": pd.array(vocabularies, dtype="string"),
             "code": pd.array(codes, dtype="string"),
-            MAPPED_CODES: pd.Series(mapped, dtype=object).to_numpy(),
+            MAPPED_CODES: pd.array(mapped, dtype="string"),
         },
         index=[f"{vocabulary}/{code}" for vocabulary, code, _ in VARIABLES],
     )
