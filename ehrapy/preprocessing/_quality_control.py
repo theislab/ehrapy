@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import math
+from collections.abc import Mapping
 from functools import partial, singledispatch
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
@@ -40,7 +41,8 @@ from ehrapy._compat import (
     sparse_nanquantile,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
-from ehrapy.preprocessing._missing_data import _missing_mask
+from ehrapy.preprocessing._missing_data import _missing_mask, _previous_observed
+from ehrapy.preprocessing._summarize_measurements import _tem_times
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -53,6 +55,7 @@ def qc_metrics(
     *,
     qc_vars: Collection[str] = (),
     layer: str | None = None,
+    time_key: str = "interval_start_offset",
     copy: bool = False,
 ) -> EHRData | None:
     """Calculates various quality control metrics.
@@ -67,6 +70,9 @@ def qc_metrics(
         edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
+        time_key: Column of `tem` with the time of every timepoint, as numbers, time differences or dates, in which the longitudinal metrics of 3D data are measured.
+            Time differences are measured in seconds and dates in seconds since the first timepoint.
+            If `tem` has no such column, the timepoints are evenly spaced and times are their positions.
         copy: Whether to return a copy of `edata` or modify it in place.
 
     Returns:
@@ -82,6 +88,13 @@ def qc_metrics(
         Extended observation level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
         - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features.
         - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features.
+
+        Longitudinal observation level metrics include (only computed for 3D data):
+
+        - `measured_timepoints_abs`: Number of timepoints with a value of any variable.
+        - `measured_timepoints_pct`: Relative amount of timepoints with a value of any variable in percent.
+        - `first_measured_time`: Time of the first timepoint with a value of any variable.
+        - `last_measured_time`: Time of the last timepoint with a value of any variable.
 
         Default feature level metrics include:
 
@@ -105,6 +118,10 @@ def qc_metrics(
         - `constant_variable_ratio`: Relative amount of constant features in percent.
         - `range_ratio`: Relative dispersion of features values respective to their mean.
 
+        Longitudinal feature level metrics include (only computed for 3D data, ``NaN`` for encoded features):
+
+        - `measured_obs_pct`: Relative amount of observations with at least one value of the feature in percent.
+        - `median_interval`: Median time between consecutive values of the feature within an observation.
 
     Examples:
         >>> import ehrdata as ed
@@ -124,7 +141,9 @@ def qc_metrics(
     if mtx.dtype == object and not is_lazy_array(mtx):
         _raise_error_when_heterogeneous(mtx)
 
-    var_metrics, obs_metrics = _compute_qc_metrics(mtx, edata, qc_vars=qc_vars, extended=FEATURE_TYPE_KEY in edata.var)
+    var_metrics, obs_metrics = _compute_qc_metrics(
+        mtx, edata, qc_vars=qc_vars, extended=FEATURE_TYPE_KEY in edata.var, time_key=time_key
+    )
 
     edata.var[var_metrics.columns] = var_metrics
     edata.obs[obs_metrics.columns] = obs_metrics
@@ -188,6 +207,18 @@ def _(mtx: CSBase, axis: tuple[int, ...]) -> np.ndarray:
     implicit_zeros = np.flatnonzero(np.bincount(index, minlength=n) < mtx.shape[axis[0]])
     values = np.concatenate([mtx.data, np.zeros(len(implicit_zeros), dtype=mtx.dtype)])
     return _count_distinct(np.concatenate([index, implicit_zeros]), values, n)
+
+
+@singledispatch
+def _intervals(observed: np.ndarray, times: np.ndarray) -> np.ndarray:
+    """Time since the previous observed timepoint at every observed timepoint, NaN elsewhere."""
+    previous = _previous_observed(observed)
+    return np.where(observed & (previous >= 0), times - times[np.maximum(previous, 0)], np.nan)
+
+
+@_intervals.register(DaskArray)
+def _(observed: DaskArray, times: np.ndarray) -> DaskArray:
+    return _map_observation_blocks(observed, _intervals, times, dtype=np.float64)
 
 
 @singledispatch
@@ -342,7 +373,7 @@ def _percentage(part: np.ndarray, total: np.ndarray | int) -> np.ndarray:
 
 
 def _compute_qc_metrics(
-    mtx: Array | CSBase, edata: EHRData, *, qc_vars: Collection[str], extended: bool
+    mtx: Array | CSBase, edata: EHRData, *, qc_vars: Collection[str], extended: bool, time_key: str
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculate the variable and observation metrics of :func:`qc_metrics`, computing dask arrays once.
 
@@ -375,6 +406,18 @@ def _compute_qc_metrics(
         lazy["total_features"] = _total(mtx)
         for qc_var in qc_vars:
             lazy[f"total_features_{qc_var}"] = _total(mtx[:, edata.var[qc_var].to_numpy(dtype=bool)])
+    if mtx.ndim == 3:
+        observed = ~_missing_mask(mtx)
+        times = _tem_times(edata, time_key)
+        xp = array_namespace(observed)
+        measured = xp.any(~_missing_mask(obs_mtx), axis=1)
+        if encoded.any():
+            measured = measured | np.any(~_missing_mask(original), axis=1)
+        lazy["var_measured_obs"] = xp.sum(xp.any(observed, axis=2), axis=0)
+        lazy["median_interval"] = nanquantile(_intervals(observed, times), 0.5, axis=obs_axes)
+        lazy["measured_timepoints"] = xp.sum(measured, axis=1)
+        lazy["first_measured_time"] = xp.min(xp.where(measured, times, xp.inf), axis=1)
+        lazy["last_measured_time"] = xp.max(xp.where(measured, times, -xp.inf), axis=1)
     metrics = dict(zip(lazy, _materialize(*lazy.values()), strict=True))
 
     n_var_values = math.prod(mtx.shape[axis] for axis in obs_axes)
@@ -415,6 +458,9 @@ def _compute_qc_metrics(
     for name, values in stats.items():
         var_metrics[name] = values
     var_metrics["iqr_outliers"] = metrics["iqr_outliers"] & ~encoded
+    if mtx.ndim == 3:
+        var_metrics["measured_obs_pct"] = np.where(encoded, np.nan, metrics["var_measured_obs"] / edata.n_obs * 100)
+        var_metrics["median_interval"] = np.where(encoded, np.nan, metrics["median_interval"])
 
     obs_missing = metrics["obs_missing"] + _compute_missing_values(original, axis=var_axes)
     n_obs_values = math.prod(obs_mtx.shape[1:]) + math.prod(original.shape[1:])
@@ -437,6 +483,11 @@ def _compute_qc_metrics(
         obs_metrics[f"log1p_total_features_{qc_var}"] = np.log1p(total)
         obs_metrics["total_features"] = metrics["total_features"]
         obs_metrics[f"pct_features_{qc_var}"] = total / metrics["total_features"] * 100
+    if mtx.ndim == 3:
+        obs_metrics["measured_timepoints_abs"] = metrics["measured_timepoints"]
+        obs_metrics["measured_timepoints_pct"] = metrics["measured_timepoints"] / mtx.shape[2] * 100
+        for name in ("first_measured_time", "last_measured_time"):
+            obs_metrics[name] = np.where(np.isfinite(metrics[name]), metrics[name], np.nan)
 
     return var_metrics, obs_metrics
 
@@ -470,6 +521,9 @@ def qc_lab_measurements(
     add_flag: bool = True,
     add_score: bool = True,
     groupby: str | None = None,
+    max_change: float | Mapping[str, float] | None = None,
+    relative_change: bool = False,
+    time_key: str = "interval_start_offset",
     copy: bool = False,
 ) -> EHRData | None:
     """Flag outliers and compute anomaly scores for numeric variables.
@@ -481,6 +535,8 @@ def qc_lab_measurements(
     * ``{var}_score``   – continuous anomaly score.
 
     For 3D data, the reference range and score statistics of a variable are computed across observations and timepoints, an observation is flagged if any of its timepoints is out of range, and its score is the mean score over its timepoints.
+    3D data additionally gets the column ``{var}_jump``, which flags observations with an implausible change between two consecutive values of the variable.
+    The change per time is implausible if its absolute value exceeds `max_change`, or, for variables without `max_change`, if it lies outside the range of normal changes of the variable estimated with `method`.
 
     Args:
         edata: Central data object.
@@ -498,11 +554,17 @@ def qc_lab_measurements(
             * ``"zscore"`` – ``(x − mean) / std``.
             * ``"iqr_distance"`` – ``(x − median) / IQR``.
             * ``"percentile"`` – percentile rank in [0, 100].
-        add_flag: Whether to add the ``{var}_outlier`` column.
+        add_flag: Whether to add the ``{var}_outlier`` column, and for 3D data the ``{var}_jump`` column.
         add_score: Whether to add the ``{var}_score`` column.
         groupby: Column in ``edata.obs`` used to stratify the computation so
             that statistics are calculated within each group independently.
             Must not contain missing values.
+        max_change: Largest plausible absolute change per time between two consecutive values of a variable of 3D data, for all variables or per variable.
+            Variables without a value are flagged by the range of their changes estimated with `method`.
+        relative_change: Whether changes are relative to the previous value instead of absolute.
+        time_key: Column of `tem` with the time of every timepoint, as numbers, time differences or dates, in which changes per time are measured.
+            Time differences and dates are measured in seconds.
+            If `tem` has no such column, changes are measured per timepoint.
         copy: If ``True``, return a modified copy; otherwise modify in place.
 
     Returns:
@@ -523,6 +585,8 @@ def qc_lab_measurements(
     missing = [v for v in var_names if v not in edata.var_names]
     if missing:
         raise ValueError(f"Variables not found in edata.var_names: {missing}")
+    if isinstance(max_change, Mapping) and (unknown := [v for v in max_change if v not in var_names]):
+        raise ValueError(f"max_change has variables that are not evaluated: {unknown}")
 
     if groupby is not None:
         if groupby not in edata.obs.columns:
@@ -531,6 +595,8 @@ def qc_lab_measurements(
             raise ValueError(f"groupby key '{groupby}' contains missing values.")
 
     mtx = edata.X if layer is None else edata.layers[layer]
+    if mtx.ndim != 3 and max_change is not None:
+        raise ValueError("max_change needs 3D data with a time axis.")
     mtx = to_dense(mtx[:, edata.var_names.get_indexer(var_names)])
     xp = array_namespace(mtx)
     mtx = xp.astype(mtx, xp.float64)
@@ -539,6 +605,12 @@ def qc_lab_measurements(
     results = {}
     if add_flag:
         results["outlier"] = _outlier_flags(mtx, groups, method)
+        if mtx.ndim == 3:
+            if not isinstance(max_change, Mapping):
+                max_change = dict.fromkeys(var_names, np.nan if max_change is None else max_change)
+            limits = np.array([max_change.get(var, np.nan) for var in var_names], dtype=np.float64)
+            changes = _changes(mtx, _tem_times(edata, time_key), relative_change)
+            results["jump"] = _jump_flags(changes, groups, method, limits)
     if add_score:
         results["score"] = _anomaly_scores(mtx, groups, score_type)
     results = dict(zip(results, _materialize(*results.values()), strict=True))
@@ -599,6 +671,35 @@ def _outlier_flags(X: Array, groups: np.ndarray | None, method: str) -> Array:
     lower, upper = _by_group(X, groups, partial(_reference_range, method=method))
     flags = (X < lower) | (X > upper)
     return array_namespace(X).any(flags, axis=2) if X.ndim == 3 else flags
+
+
+@singledispatch
+def _changes(X: np.ndarray, times: np.ndarray, relative: bool) -> np.ndarray:
+    """Change per time from the previous observed value at every observed timepoint, NaN elsewhere."""
+    observed = ~np.isnan(X)
+    previous = np.take_along_axis(X, np.maximum(_previous_observed(observed), 0), axis=2)
+    change = X - previous
+    if relative:
+        change = change / np.where(previous != 0, np.abs(previous), np.nan)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return change / _intervals(observed, times)
+
+
+@_changes.register(DaskArray)
+def _(X: DaskArray, times: np.ndarray, relative: bool) -> DaskArray:
+    return _map_observation_blocks(X, _changes, times, relative, dtype=np.float64)
+
+
+def _jump_flags(changes: Array, groups: np.ndarray | None, method: str, limits: np.ndarray) -> Array:
+    """Whether any change of every variable exceeds its limit, or lies outside its range of normal changes where the limit is NaN."""
+    xp = array_namespace(changes)
+    given = _broadcast_var_stat(~np.isnan(limits), changes)
+    limit = _broadcast_var_stat(limits, changes)
+    exceeds = xp.abs(changes) > limit
+    if not given.all():
+        lower, upper = _by_group(changes, groups, partial(_reference_range, method=method))
+        exceeds = xp.where(given, exceeds, (changes < lower) | (changes > upper))
+    return xp.any(exceeds, axis=2)
 
 
 def _anomaly_scores(X: Array, groups: np.ndarray | None, score_type: str) -> Array:

@@ -318,6 +318,51 @@ def test_qc_metrics_encoded_array_types(array_type):
     pd.testing.assert_frame_equal(result.var, expected.var)
 
 
+def _longitudinal_edata(X, times=None):
+    tem = (
+        None
+        if times is None
+        else pd.DataFrame({"interval_start_offset": times}, index=list(map(str, range(len(times)))))
+    )
+    return ed.EHRData(X=X, tem=tem)
+
+
+_LONGITUDINAL_X = np.array(
+    [
+        [[1, np.nan, 3, np.nan], [np.nan] * 4],
+        [[np.nan, 2, np.nan, np.nan], [5, np.nan, np.nan, 7]],
+        [[np.nan] * 4, [np.nan] * 4],
+    ]
+)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+@pytest.mark.parametrize(
+    ("times", "first", "last", "interval"),
+    [(None, [0, 0, np.nan], [2, 3, np.nan], [2, 3]), ([0.0, 1.0, 5.0, 6.0], [0, 0, np.nan], [5, 6, np.nan], [5, 6])],
+)
+def test_qc_metrics_3D_longitudinal_metrics(array_type, times, first, last, interval):
+    edata = _longitudinal_edata(array_type(_LONGITUDINAL_X), times)
+
+    with forbid_dask_compute(allowed=1):
+        ep.pp.qc_metrics(edata)
+
+    np.testing.assert_array_equal(edata.obs["measured_timepoints_abs"], [2, 3, 0])
+    np.testing.assert_array_equal(edata.obs["measured_timepoints_pct"], [50.0, 75.0, 0.0])
+    np.testing.assert_array_equal(edata.obs["first_measured_time"], first)
+    np.testing.assert_array_equal(edata.obs["last_measured_time"], last)
+    np.testing.assert_allclose(edata.var["measured_obs_pct"], [200 / 3, 100 / 3])
+    np.testing.assert_array_equal(edata.var["median_interval"], interval)
+
+
+def test_qc_metrics_2D_has_no_longitudinal_metrics():
+    edata = ed.EHRData(X=_LONGITUDINAL_X[:, :, 0])
+    ep.pp.qc_metrics(edata)
+
+    assert "median_interval" not in edata.var
+    assert "measured_timepoints_abs" not in edata.obs
+
+
 @pytest.mark.parametrize("copy", [False, True])
 def test_calculate_qc_metrics(missing_values_edata, copy):
     result = ep.pp.qc_metrics(missing_values_edata, copy=copy)
@@ -531,6 +576,49 @@ def test_qc_lab_measurements_array_types(array_type, ndim, groupby, method, scor
 
     assert isinstance(result.X, array_type.cls)
     pd.testing.assert_frame_equal(result.obs, expected)
+
+
+_JUMP_X = np.array(
+    [
+        [[1, np.nan, 3, np.nan], [4, 4, 4, 4]],
+        [[np.nan, 2, np.nan, 10], [5, np.nan, np.nan, 8]],
+        [[1, 2, 3, 4], [4, 5, 4, 5]],
+    ]
+)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+@pytest.mark.parametrize(
+    ("kwargs", "jumps"),
+    [
+        ({"max_change": 2.0}, [[False, False], [True, False], [False, False]]),
+        ({"max_change": 0.9, "time_key": "missing"}, [[True, False], [True, True], [True, True]]),
+        ({"max_change": {"1": 0.9}}, [[False, False], [True, False], [True, True]]),
+        ({"max_change": 1.0, "relative_change": True}, [[False, False], [True, False], [False, False]]),
+        ({}, [[False, False], [True, False], [True, True]]),
+    ],
+)
+def test_qc_lab_measurements_3D_jumps(array_type, kwargs, jumps):
+    edata = _longitudinal_edata(array_type(_JUMP_X), [0.0, 1.0, 2.0, 4.0])
+
+    with forbid_dask_compute(allowed=1):
+        ep.pp.qc_lab_measurements(edata, add_score=False, **kwargs)
+
+    np.testing.assert_array_equal(edata.obs[["0_jump", "1_jump"]], jumps)
+
+
+def test_qc_lab_measurements_2D_has_no_jumps():
+    edata = ed.EHRData(X=_JUMP_X[:, :, 0])
+    ep.pp.qc_lab_measurements(edata)
+
+    assert not edata.obs.columns.str.endswith("_jump").any()
+    with pytest.raises(ValueError, match="3D"):
+        ep.pp.qc_lab_measurements(edata, max_change=1.0)
+
+
+def test_qc_lab_measurements_max_change_unknown_var():
+    with pytest.raises(ValueError, match="max_change"):
+        ep.pp.qc_lab_measurements(ed.EHRData(X=_JUMP_X), var_names=["0"], max_change={"1": 1.0})
 
 
 def test_qc_lab_measurements_defaults_to_all_vars():

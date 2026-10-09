@@ -38,7 +38,7 @@ from ehrapy._compat import (
 )
 from ehrapy._progress import spinner
 from ehrapy._settings import settings
-from ehrapy.preprocessing._missing_data import _missing_mask
+from ehrapy.preprocessing._missing_data import _missing_mask, _previous_observed
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 # number of array elements densified or predicted at once
@@ -773,8 +773,7 @@ def _time_context(X: np.ndarray) -> list[np.ndarray]:
     n_t = X.shape[2]
     steps = np.arange(n_t)
     observed = ~np.isnan(X)
-    last = np.maximum.accumulate(np.where(observed, steps, -1), axis=2)
-    before = np.concatenate([np.full((*X.shape[:2], 1), -1), last[..., :-1]], axis=2)
+    before = _previous_observed(observed)
     first = np.minimum.accumulate(np.where(observed, steps, n_t)[..., ::-1], axis=2)[..., ::-1]
     after = np.concatenate([first[..., 1:], np.full((*X.shape[:2], 1), n_t)], axis=2)
     context = [np.broadcast_to(steps.astype(np.float64), X.shape)]
