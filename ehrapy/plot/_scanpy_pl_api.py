@@ -643,9 +643,6 @@ def stacked_violin(
 
     Makes a compact image composed of individual violin plots (from :func:`~seaborn.violinplot`) stacked on top of each other.
 
-    This function provides a convenient interface to the :class:`~scanpy.pl.StackedViolin` class.
-    If you need more flexibility, use :class:`~scanpy.pl.StackedViolin` directly.
-
     Args:
         edata: Central data object.
         var_names: {var_names}
@@ -789,9 +786,6 @@ def matrixplot(
     **kwds,
 ) -> MatrixPlot | dict | None:  # pragma: no cover
     """Creates a heatmap of the mean count per group of each var_names.
-
-    This function provides a convenient interface to the :class:`~scanpy.pl.MatrixPlot` class.
-    If you need more flexibility, you should use :class:`~scanpy.pl.MatrixPlot` directly.
 
     Args:
         edata: Central data object.
@@ -2175,7 +2169,7 @@ def rank_features_groups_stacked_violin(
         return_fig: Returns :class:`~scanpy.pl.StackedViolin` object.
             Useful for fine-tuning the plot.
             Takes precedence over `show=False`.
-        **kwds: Keyword arguments of :func:`scanpy.pl.stacked_violin`.
+        **kwds: Keyword arguments of :func:`~ehrapy.plot.stacked_violin`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.StackedViolin` object, else if `show` is false, return axes dict
@@ -2233,7 +2227,7 @@ def rank_features_groups_heatmap(
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
         show: {show}
-        **kwds: Keyword arguments of :func:`scanpy.pl.heatmap`.
+        **kwds: Keyword arguments of :func:`~ehrapy.plot.heatmap`.
 
     Examples:
         >>> import ehrdata as ed
@@ -2293,7 +2287,7 @@ def rank_features_groups_dotplot(
         return_fig: Returns :class:`~scanpy.pl.DotPlot` object.
             Useful for fine-tuning the plot.
             Takes precedence over `show=False`.
-        **kwds: Keyword arguments of :func:`scanpy.pl.dotplot`.
+        **kwds: Keyword arguments of :func:`~ehrapy.plot.dotplot`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.DotPlot` object, else if `show` is false, return axes dict
@@ -2361,7 +2355,7 @@ def rank_features_groups_matrixplot(
         return_fig: Returns :class:`~scanpy.pl.MatrixPlot` object.
             Useful for fine-tuning the plot.
             Takes precedence over `show=False`.
-        **kwds: Keyword arguments of :func:`scanpy.pl.matrixplot`.
+        **kwds: Keyword arguments of :func:`~ehrapy.plot.matrixplot`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.MatrixPlot` object, else if `show` is false, return axes dict
@@ -2421,7 +2415,7 @@ def rank_features_groups_tracksplot(
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
         show: {show}
-        **kwds: Keyword arguments of :func:`scanpy.pl.tracksplot`.
+        **kwds: Keyword arguments of :func:`~ehrapy.plot.tracksplot`.
 
     Examples:
         >>> import ehrdata as ed

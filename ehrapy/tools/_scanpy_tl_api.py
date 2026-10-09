@@ -36,7 +36,7 @@ def leiden(
     Cluster observations using the Leiden algorithm :cite:p:`Traag2019`, an improved version of the Louvain algorithm :cite:p:`Blondel2008`.
     It has been proposed for single-cell analysis by :cite:p:`Levine2015`.
     This requires having run :func:`~ehrapy.preprocessing.neighbors`.
-    Uses the ``igraph`` implementation (``flavor="igraph"`` in scanpy); ``leidenalg`` is not supported.
+    Uses the ``igraph`` implementation; ``leidenalg`` is not supported.
 
     Args:
         edata: Central data object.
@@ -187,7 +187,7 @@ def dpt(
     """Infer progression of observations through geodesic distance along the graph :cite:p:`Haghverdi2016`, :cite:p:`Wolf2019`.
 
     Reconstruct the progression of a process from snapshot data.
-    `Diffusion Pseudotime` has been introduced by :cite:p:`Haghverdi2016` and implemented within Scanpy :cite:p:`Wolf2018`.
+    `Diffusion Pseudotime` has been introduced by :cite:p:`Haghverdi2016` and implemented by :cite:p:`Wolf2018`.
     Here, we use a further developed version, which is able to deal with disconnected graphs :cite:p:`Wolf2019` and can be run in a `hierarchical` mode by setting the parameter `n_branchings>1`.
     We recommend, however, to only use :func:`~ehrapy.tools.dpt` for computing pseudotime (`n_branchings=0`) and to detect branchings via :func:`~ehrapy.tools.paga`.
     For pseudotime, you need to annotate your data with a root observation.
