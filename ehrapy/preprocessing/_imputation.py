@@ -138,8 +138,6 @@ def explicit_impute(
     if isinstance(replacement, Mapping):
         _var_indices(edata, [var for var in replacement if var != "default"])
         values = {var: _extract_impute_value(replacement, var) for var in edata.var_names}
-        for var in (var for var, value in values.items() if value is None):
-            logger.warning(f"No replace value passed and found for var [not bold green]{var}.")
         values = {var: value for var, value in values.items() if value is not None}
         _warn_imputation_threshold(edata, list(values), threshold=warning_threshold, layer=layer)
         var_indices = edata.var_names.get_indexer(list(values))
