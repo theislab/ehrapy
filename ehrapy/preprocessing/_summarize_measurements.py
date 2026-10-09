@@ -236,8 +236,13 @@ def _aggregate_time(X: Array, statistic: str) -> Array:
     raise ValueError(f"Unknown statistic: {statistic}")
 
 
-def _tem_times(edata: EHRData, time_key: str) -> np.ndarray:
-    """Time of every timepoint since the first one from `edata.tem[time_key]`, as numbers, time differences in seconds or dates, or its position if `tem` has no such column."""
+def _tem_times(edata: EHRData, time_key: str | None) -> np.ndarray:
+    """Time of every timepoint since the first one from `edata.tem[time_key]`, as numbers, time differences in seconds or dates, or its position if `tem` has no such column.
+
+    If `time_key` is `None`, `time_value` is used if present, else `interval_start_offset`.
+    """
+    if time_key is None:
+        time_key = "time_value" if "time_value" in edata.tem else "interval_start_offset"
     if time_key not in edata.tem:
         return np.arange(edata.n_t, dtype=np.float64)
     times = edata.tem[time_key]

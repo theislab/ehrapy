@@ -57,7 +57,7 @@ def qc_metrics(
     *,
     qc_vars: Collection[str] = (),
     layer: str | None = None,
-    time_key: str = "interval_start_offset",
+    time_key: str | None = None,
     copy: bool = False,
 ) -> EHRData | None:
     """Calculates various quality control metrics.
@@ -73,6 +73,7 @@ def qc_metrics(
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
         time_key: Column of `tem` with the time of every timepoint, as numbers, time differences or dates, in which the longitudinal metrics of 3D data are measured.
+            If `None`, `time_value` is used if `tem` has it, so that times are in the unit of the intervals, else `interval_start_offset`.
             Time differences are measured in seconds and dates in seconds since the first timepoint.
             If `tem` has no such column, the timepoints are evenly spaced and times are their positions.
         copy: Whether to return a copy of `edata` or modify it in place.
@@ -375,7 +376,7 @@ def _percentage(part: np.ndarray, total: np.ndarray | int) -> np.ndarray:
 
 
 def _compute_qc_metrics(
-    mtx: Array | CSBase, edata: EHRData, *, qc_vars: Collection[str], extended: bool, time_key: str
+    mtx: Array | CSBase, edata: EHRData, *, qc_vars: Collection[str], extended: bool, time_key: str | None
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculate the variable and observation metrics of :func:`qc_metrics`, computing dask arrays once.
 
@@ -525,7 +526,7 @@ def qc_lab_measurements(
     groupby: str | None = None,
     max_change: float | Mapping[str, float] | None = None,
     relative_change: bool = False,
-    time_key: str = "interval_start_offset",
+    time_key: str | None = None,
     copy: bool = False,
 ) -> EHRData | None:
     """Flag outliers and compute anomaly scores for numeric variables.
@@ -565,6 +566,7 @@ def qc_lab_measurements(
             Variables without a value are flagged by the range of their changes estimated with `method`.
         relative_change: Whether changes are relative to the previous value instead of absolute.
         time_key: Column of `tem` with the time of every timepoint, as numbers, time differences or dates, in which changes per time are measured.
+            If `None`, `time_value` is used if `tem` has it, so that times are in the unit of the intervals, else `interval_start_offset`.
             Time differences and dates are measured in seconds.
             If `tem` has no such column, changes are measured per timepoint.
         copy: If ``True``, return a modified copy; otherwise modify in place.

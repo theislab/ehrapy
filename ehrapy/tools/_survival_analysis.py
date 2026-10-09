@@ -61,7 +61,7 @@ def _survival_frame(
     if duration_col is not None:
         raise ValueError(f"The durations are derived from the 3D variable {event_col!r}, pass no `duration_col`.")
     duration_col = f"{event_col}_duration"
-    times = _tem_times(edata, "time_value" if "time_value" in edata.tem else "interval_start_offset")
+    times = _tem_times(edata, None)
     events = pd.DataFrame(
         _time_to_event(X[:, edata.var_names.get_loc(event_col)], times, event_col),
         index=edata.obs_names,

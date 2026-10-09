@@ -355,6 +355,24 @@ def test_qc_metrics_3D_longitudinal_metrics(array_type, times, first, last, inte
     np.testing.assert_array_equal(edata.var["median_interval"], interval)
 
 
+def _daily_tem(days):
+    return pd.DataFrame(
+        {"interval_start_offset": pd.to_timedelta(days, unit="D"), "time_value": days},
+        index=list(map(str, range(len(days)))),
+    )
+
+
+def test_qc_metrics_3D_times_default_to_time_value():
+    edata = ed.EHRData(X=_LONGITUDINAL_X, tem=_daily_tem([0.0, 1.0, 5.0, 6.0]))
+
+    ep.pp.qc_metrics(edata)
+    np.testing.assert_array_equal(edata.obs["last_measured_time"], [5, 6, np.nan])
+    np.testing.assert_array_equal(edata.var["median_interval"], [5, 6])
+
+    ep.pp.qc_metrics(edata, time_key="interval_start_offset")
+    np.testing.assert_array_equal(edata.var["median_interval"], [5 * 86400, 6 * 86400])
+
+
 def test_qc_metrics_2D_has_no_longitudinal_metrics():
     edata = ed.EHRData(X=_LONGITUDINAL_X[:, :, 0])
     ep.pp.qc_metrics(edata)
@@ -605,6 +623,13 @@ def test_qc_lab_measurements_3D_jumps(array_type, kwargs, jumps):
         ep.pp.qc_lab_measurements(edata, add_score=False, **kwargs)
 
     np.testing.assert_array_equal(edata.obs[["0_jump", "1_jump"]], jumps)
+
+
+def test_qc_lab_measurements_3D_jumps_default_to_time_value():
+    edata = ed.EHRData(X=_JUMP_X, tem=_daily_tem([0.0, 1.0, 2.0, 4.0]))
+    ep.pp.qc_lab_measurements(edata, add_score=False, max_change=2.0)
+
+    np.testing.assert_array_equal(edata.obs[["0_jump", "1_jump"]], [[False, False], [True, False], [False, False]])
 
 
 def test_qc_lab_measurements_2D_has_no_jumps():
