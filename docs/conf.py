@@ -149,6 +149,8 @@ intersphinx_mapping = {
     "statsmodels": ("https://www.statsmodels.org/stable", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
     "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
+    "cellrank": ("https://cellrank.readthedocs.io/en/latest/", None),
+    "pypots": ("https://docs.pypots.com/en/latest/", None),
     "holoviews": ("https://holoviews.org/", None),
     "dask": ("https://docs.dask.org/en/stable/", None),
     "igraph": ("https://python.igraph.org/en/stable/api/", None),
