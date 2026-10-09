@@ -24,13 +24,8 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/mimic_2_causal_inference
    notebooks/longitudinal_with_ehrapy
    notebooks/prediction
-   notebooks/ontology_mapping
-   notebooks/fhir
-   notebooks/cohort_tracking
+   notebooks/cohort
    notebooks/bias
-   notebooks/out_of_core
-   notebooks/patient_trajectory
-   notebooks/imputation_nb
 
 ```
 
