@@ -44,3 +44,10 @@ repos:
       hooks:
           - id: zizmor
             args: [--no-progress, --fix]
+    - repo: local
+      hooks:
+          - id: changelog-user-links
+            name: link GitHub usernames in the changelog
+            language: pygrep
+            entry: '(^|[^\[\w/`])@[A-Za-z0-9-]+'
+            files: ^docs/changelog\.md$
