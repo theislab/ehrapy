@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import singledispatch
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 
 from ehrapy._compat import _map_observation_blocks, _materialize
 from ehrapy._settings import settings
-from ehrapy.ml._deep import DeepModel, _deep_model, _FittedModel
+from ehrapy.ml._deep import DeepModel, Trainer, _deep_model, _FittedModel
 from ehrapy.ml._features import _features, _sequences, _times
 from ehrapy.ml._task import Kind, Task, _targets
 
@@ -87,6 +87,7 @@ def fit(
     | DeepModel
     | nn.Module
     | None = None,
+    trainer: Trainer | None = None,
     var_names: Iterable[str] | None = None,
     obs_keys: Iterable[str] = (),
     layer: str | None = None,
@@ -124,6 +125,8 @@ def fit(
             A torch module is a model of time series that maps the `values`, whether they were observed (`mask`) and the time since their last observation (`time_since_observed`), each of shape `(observations, timepoints, variables)`, and the `static` covariates of shape `(observations, covariates)` to an embedding of shape `(observations, features)`, or to an embedding and the attention to every timepoint.
             For rolling tasks, it returns an embedding of every timepoint of shape `(observations, timepoints, features)` that only reads earlier timepoints.
             If `None`, gradient boosting, or the Cox model for survival tasks.
+        trainer: How a deep learning model or torch module is trained, replacing the trainer of a configured deep learning model.
+            If `None`, the trainer of a configured deep learning model or else the defaults of :class:`~ehrapy.ml.Trainer` are used.
         var_names: Variables to compute features from.
             If `None`, all variables except the targets are used.
         obs_keys: Columns of `obs` to use as features, with categorical columns one-hot encoded.
@@ -148,6 +151,19 @@ def fit(
         >>> ep.ml.split(edata, stratify="cluster")
         >>> task = ep.ml.Task("cluster", prediction_time=6)
         >>> predictor = ep.ml.fit(edata, task, model="logistic")
+
+        A torch module that embeds the mean of every variable over time, trained for at most 5 epochs:
+
+        >>> import torch
+        >>> class Mean(torch.nn.Module):
+        ...     def __init__(self, n_variables: int):
+        ...         super().__init__()
+        ...         self.linear = torch.nn.Linear(n_variables, 8)
+        ...
+        ...     def forward(self, values, mask, time_since_observed, static):
+        ...         return self.linear(values.mean(dim=1))
+        >>> trainer = ep.ml.Trainer(max_epochs=5, device="cpu")
+        >>> predictor = ep.ml.fit(edata, task, model=Mean(edata.n_vars), trainer=trainer)
     """
     if split_key not in edata.obs:
         raise KeyError(f"`edata.obs` has no column {split_key!r}. Split the observations first with `ep.ml.split`.")
@@ -159,6 +175,10 @@ def fit(
     if model is None:
         model = "cox" if task.kind == "survival" else "gradient_boosting"
     deep = _deep_model(model)
+    if trainer is not None:
+        if deep is None:
+            raise ValueError(f"Only deep learning models and torch modules take a `trainer`, got {model!r}.")
+        deep = replace(deep, trainer=trainer)
     sequential = deep is not None and deep.sequential
     n_outputs = len(classes) if task.kind in {"multiclass", "multilabel"} else 1
 
