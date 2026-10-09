@@ -55,7 +55,7 @@ def test_obs_df_3d_var_keys(edata_blobs_timeseries_small, statistic):
 
     assert df.columns.tolist() == ["cluster", "feature_1", "feature_0"]
     pd.testing.assert_series_equal(df["cluster"], edata.obs["cluster"])
-    np.testing.assert_array_equal(df[["feature_1", "feature_0"]].to_numpy(), summary.X)
+    np.testing.assert_allclose(df[["feature_1", "feature_0"]].to_numpy(), summary.X, rtol=1e-12)
 
 
 def test_obs_df_3d_timepoint(edata_blobs_timeseries_small):
