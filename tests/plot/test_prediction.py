@@ -59,3 +59,12 @@ def test_subgroup_performance_keeps_subgroup_order(edata):
 
     rendered = hv.render(panel, backend="bokeh")
     assert list(rendered.x_range.factors) == ["b", "a"]
+
+
+def test_subgroup_performance_titles_fit_panels(edata):
+    performance = ep.ml.evaluate(edata, ep.ml.Task("y"), split=None, groupby="group", n_bootstrap=0)
+
+    (panel,) = ep.pl.subgroup_performance(performance, metrics=["calibration_intercept"])
+
+    difference = performance.loc[("difference", "calibration_intercept"), "value"]
+    assert panel.opts.get("plot").kwargs["title"] == f"calibration_intercept\ndifference {difference:.2f}"
