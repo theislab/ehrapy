@@ -8,6 +8,7 @@ import dask.array as da
 import numpy as np
 import pytest
 from ehrdata import EHRData
+from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
@@ -1022,6 +1023,29 @@ def test_gradient_boosting_impute_beats_locf(rng):
     imputed = gradient_boosting_impute(_numeric_edata(X_missing), copy=True).X
     locf = locf_impute(_numeric_edata(X_missing), copy=True).X
     assert error(imputed) < error(locf) / 2
+
+
+def test_gradient_boosting_impute_skips_rarely_observed_predictors(rng):
+    X = rng.normal(size=(11_000, 6))
+    X[:, 1:5] = np.nan
+    X[np.arange(4), np.arange(1, 5)] = 1.0
+    X[rng.random(11_000) < 0.1, 5] = np.nan
+
+    imputed = gradient_boosting_impute(_numeric_edata(X), max_train_obs=None, random_state=3, copy=True).X
+
+    assert not np.isnan(imputed[:, 5]).any()
+
+
+def test_gradient_boosting_impute_warns_for_variables_without_observed_values(rng, monkeypatch):
+    messages = []
+    monkeypatch.setattr(logger, "warning", lambda msg, **kwargs: messages.append(msg))
+    X = rng.normal(size=(50, 2))
+    X[:, 1] = np.nan
+
+    imputed = gradient_boosting_impute(_numeric_edata(X), copy=True).X
+
+    assert np.isnan(imputed[:, 1]).all()
+    assert any("Variable '1' has no observed values" in message for message in messages)
 
 
 def test_gradient_boosting_impute_categorical(rng):

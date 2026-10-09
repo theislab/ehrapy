@@ -806,25 +806,31 @@ def _hide_like(predictors: np.ndarray, missing_rate: np.ndarray, rng: np.random.
 
 
 @singledispatch
-def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int) -> list[Model | None]:
+def _fit_boosting(
+    sample: np.ndarray, categorical: np.ndarray, var_names: Sequence[str], random_state: int
+) -> list[Model | None]:
     """A gradient boosting model per variable with the predictors it uses and the range of its observed values, `None` for variables without observed values."""
     from sklearn.dummy import DummyClassifier, DummyRegressor
     from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 
+    min_samples_leaf = HistGradientBoostingRegressor().min_samples_leaf
     rng = np.random.default_rng(random_state)
     rows, context = _rows_and_context(sample)
     models: list[Model | None] = []
     for var in range(rows.shape[1]):
         observed = ~np.isnan(rows[:, var])
         if not observed.any():
+            logger.warning(
+                f"Variable '{var_names[var]}' has no observed values in the training observations and stays missing."
+            )
             models.append(None)
             continue
         predictors = _predictors(rows[observed], [values[observed] for values in context], var)
         if not observed.all():
             to_impute = _predictors(rows[~observed], [values[~observed] for values in context], var)
             _hide_like(predictors, np.isnan(to_impute).mean(axis=0), rng)
-        # scikit-learn cannot bin a predictor without values
-        used = ~np.isnan(predictors).all(axis=0)
+        # predictors observed in fewer rows than a leaf can never be split on, and may have no values left to bin after the validation split
+        used = (~np.isnan(predictors)).sum(axis=0) >= min_samples_leaf
         if not used.any():
             model = DummyClassifier(strategy="most_frequent") if categorical[var] else DummyRegressor()
         else:
@@ -837,15 +843,15 @@ def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int
 
 
 @_fit_boosting.register(CSBase)
-def _(sample: CSBase, categorical: np.ndarray, random_state: int) -> list[Model | None]:
-    return _fit_boosting(to_dense(sample), categorical, random_state)
+def _(sample: CSBase, categorical: np.ndarray, var_names: Sequence[str], random_state: int) -> list[Model | None]:
+    return _fit_boosting(to_dense(sample), categorical, var_names, random_state)
 
 
 @_fit_boosting.register(DaskArray)
-def _(sample: DaskArray, categorical: np.ndarray, random_state: int) -> Delayed:
+def _(sample: DaskArray, categorical: np.ndarray, var_names: Sequence[str], random_state: int) -> Delayed:
     import dask
 
-    return dask.delayed(_fit_boosting)(sample, categorical, random_state)
+    return dask.delayed(_fit_boosting)(sample, categorical, var_names, random_state)
 
 
 def _batch_size(X: np.ndarray | CSBase) -> int:
@@ -906,7 +912,8 @@ def gradient_boosting_impute(
     Every variable is predicted from the other variables of the same observation, missing values included, with :class:`~sklearn.ensemble.HistGradientBoostingRegressor`, or :class:`~sklearn.ensemble.HistGradientBoostingClassifier` for categorical variables.
     For 3D data, every timepoint is predicted, and the predictors also include the timepoint and the closest observed values of the variable before and after it with their distance in timepoints.
     During training, every predictor is hidden as often as it is missing where the variable is imputed, so that variables measured together cannot stand in for each other.
-    Imputed values stay within the range of the observed values of their variable, and variables without any observed value stay missing.
+    Imputed values stay within the range of the observed values of their variable, and variables without any observed value in the training observations stay missing with a warning.
+    Predictors observed too rarely to split on are left out.
 
     Args:
         edata: Central data object.
@@ -945,7 +952,7 @@ def gradient_boosting_impute(
     train = np.arange(X.shape[0])
     if max_train_obs is not None and X.shape[0] > max_train_obs:
         train = np.sort(np.random.default_rng(random_state).choice(X.shape[0], max_train_obs, replace=False))
-    models = _fit_boosting(values[train], categorical, random_state)
+    models = _fit_boosting(values[train], categorical, var_names, random_state)
     X = _set_columns(X, var_indices, _impute_boosting(values, models))
 
     if layer is None:
