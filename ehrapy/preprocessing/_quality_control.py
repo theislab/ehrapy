@@ -4,7 +4,7 @@ import itertools
 import math
 from collections.abc import Mapping
 from functools import partial, singledispatch
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple
 
 import array_api_extra as xpx
 import numpy as np
@@ -33,19 +33,21 @@ from ehrapy._compat import (
     _sparse_columns,
     _sparse_rows,
     _var_axes,
-    function_2D_only,
     nanquantile,
     nanstd,
     sparse_nan_min_max,
     sparse_nan_moments,
     sparse_nanquantile,
 )
+from ehrapy.get._get import _resolve_axis
 from ehrapy.preprocessing._encoding import _get_encoded_features
 from ehrapy.preprocessing._missing_data import _missing_mask, _previous_observed
-from ehrapy.preprocessing._summarize_measurements import _tem_times
+from ehrapy.preprocessing._summarize_measurements import _aggregate_time, _tem_times
 
 if TYPE_CHECKING:
-    from collections.abc import Collection
+    from collections.abc import Collection, Sequence
+
+    from ehrapy.preprocessing._summarize_measurements import Statistic
 
     type Array = np.ndarray | DaskArray
 
@@ -712,11 +714,12 @@ def _anomaly_scores(X: Array, groups: np.ndarray | None, score_type: str) -> Arr
     return xpx.nanmean(scores, axis=2) if X.ndim == 3 else scores
 
 
-@function_2D_only(allow_single_timepoint=True)
 def mcar_test(
     edata: EHRData,
     *,
     method: Literal["little", "ttest"] = "little",
+    tem_names: Any | Sequence[Any] | slice | None = None,
+    agg: Statistic | None = None,
     layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
@@ -731,15 +734,22 @@ def mcar_test(
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
-    3D data is only supported with a single timepoint, which is treated as 2D data.
+    For 3D data, the test uses the values at the timepoint selected by `tem_names`, or `agg` reduces the selected timepoints.
 
     Args:
         edata: Central data object.
         method: ``"little"`` for a global chi-square test or ``"ttest"`` for pairwise Welch t-tests across all variable combinations.
+        tem_names: Labels of `edata.tem.index` or a positional slice that select the timepoints of 3D data.
+            If `None` (default), all timepoints are used.
+        agg: How the selected timepoints of 3D data are reduced, one of the statistics of :func:`~ehrapy.preprocessing.summarize_measurements`.
+            Required if more than one timepoint is selected.
         layer: Layer to apply the test to. Uses ``X`` if ``None``.
 
     Returns:
         A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
+
+    Raises:
+        ValueError: If Little's test is applied to variables that are not observed together in at least two observations.
 
     Examples:
         >>> import ehrdata as ed
@@ -749,10 +759,21 @@ def mcar_test(
         ... )
         >>> ep.pp.mcar_test(edata)
         0.1412...
+
+        Test the mean of the first 6 timepoints of longitudinal data:
+
+        >>> edata = ed.dt.ehrdata_blobs(n_observations=100, n_variables=5, missing_values=0.1, base_timepoints=10)
+        >>> p_value = ep.pp.mcar_test(edata, tem_names=slice(0, 6), agg="mean")
     """
     mtx = edata.X if layer is None else edata.layers[layer]
     if mtx.ndim == 3:
-        mtx = mtx[:, :, 0]
+        tem_pos, _ = _resolve_axis(pd.Index(edata.tem.index), tem_names, "tem_names")
+        mtx = mtx[:, :, tem_pos]
+        if agg is None and mtx.shape[2] > 1:
+            raise ValueError("mcar_test of 3D data needs `agg` or `tem_names` that select one timepoint.")
+        mtx = mtx[:, :, 0] if agg is None else _aggregate_time(mtx, agg)
+    elif tem_names is not None or agg is not None:
+        raise ValueError("tem_names and agg need 3D data with a time axis.")
 
     # float64 required: covariance estimation and linear solves need stable floating-point math
     if mtx.dtype != np.float64:
@@ -763,7 +784,7 @@ def mcar_test(
 
     var_names = np.asarray(edata.var_names)
     if method == "little":
-        return _little_mcar_test(_missingness_patterns(mtx))
+        return _little_mcar_test(_missingness_patterns(mtx), var_names)
     if method == "ttest":
         return _mcar_t_tests(_missingness_patterns(mtx), var_names)
     raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
@@ -844,7 +865,7 @@ def _(X: DaskArray) -> _MissingnessPatterns:
     )
 
 
-def _little_mcar_test(statistics: _MissingnessPatterns) -> float:
+def _little_mcar_test(statistics: _MissingnessPatterns, var_names: np.ndarray) -> float:
     # Implements equation (4) from:
     # Li, C. (2013). Little's test of missing completely at random. Stata Journal, 13(4), 795-809.
     # Freely accessible preprint: https://cpb-us-w2.wpmucdn.com/blog.nus.edu.sg/dist/4/6502/files/2018/06/mcartest-zlxtj7.pdf
@@ -859,7 +880,16 @@ def _little_mcar_test(statistics: _MissingnessPatterns) -> float:
     mu = sums.sum(axis=0) / (counts @ valid_f)
 
     denom = valid_f.T @ (counts[:, None] * valid_f)
-    np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
+    first, second = np.nonzero(np.triu(denom < 2))
+    if len(first):
+        pairs = ", ".join(
+            repr(var_names[i]) if i == j else f"{var_names[i]!r} and {var_names[j]!r}"
+            for i, j in zip(first[:5], second[:5], strict=True)
+        )
+        raise ValueError(
+            f"Little's MCAR test needs every variable and pair of variables observed together in at least two observations, but {len(first)} are not, such as {pairs}. "
+            "Select variables that are measured together, or for 3D data reduce more timepoints with `agg`."
+        )
 
     M = sums.T @ valid_f
     cov_global = (S - (M * M.T) / denom) / (denom - 1)
