@@ -95,6 +95,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
+* {func}`ep.pp.neighbors <ehrapy.preprocessing.neighbors>` with `metric="dtw"`, `"soft_dtw"` or `"gak"` stores the name of the metric in `uns["neighbors"]["params"]` instead of the internal distance function together with the whole time series array, so that {func}`ed.io.write_h5ed <ehrdata.io.write_h5ed>` writes the result ([#1188](https://github.com/theislab/ehrapy/pull/1188)) @Zethson
 * {func}`ep.pl.violin <ehrapy.plot.violin>` no longer draws a legend that repeats the x axis when `groupby` has integer categories such as a 0/1 treatment flag ([#1182](https://github.com/theislab/ehrapy/pull/1182)) @Zethson
 * {meth}`CausalEstimate.summary <ehrapy.tools.CausalEstimate.summary>` labels the effect with its new `estimand` attribute, so that {func}`ep.tl.propensity_score_matching <ehrapy.tools.propensity_score_matching>` with `target="att"` reports an ATT instead of an ATE (PRLINK) @Zethson
 * The `summary()` of a {class}`ep.tl.CausalEstimate <ehrapy.tools.CausalEstimate>` labels the effect with its new `estimand` attribute, so that {func}`ep.tl.propensity_score_matching <ehrapy.tools.propensity_score_matching>` with `target="att"` reports an ATT instead of an ATE ([#1183](https://github.com/theislab/ehrapy/pull/1183)) @Zethson
