@@ -94,6 +94,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
+* Matplotlib figures in notebooks display inline after a holoviews-based ehrapy plot that runs before the first matplotlib figure, without `%matplotlib inline` @Zethson
 * {func}`ep.tl.ols <ehrapy.tools.ols>` and {func}`ep.tl.glm <ehrapy.tools.glm>` find the `obs` columns and variables quoted as `Q('...')` in a formula, so that names with spaces work again, by requiring formulaic 1.2.2 ([#1165](https://github.com/theislab/ehrapy/pull/1165)) @Zethson
 * {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses scanpy's dask-native `covariance_eigh` solver for dask arrays by default instead of requiring dask-ml ([#1163](https://github.com/theislab/ehrapy/pull/1163)) @Zethson
 * The `rapids12` and `rapids13` extras install the CUDA wheels of rapids-singlecell, whose 0.18 release only builds from source under its old name and extras ([#1153](https://github.com/theislab/ehrapy/pull/1153)) @Zethson

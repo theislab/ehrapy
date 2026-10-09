@@ -128,6 +128,8 @@ doc = [
 ]
 test = [
     "ehrapy[dask,leiden,ml]",
+    "ipykernel",
+    "nbclient",
     "pytest",
     "pytest-cov",
     "pytest-mock",
@@ -166,7 +168,7 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 # CPU
 [tool.hatch.envs.hatch-test]
 features = [ "dask", "leiden", "ml" ]
-extra-dependencies = [ "xdoctest" ]
+extra-dependencies = [ "ipykernel", "nbclient", "xdoctest" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]
