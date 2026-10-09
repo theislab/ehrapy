@@ -608,6 +608,39 @@ def test_rank_features_groups_logfoldchanges(method, reference, standardize, rng
     assert np.isnan(expected).any() == standardize
 
 
+@pytest.mark.parametrize("reference", ["rest", "b"])
+def test_rank_features_groups_categorical_logfoldchanges(reference, rng):
+    flag = (rng.random(40) < np.repeat([0.9, 0.3, 0.1, 0.6], 10)).astype(float)
+    edata = ed.EHRData(
+        X=np.column_stack([_ranking_data(rng), flag]),
+        obs=_ranking_edata(_ranking_data(rng)).obs,
+        var=pd.DataFrame(
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG] * 3 + [CATEGORICAL_TAG] * 2}, index=["n0", "n1", "n2", "c", "flag"]
+        ),
+    )
+    ep.tl.rank_features_groups(edata, "group", reference=reference)
+
+    result = edata.uns["rank_features_groups"]
+    groups = edata.obs["group"].to_numpy()
+    logfoldchanges = {
+        group: pd.Series(result["logfoldchanges"][group], index=result["names"][group])
+        for group in result["names"].dtype.names
+    }
+    for group, values in logfoldchanges.items():
+        rest = groups != group if reference == "rest" else groups == reference
+        assert values["flag"] == pytest.approx(np.log2(flag[groups == group].mean() / flag[rest].mean()))
+        assert np.isnan(values["c"])
+    assert logfoldchanges["a"]["flag"] > 0 > logfoldchanges["c"]["flag"]
+
+
+def test_rank_features_groups_df_orders_by_pvals(mimic_2_encoded):
+    ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit")
+
+    for group, df in ep.get.rank_features_groups_df(mimic_2_encoded, group=None).groupby("group", observed=True):
+        order = df.sort_values(["pvals_adj", "pvals"], kind="stable")
+        assert df.index.equals(order.index), group
+
+
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 def test_filter_rank_features_groups_array_types(array_type, rng):
     X = _ranking_data(rng)
