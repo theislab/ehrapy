@@ -86,6 +86,7 @@ redirects = {
         )
     },
     **{f"tutorials/notebooks/{name}": "cohort.html" for name in ("cohort_tracking", "imputation_nb")},
+    "tutorials/notebooks/mimic_2_introduction": "subgroups.html",
 }
 
 nbsphinx_execute = "never"
@@ -187,12 +188,12 @@ html_show_sphinx = False
 
 nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
-    "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
     "tutorials/notebooks/mimic_2_effect_estimation": "_static/tutorials/effect_estimation.png",
     "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
     "tutorials/notebooks/cohort": "_static/tutorials/cohort_tracking.png",
+    "tutorials/notebooks/subgroups": "_static/tutorials/subgroups.png",
     "tutorials/notebooks/bias": "_static/tutorials/bias.png",
     "tutorials/notebooks/longitudinal_with_ehrapy": "_static/tutorials/longitudinal_with_ehrapy.png",
     "tutorials/notebooks/prediction": "_static/tutorials/machine_learning.png",
