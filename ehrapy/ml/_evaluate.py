@@ -89,7 +89,7 @@ def evaluate(
     """
     y, prediction, obs = _evaluation_data(edata, task, key=key, split_key=split_key, split=split)
     metrics = _metrics(task.kind, threshold)
-    groups = None if groupby is None else obs[groupby].to_numpy()
+    groups = None if groupby is None else pd.Categorical(obs[groupby], categories=_subgroups(obs[groupby]))
     patients = pd.factorize(obs.index if patient_key is None else obs[patient_key])[0]
 
     def table(rows: np.ndarray) -> pd.Series:
@@ -130,8 +130,15 @@ def _evaluation_data(
     return (y if task.kind in {"regression", "survival"} else y.astype(np.int64)), prediction, obs
 
 
+def _subgroups(column: pd.Series) -> pd.Index:
+    """The subgroups in `column`, in the order of its categories or else of their appearance."""
+    if isinstance(column.dtype, pd.CategoricalDtype):
+        return column.cat.remove_unused_categories().cat.categories
+    return pd.Index(column.dropna().unique())
+
+
 def _table(
-    y: np.ndarray, prediction: np.ndarray, groups: np.ndarray | None, metrics: Mapping[str, Metric], kind: Kind
+    y: np.ndarray, prediction: np.ndarray, groups: pd.Categorical | None, metrics: Mapping[str, Metric], kind: Kind
 ) -> pd.Series:
     """The metrics, per subgroup with their largest differences if `groups` is given."""
     if groups is None:
@@ -139,7 +146,8 @@ def _table(
     per_group = pd.DataFrame(
         {
             group: _values(y[groups == group], prediction[groups == group], metrics, kind)
-            for group in np.unique(groups[pd.notna(groups)])
+            for group in groups.categories
+            if (groups == group).any()
         },
         index=pd.Index(list(metrics), name="metric"),
     )

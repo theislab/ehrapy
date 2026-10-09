@@ -204,14 +204,15 @@ def _aggregate_time(X: Array, statistic: str) -> Array:
     if not xp.isdtype(X.dtype, "real floating"):
         X = xp.astype(X, xp.float64)
     match statistic:
-        case "min":
-            return xpx.nanmin(X, axis=2)
-        case "max":
-            return xpx.nanmax(X, axis=2)
-        case "mean":
-            return xpx.nanmean(X, axis=2)
-        case "median":
-            return nanquantile(X, 0.5, axis=2)
+        case "min" | "max" | "mean" | "median":
+            measured = xp.any(~xp.isnan(X), axis=2)
+            filled = xp.where(measured[..., None], X, 0)
+            summary = (
+                nanquantile(filled, 0.5, axis=2)
+                if statistic == "median"
+                else getattr(xpx, f"nan{statistic}")(filled, axis=2)
+            )
+            return xp.where(measured, summary, xp.nan)
         case "count":
             return xp.sum(xp.astype(~xp.isnan(X), X.dtype), axis=2)
         case "std" | "slope":

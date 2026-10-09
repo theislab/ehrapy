@@ -101,7 +101,7 @@ def test_summarize_measurements_unknown_var(edata_blob_small):
         summarize_measurements(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, var_names=["unknown"])
 
 
-@pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+@pytest.mark.filterwarnings("error::RuntimeWarning")
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize(("ndim", "tem_names"), [(2, None), (3, None), (3, {"early": slice(0, 2), "late": ["2", "3"]})])
 def test_summarize_measurements_array_types(array_type, ndim, tem_names, rng):
