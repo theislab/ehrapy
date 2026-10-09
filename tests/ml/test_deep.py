@@ -24,6 +24,18 @@ MODELS = {
 QUICK = ep.ml.Trainer(max_epochs=2, batch_size=16, device="cpu")
 
 
+def _mean():
+    class Mean(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(3, 4)
+
+        def forward(self, values, mask, time_since_observed, static):
+            return self.linear(values.mean(dim=1))
+
+    return Mean()
+
+
 def _split(n_obs: int) -> ed.EHRData:
     edata = longitudinal(n_obs)
     ep.ml.split(edata)
@@ -95,21 +107,23 @@ def test_class_weight_raises_rare_class_probabilities():
 
 
 def test_torch_module():
-    class Mean(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear = torch.nn.Linear(3, 4)
-
-        def forward(self, values, mask, time_since_observed, static):
-            return self.linear(values.mean(dim=1))
-
     edata = _split(60)
-    module = Mean()
+    module = _mean()
     predictor = ep.ml.fit(edata, TASKS["regression"], model=module)
     ep.ml.predict(edata, predictor)
 
     assert edata.obsm["X_prediction"].shape == (60, 4)
     assert predictor.model.module.network is not module
+
+
+def test_trainer():
+    edata = _split(60)
+    trainer = ep.ml.Trainer(max_epochs=1, device="cpu")
+
+    assert ep.ml.fit(edata, TASKS["binary"], model=_mean(), trainer=trainer).model.n_epochs == 1
+    assert ep.ml.fit(edata, TASKS["binary"], model=ep.ml.GRU(trainer=QUICK), trainer=trainer).model.n_epochs == 1
+    with pytest.raises(ValueError, match="Only deep learning models"):
+        ep.ml.fit(edata, TASKS["binary"], model="logistic", trainer=trainer)
 
 
 def test_model_names():
