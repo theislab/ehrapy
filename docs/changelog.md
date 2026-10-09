@@ -53,6 +53,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 💥 Breaking changes
 
+* {func}`ep.tl.weibull_aft <ehrapy.tools.weibull_aft>` takes `event_col` as keyword argument and defaults to `model_ancillary=False` like {func}`ep.tl.log_logistic_aft <ehrapy.tools.log_logistic_aft>`, so that it no longer models the shape parameter with all covariates unless asked to, which changes the fitted models of calls that relied on the default ([#1193](https://github.com/theislab/ehrapy/pull/1193)) @Zethson
 * Remove the single-cell leftovers `feature_symbols`, `use_raw` and the unused fields of `ep.settings` ([#1154](https://github.com/theislab/ehrapy/pull/1154), [#1162](https://github.com/theislab/ehrapy/pull/1162)) @Zethson
 
   The `feature_symbols` argument of the `ep.pl` and `ep.get` functions and the `use_raw` argument of the `ep.pl` functions are gone, and plots always read `.X` or `layer`, never `.raw`.
