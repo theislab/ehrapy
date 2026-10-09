@@ -461,10 +461,16 @@ def longitudinal_events() -> ed.EHRData:
 
 @pytest.mark.parametrize(
     ("time_key", "durations"),
-    [("interval_start_offset", [0, 7200, 7200, 14400, 3600]), ("unknown", [0, 2, 2, 3, 1])],
+    [
+        ("time_value", [0, 2, 2, 4, 1]),
+        ("interval_start_offset", [0, 7200, 7200, 14400, 3600]),
+        ("unknown", [0, 2, 2, 3, 1]),
+    ],
 )
 def test_survival_from_longitudinal_event(longitudinal_events, time_key, durations):
-    if time_key == "unknown":
+    if time_key == "time_value":
+        longitudinal_events.tem["time_value"] = [0.0, 1, 2, 4]
+    elif time_key == "unknown":
         longitudinal_events.tem = longitudinal_events.tem.rename(columns={"interval_start_offset": time_key})
 
     kmf = ep.tl.kaplan_meier(longitudinal_events, event_col="event")

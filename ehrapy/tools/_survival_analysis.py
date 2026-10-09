@@ -61,8 +61,9 @@ def _survival_frame(
     if duration_col is not None:
         raise ValueError(f"The durations are derived from the 3D variable {event_col!r}, pass no `duration_col`.")
     duration_col = f"{event_col}_duration"
+    times = _tem_times(edata, "time_value" if "time_value" in edata.tem else "interval_start_offset")
     events = pd.DataFrame(
-        _time_to_event(X[:, edata.var_names.get_loc(event_col)], _tem_times(edata, "interval_start_offset"), event_col),
+        _time_to_event(X[:, edata.var_names.get_loc(event_col)], times, event_col),
         index=edata.obs_names,
         columns=[duration_col, event_col],
     )
@@ -248,7 +249,7 @@ def kaplan_meier(
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry_col: Column in `edata.obs` or variable with the relative time when a subject entered the study.
@@ -442,7 +443,7 @@ def cox_ph(
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         label: The name of the column of the estimate.
@@ -592,7 +593,7 @@ def weibull_aft(
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
@@ -705,7 +706,7 @@ def log_logistic_aft(
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
@@ -876,7 +877,7 @@ def nelson_aalen(
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry_col: Column in `edata.obs` or variable with the relative time when a subject entered the study.
@@ -956,7 +957,7 @@ def weibull(
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry_col: Column in `edata.obs` or variable with the relative time when a subject entered the study.
@@ -1030,7 +1031,7 @@ def cox_ph_adjusted_curves(
         event_col: The name of the column that specifies whether the event has been observed or censored.
             Column values are True if the event was observed, False if the event was lost (right-censored).
             If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
-            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
+            Times count from the first timepoint, in the unit of `edata.tem['time_value']` if present, else in seconds of `edata.tem['interval_start_offset']`, or as positions otherwise.
         method: The method used to compute adjusted survival curves. Options are:
             * `'average'` one population-averaged curve per group, no rebalancing.
             * `'conditional'` one curve per group for a synthetic reference patient with cohort-average covariates, varying only the strata variable.
