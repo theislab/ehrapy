@@ -7,24 +7,32 @@ import pytest
 from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from ehrapy.tools._comorbidity import MAPPED_CODES
 from ehrapy.tools._comorbidity_tables import CHARLSON as CHARLSON_INDEX
 from tests.conftest import forbid_dask_compute
 
-VOCABULARIES_AND_CODES = [
-    ("ICD10CM", "E11.9"),
-    ("ICD10CM", "E1122"),
-    ("ICD10", "c78.0"),
-    ("ICD10GM", "C50.9"),
-    ("ICD10CM", "K70.3"),
-    ("ICD10CM", "K72.10"),
-    ("ICD10CM", "I21.4"),
-    ("ICD10CM", "I25.10"),
-    ("SNOMED", "I21"),
-    ("ICD10CM", "I50.9"),
-    ("ICD10CM", "F32.9"),
-    ("ICD10CM", "E66.01"),
-    ("ICD10CM", "I10"),
-    ("ICD10CM", "I13.0"),
+VARIABLES = [
+    ("ICD10CM", "E11.9", None),
+    ("ICD10CM", "E1122", None),
+    ("ICD10", "c78.0", None),
+    ("ICD10GM", "C50.9", None),
+    ("ICD10CM", "K70.3", None),
+    ("ICD10CM", "K72.10", None),
+    ("ICD10CM", "I21.4", None),
+    ("ICD10CM", "I25.10", None),
+    ("SNOMED", "I21", None),
+    ("ICD10CM", "I50.9", None),
+    ("ICD10CM", "F32.9", None),
+    ("ICD10CM", "E66.01", None),
+    ("ICD10CM", "I10", None),
+    ("ICD10CM", "I13.0", None),
+    ("ICD9CM", "250.00", None),
+    ("ICD9CM", "250.40", None),
+    ("ICD9", "4280", None),
+    ("ICD9CM", "V42.7", None),
+    ("SNOMED", "22298006", ["ICD10CM/I21.9", "ICD9CM/410.90"]),
+    ("SNOMED", "94503003", ["ICD10CM/C78.0", "ICD10CM/E11.9"]),
+    ("LOINC", "8480-6", None),
 ]
 CODES_OF_PATIENTS = [
     ["E11.9", "I21.4"],
@@ -35,22 +43,31 @@ CODES_OF_PATIENTS = [
     ["I50.9", "K70.3", "F32.9"],
     ["E66.01", "F32.9"],
     ["I10", "I13.0"],
+    ["250.00", "250.40"],
+    ["4280", "V42.7"],
+    ["22298006"],
+    ["94503003"],
+    ["8480-6"],
 ]
-CHARLSON = [2, 2, 6, 3, 0, 2, 0, 1]
-QUAN = [0, 1, 6, 4, 0, 4, 0, 2]
-VAN_WALRAVEN = [0, 0, 12, 11, 0, 15, -7, 7]
+CHARLSON = [2, 2, 6, 3, 0, 2, 0, 1, 2, 2, 1, 7, 0]
+QUAN = [0, 1, 6, 4, 0, 4, 0, 2, 1, 4, 0, 6, 0]
+VAN_WALRAVEN = [0, 0, 12, 11, 0, 15, -7, 7, 0, 18, 0, 12, 0]
 
 
 def _var() -> pd.DataFrame:
-    vocabularies, codes = zip(*VOCABULARIES_AND_CODES, strict=True)
+    vocabularies, codes, mapped = zip(*VARIABLES, strict=True)
     return pd.DataFrame(
-        {"vocabulary": pd.array(vocabularies, dtype="string"), "code": pd.array(codes, dtype="string")},
-        index=[f"{vocabulary}/{code}" for vocabulary, code in VOCABULARIES_AND_CODES],
+        {
+            "vocabulary": pd.array(vocabularies, dtype="string"),
+            "code": pd.array(codes, dtype="string"),
+            MAPPED_CODES: pd.Series(mapped, dtype=object).to_numpy(),
+        },
+        index=[f"{vocabulary}/{code}" for vocabulary, code, _ in VARIABLES],
     )
 
 
 def _X() -> np.ndarray:
-    codes = [code for _, code in VOCABULARIES_AND_CODES]
+    codes = [code for _, code, _ in VARIABLES]
     X = np.zeros((len(CODES_OF_PATIENTS), len(codes)))
     for patient, patient_codes in enumerate(CODES_OF_PATIENTS):
         X[patient, [codes.index(code) for code in patient_codes]] = 1
@@ -101,6 +118,9 @@ def test_comorbidity_index_hierarchy():
         True,
         False,
     ]
+    assert obs.loc["patient_8", ["cci_diabetes_complicated", "cci_diabetes_uncomplicated"]].tolist() == [True, False]
+    assert obs.loc["patient_10", "cci_myocardial_infarction"]
+    assert obs.loc["patient_11", ["cci_metastatic_solid_tumor", "cci_diabetes_uncomplicated"]].all()
     weights = pd.Series(CHARLSON_INDEX.weights["charlson"]).add_prefix("cci_")
     np.testing.assert_array_equal(obs[weights.index].astype(int) @ weights, obs["cci"])
 
@@ -139,8 +159,23 @@ def test_comorbidity_index_array_types(array_type, ndim):
     np.testing.assert_array_equal(result.obs["elixhauser"], VAN_WALRAVEN)
 
 
+def test_comorbidity_index_warns_about_variables_without_icd_codes(monkeypatch):
+    warnings = []
+    monkeypatch.setattr("ehrapy.tools._comorbidity.logger.warning", warnings.append)
+
+    ep.tl.comorbidity_index(_edata(_X()))
+
+    assert len(warnings) == 1
+    assert "Ignoring 2 variables" in warnings[0]
+    assert "SNOMED: 1" in warnings[0]
+    assert "LOINC: 1" in warnings[0]
+    assert "backend_handle" in warnings[0]
+
+
 def test_comorbidity_index_errors():
     edata = _edata(_X())
+    with pytest.raises(ValueError, match="backend_handle"):
+        ep.tl.comorbidity_index(edata[:, edata.var["vocabulary"] == "LOINC"])
     with pytest.raises(ValueError, match="quan"):
         ep.tl.comorbidity_index(edata, method="elixhauser", weights="quan")
 

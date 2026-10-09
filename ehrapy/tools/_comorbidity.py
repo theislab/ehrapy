@@ -5,18 +5,43 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import pandas as pd
+from ehrdata._logger import logger
 from fast_array_utils.types import CSBase, DaskArray
 
 from ehrapy._compat import _map_observation_blocks, _materialize
-from ehrapy.plot._timeseries import _resolve_axis
+from ehrapy.get._get import _resolve_axis
 from ehrapy.tools._comorbidity_tables import COMORBIDITY_INDICES
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from ehrdata import EHRData
 
-ICD10_VOCABULARIES = frozenset({"ICD10", "ICD10CM", "ICD10GM"})
+ICD_VOCABULARIES: Mapping[str, frozenset[str]] = {
+    "ICD10": frozenset({"ICD10", "ICD10CM", "ICD10GM", "ICD10CN"}),
+    "ICD9": frozenset({"ICD9", "ICD9CM"}),
+}
+MAPPED_CODES = "icd_codes"
+
+
+def _variable_codes(var: pd.DataFrame) -> pd.DataFrame:
+    """ICD revision and undotted code of the codes of every variable and of the ICD codes mapped to it, indexed by the position of the variable."""
+    codes = pd.DataFrame({"vocabulary": var["vocabulary"].array, "code": var["code"].array})
+    if MAPPED_CODES in var.columns:
+        mapped = pd.Series(var[MAPPED_CODES].to_numpy(), index=codes.index).explode().dropna().astype(str)
+        if len(mapped):
+            mapped = mapped.str.split("/", n=1, expand=True).reindex(columns=[0, 1])
+            codes = pd.concat([codes, mapped.set_axis(["vocabulary", "code"], axis=1)])
+    revisions = {
+        vocabulary: revision for revision, vocabularies in ICD_VOCABULARIES.items() for vocabulary in vocabularies
+    }
+    return pd.DataFrame(
+        {
+            "revision": codes["vocabulary"].astype("string").str.upper().map(revisions),
+            "code": codes["code"].astype("string").str.replace(".", "", regex=False).str.upper(),
+        },
+        index=codes.index,
+    )
 
 
 @singledispatch
@@ -57,9 +82,11 @@ def comorbidity_index(
 ) -> EHRData | None:
     """Score the comorbidity burden of every observation with the Charlson or Elixhauser comorbidity index.
 
-    The variables are ICD-10 codes, described by the `vocabulary` and `code` columns of `edata.var` as written by `ehrdata.annotate_codes`.
-    Variables of the vocabularies `ICD10`, `ICD10CM` and `ICD10GM` are assigned to comorbidity categories by the ICD-10 coding algorithms of :cite:p:`Quan2005`, matching codes with or without dots by their prefix.
-    An observation has a comorbidity if any of its codes in the category has a positive value, such as a presence flag or a count.
+    The variables are diagnosis codes, described by the `vocabulary` and `code` columns of `edata.var` as written by `ehrdata.annotate_codes`.
+    Codes of the vocabularies `ICD9` and `ICD9CM`, and `ICD10`, `ICD10CM`, `ICD10GM` and `ICD10CN` are assigned to comorbidity categories by the ICD-9-CM and ICD-10 coding algorithms of :cite:p:`Quan2005`, matching codes with or without dots by their prefix.
+    Variables of other vocabularies, such as SNOMED, count with the ICD codes mapped to them in `edata.var["icd_codes"]`, which `ehrdata.annotate_codes` writes with an OMOP CDM database, and belong to every category of any of these codes.
+    Variables without an ICD code are ignored with a warning.
+    An observation has a comorbidity if any of its variables in the category has a positive value, such as a presence flag or a count.
     For 3D data, a code counts at any timepoint in `tem_names`.
 
     If an observation has both the milder and the more severe form of a comorbidity, only the more severe form is kept.
@@ -110,16 +137,28 @@ def comorbidity_index(
         raise ValueError(f"The {method} index takes the weights {list(index.weights)}, not {scheme!r}.")
     if missing := {"vocabulary", "code"} - set(edata.var.columns):
         raise ValueError(
-            f"edata.var lacks the columns {sorted(missing)}, which describe the ICD-10 code of every variable. "
+            f"edata.var lacks the columns {sorted(missing)}, which describe the code of every variable. "
             "Annotate variables named like `ICD10CM/I21.0` with `ed.annotate_codes(edata)` first."
         )
-    is_icd10 = edata.var["vocabulary"].str.upper().isin(ICD10_VOCABULARIES).to_numpy(dtype=bool)
-    if not is_icd10.any():
-        raise ValueError(f"No variable has an ICD-10 vocabulary ({', '.join(sorted(ICD10_VOCABULARIES))}).")
-    codes = edata.var["code"].str.replace(".", "", regex=False).str.upper()
-    membership = np.column_stack(
-        [is_icd10 & codes.str.startswith(prefixes, na=False).to_numpy(dtype=bool) for prefixes in index.codes.values()]
-    )
+    codes = _variable_codes(edata.var)
+    matchable = np.zeros(edata.n_vars, dtype=bool)
+    matchable[codes.index[codes["revision"].notna()]] = True
+    hint = "Map codes of other vocabularies, such as SNOMED, to ICD codes with `ed.annotate_codes(edata, backend_handle=...)` and an OMOP CDM database."
+    if not matchable.any():
+        raise ValueError(f"No variable has an ICD-9 or ICD-10 code. {hint}")
+    if not matchable.all():
+        unmatched = edata.var["vocabulary"][~matchable].astype("string").fillna("no vocabulary").value_counts()
+        logger.warning(
+            f"Ignoring {(~matchable).sum()} variables without an ICD-9 or ICD-10 code "
+            f"({', '.join(f'{vocabulary}: {n}' for vocabulary, n in unmatched.items())}). {hint}"
+        )
+
+    categories = list(index.weights[scheme])
+    membership = np.zeros((edata.n_vars, len(categories)), dtype=bool)
+    for revision, prefixes_of_categories in index.codes.items():
+        revision_codes = codes["code"][codes["revision"] == revision]
+        for i, prefixes in enumerate(prefixes_of_categories.values()):
+            membership[revision_codes.index[revision_codes.str.startswith(prefixes, na=False)], i] = True
 
     X = edata.X if layer is None else edata.layers[layer]
     if tem_names is not None:
@@ -132,9 +171,8 @@ def comorbidity_index(
     if len(used):
         (has,) = _materialize(_has_categories(X[:, used], membership[used].astype(np.float64)))
     else:
-        has = np.zeros((edata.n_obs, len(index.codes)), dtype=bool)
+        has = np.zeros((edata.n_obs, len(categories)), dtype=bool)
 
-    categories = list(index.codes)
     for milder, severe in index.hierarchy:
         has[:, categories.index(milder)] &= ~has[:, categories.index(severe)]
 
