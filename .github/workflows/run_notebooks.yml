@@ -19,7 +19,7 @@ jobs:
         strategy:
             matrix:
                 notebook: [
-                        "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
+                        "docs/tutorials/notebooks/data.ipynb",
                         "docs/tutorials/notebooks/subgroups.ipynb",
                         "docs/tutorials/notebooks/survival.ipynb",
                         "docs/tutorials/notebooks/trajectories.ipynb",

@@ -90,6 +90,7 @@ redirects = {
     "tutorials/notebooks/mimic_2_survival_analysis": "survival.html",
     "tutorials/notebooks/mimic_2_fate": "trajectories.html",
     "tutorials/notebooks/bias": "prediction.html",
+    "tutorials/notebooks/ehrapy_introduction": "data.html",
     "tutorials/notebooks/longitudinal_with_ehrapy": "cohort.html",
     **{
         f"tutorials/notebooks/{name}": "causal.html"
@@ -195,7 +196,7 @@ html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
 
 nbsphinx_thumbnails = {
-    "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
+    "tutorials/notebooks/data": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/trajectories": "_static/tutorials/trajectories.png",
     "tutorials/notebooks/survival": "_static/tutorials/survival.png",
     "tutorials/notebooks/causal": "_static/tutorials/causal_inference.png",
