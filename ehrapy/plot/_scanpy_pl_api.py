@@ -12,8 +12,8 @@ from fast_array_utils.types import DaskArray
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
 from ehrapy._compat import _as_scanpy_input, _materialize, _raise_if_3D, function_2D_only
-from ehrapy._utils_doc import _doc_params, doc_plot_params
 from ehrapy.get._get import _over_time
+from ehrapy.plot._docs import _doc_params, doc_plot_params
 
 if TYPE_CHECKING:
     from pathlib import Path
