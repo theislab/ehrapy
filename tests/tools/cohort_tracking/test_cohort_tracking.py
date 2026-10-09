@@ -1,5 +1,9 @@
 from pathlib import Path
 
+import ehrdata as ed
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pytest
 
 import ehrapy as ep
@@ -80,6 +84,22 @@ def test_CohortTracker_plot_cohort_barplot_test_sensitivity(edata_mini, check_sa
             base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_vanilla",
             tol=1e-1,
         )
+
+
+def test_CohortTracker_plot_cohort_barplot_show_keeps_rows_apart(monkeypatch):
+    monkeypatch.setattr(plt, "show", lambda: None)
+    n = np.arange(120)
+    obs = pd.DataFrame({"age": n, "unit": (n % 12).astype(str), "outcome": (n % 6).astype(str)}, index=n.astype(str))
+    edata = ed.EHRData(obs=obs.astype({"unit": "category", "outcome": "category"}))
+    ct = ep.tl.CohortTracker(edata, categorical=["unit", "outcome"])
+    for label in ["First", "Second", "Third", "Fourth"]:
+        ct(edata, label=label)
+
+    ct.plot_cohort_barplot(subfigure_title=True, show=True, subplots_kwargs={"figsize": (8, 12)})
+
+    heights = [ax.get_position().height for ax in plt.gcf().axes]
+    plt.close("all")
+    assert min(heights) > 0.15
 
 
 def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image):

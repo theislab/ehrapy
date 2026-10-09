@@ -538,7 +538,16 @@ class CohortTracker:
             plt.legend(handles=legend_handles, **tot_legend_kwargs)
 
         if show:
-            plt.tight_layout()
+            figure = axes[0].figure
+            legends = [legend for single_ax in axes if (legend := single_ax.get_legend()) is not None]
+            renderer = figure.canvas.get_renderer()
+            legend_width = max((legend.get_window_extent(renderer).width for legend in legends), default=0)
+            # a legend outside the axes would count as decoration of its row and squeeze all rows together
+            for legend in legends:
+                legend.set_in_layout(False)
+            figure.tight_layout(rect=(0, 0, 1 - legend_width / figure.bbox.width, 1))
+            for legend in legends:
+                legend.set_in_layout(True)
             plt.show()
             return None
 
