@@ -173,6 +173,19 @@ class TestDiagnostics:
         assert {"smd_unweighted", "smd_weighted", "var_ratio_unweighted", "var_ratio_weighted"} <= set(bal.columns)
         assert (bal["smd_weighted"].abs() < bal["smd_unweighted"].abs()).all()
 
+    def test_covariate_balance_of_object_data(self):
+        edata = ed.EHRData(
+            X=np.column_stack([self.edata.X.astype(object), np.where(self.edata.X[:, 1] == 1, "b", "a")]),
+            var=pd.DataFrame(index=[*self.edata.var_names, "unit"]),
+        )
+        expected = ep.tl.covariate_balance(self.edata, treatment="tx", covariates=self.covariates)
+
+        bal = ep.tl.covariate_balance(edata, treatment="tx", covariates=[*self.covariates, "unit"])
+
+        assert bal.index.tolist() == [*self.covariates, "unit_b"]
+        unweighted = ["smd_unweighted", "var_ratio_unweighted"]
+        pd.testing.assert_frame_equal(bal.loc[self.covariates, unweighted], expected[unweighted])
+
     def test_covariate_balance_accepts_external_weights(self):
         est = ep.tl.iptw(self.edata, treatment="tx", outcome="y", covariates=self.covariates, n_bootstrap=0)
         w_full = np.full(self.edata.n_obs, np.nan)
