@@ -95,6 +95,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
+* {func}`ep.pp.detect_bias <ehrapy.preprocessing.detect_bias>` and {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` no longer fail for variables whose name is also a column of `obs` or that have missing values, and leave out the observations without a value of the predicted variable or the sensitive feature ([#1196](https://github.com/theislab/ehrapy/pull/1196)) @Zethson
 * {func}`ep.tl.cox_ph_adjusted_curves <ehrapy.tools.cox_ph_adjusted_curves>` raises an error when `strata` is neither a covariate nor one of the `strata` of `cph`, which gave every group the same curve, and its documentation no longer asks to leave `strata` out of the model ([#1192](https://github.com/theislab/ehrapy/pull/1192)) @Zethson
 * {func}`ep.pl.cox_ph_forestplot <ehrapy.plot.cox_ph_forestplot>` draws the confidence intervals as horizontal error bars, puts the reference line at a coefficient of 0, which is a hazard ratio of 1, instead of 1, and gives the header its own row instead of overlapping the top coefficient ([#1191](https://github.com/theislab/ehrapy/pull/1191)) @Zethson
 * The survival models that derive durations from a longitudinal `event_col` measure them in the unit of `edata.tem["time_value"]`, such as hours on PhysioNet 2012 and 2019, instead of in seconds of `edata.tem["interval_start_offset"]`, which they keep using when `tem` has no `time_value` ([#1190](https://github.com/theislab/ehrapy/pull/1190)) @Zethson

@@ -80,6 +80,20 @@ def test_var_names_subset():
     assert pd.isna(edata.var["feature_importances"]["feature2"])
 
 
+def test_obs_column_and_missing_target():
+    rng = np.random.default_rng(0)
+    target = rng.random(200)
+    target[::5] = np.nan
+    edata = ed.EHRData(np.stack((target, target * 2, rng.random(200))).T, obs=pd.DataFrame({"feature1": target}))
+    edata.var_names = ["target", "feature1", "feature2"]
+    edata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 3
+
+    rank_features_supervised(edata, predicted_feature="target", model="rf", var_names="all")
+
+    assert edata.var["feature_importances"]["feature1"] > edata.var["feature_importances"]["feature2"]
+    assert edata.uns["feature_importances"]["score"] > 0.9
+
+
 def test_copy():
     target = np.random.default_rng(0).random(100)
     edata = ed.EHRData(np.stack((target, target * 2)).T)

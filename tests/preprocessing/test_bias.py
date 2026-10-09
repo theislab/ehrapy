@@ -96,6 +96,27 @@ def test_detect_bias_specified_sensitive_features(edata_small_bias):
     assert len(df) == 2  # contin1 predicts cat1 and cat1 predicts contin1
 
 
+def test_detect_bias_obs_column_and_missing_values(edata_small_bias):
+    X = edata_small_bias.X.astype(np.float64)
+    X[::7, 3] = np.nan
+    X[::11, 4] = np.nan
+    edata_small_bias.X = X
+    edata_small_bias.obs["contin1"] = X[:, 3]
+
+    ep.pp.detect_bias(
+        edata_small_bias,
+        sensitive_features=["cat1"],
+        run_feature_importances=True,
+        feature_importance_threshold=0.5,
+        prediction_confidence_threshold=0.4,
+    )
+
+    results = edata_small_bias.uns["bias"]
+    assert list(edata_small_bias.uns["smd"]["cat1"].columns) == [0, 1]
+    assert set(results["standardized_mean_differences"]["Sensitive Group"]) == {0, 1}
+    assert results["feature_importances"]["Predicted Feature"].tolist() == ["contin1"]
+
+
 def test_unencoded_data():
     edata = ed.io.from_pandas(
         pd.DataFrame({"Unencoded": ["A", "B", "C", "D", "E", "F"], "Encoded": [1, 2, 3, 4, 5, 6]})

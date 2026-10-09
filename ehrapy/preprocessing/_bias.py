@@ -218,7 +218,8 @@ def detect_bias(
     continuous = X[:, edata.var_names.get_indexer(continuous_var_names)]
     for sens_feature in cat_sens_features:
         sens_values = _column(sens_feature)
-        sens_feature_groups = sorted(pd.unique(sens_values))
+        observed = ~pd.isna(sens_values)
+        sens_feature_groups = sorted(pd.unique(sens_values[observed]))
         if len(sens_feature_groups) == 1:
             continue
         smd_df = pd.DataFrame(index=continuous_var_names, columns=sens_feature_groups)
@@ -226,7 +227,7 @@ def detect_bias(
         for _group_nr, group in enumerate(sens_feature_groups):
             # Compute SMD for all continuous features between the sensitive group and all other observations
             group_mean, group_std = _nan_mean_std(continuous[sens_values == group])
-            comparison_mean, comparison_std = _nan_mean_std(continuous[sens_values != group])
+            comparison_mean, comparison_std = _nan_mean_std(continuous[observed & (sens_values != group)])
 
             smd = pd.Series(
                 (group_mean - comparison_mean) / np.sqrt((group_std**2 + comparison_std**2) / 2),
@@ -317,23 +318,15 @@ def detect_bias(
             "Prediction Score": [],
         }
         for prediction_feature in edata.var_names:
-            try:
-                rank_features_supervised(
-                    edata,
-                    predicted_feature=prediction_feature,
-                    var_names="all",
-                    model="rf",
-                    key_added=f"{prediction_feature}_feature_importances",
-                    percent_output=True,
-                    verbose=False,
-                )
-            except ValueError as e:
-                if "Input y contains NaN" in str(e):
-                    raise ValueError(
-                        f"During feature importance computation, input feature y ({prediction_feature}) was found to contain NaNs."
-                    ) from e
-                else:
-                    raise e
+            rank_features_supervised(
+                edata,
+                predicted_feature=prediction_feature,
+                var_names="all",
+                model="rf",
+                key_added=f"{prediction_feature}_feature_importances",
+                percent_output=True,
+                verbose=False,
+            )
 
             prediction_score = edata.uns[f"{prediction_feature}_feature_importances"]["score"]
             for sens_feature in sens_features_list:
