@@ -1025,7 +1025,7 @@ def cox_ph_adjusted_curves(
         edata: Central data object.
         cph: Fitted CoxPHFitter, as returned by :func:`~ehrapy.tools.cox_ph`.
         strata: Name of the column to stratify by.
-            Must be present in the data and should not be included in the Cox model formula.
+            Must be a covariate or one of the `strata` of `cph`, because the curves of its groups differ only through the model.
         duration_col: The name of the column that contains the subjects' lifetimes.
             `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: The name of the column that specifies whether the event has been observed or censored.
@@ -1069,6 +1069,10 @@ def cox_ph_adjusted_curves(
     edata = edata.copy() if copy else edata
     strata_cols = [cph.strata] if isinstance(cph.strata, str) else list(cph.strata or [])
     cph_covariates = _formula_variables(cph.formula) if cph.formula else list(cph.params_.index)
+    if strata not in {*strata_cols, *cph_covariates}:
+        raise ValueError(
+            f"{strata!r} is neither a covariate nor one of the `strata` of `cph`, so all of its groups would get the same curve."
+        )
     df, duration_col = _survival_frame(
         edata, duration_col, event_col, [strata, *strata_cols, *cph_covariates], layer=layer
     )
