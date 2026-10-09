@@ -13,7 +13,7 @@ from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase
 
 from ehrapy._compat import _materialize
-from ehrapy._utils_axis import _resolve_axis
+from ehrapy.get._get import _resolve_axis
 from ehrapy.plot._holoviews import load_hv_extensions
 from ehrapy.preprocessing._missing_data import _missing_mask
 

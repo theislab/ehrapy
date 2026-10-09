@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from ehrapy._compat import _materialize
-from ehrapy._utils_axis import _resolve_axis
+from ehrapy.get._get import _resolve_axis
 from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:

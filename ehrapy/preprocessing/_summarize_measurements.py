@@ -12,7 +12,7 @@ from ehrdata import EHRData
 from fast_array_utils.types import CSBase, DaskArray
 
 from ehrapy._compat import _map_variable_blocks, nanquantile
-from ehrapy._utils_axis import _resolve_axis
+from ehrapy.get._get import _resolve_axis
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
