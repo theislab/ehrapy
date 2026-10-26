@@ -1,24 +1,25 @@
 name: Run Notebooks
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
     run:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                notebook: [
+                notebook:
+                    [
                         "docs/tutorials/notebooks/data.ipynb",
                         "docs/tutorials/notebooks/subgroups.ipynb",
                         "docs/tutorials/notebooks/survival.ipynb",

@@ -20,11 +20,11 @@ If you don't have [pip] installed, this [Python installation guide] can guide yo
 
 ehrapy keeps optional functionality in extras:
 
-| Extra | Enables |
-| --- | --- |
-| `dask` | Out-of-core and lazy computation on {class}`dask.array.Array` data |
-| `leiden` | {func}`ehrapy.tools.leiden` clustering through `igraph` (GPL licensed) |
-| `rapids12`, `rapids13` | GPU acceleration through rapids-singlecell for CUDA 12 or 13 |
+| Extra                  | Enables                                                                |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `dask`                 | Out-of-core and lazy computation on {class}`dask.array.Array` data     |
+| `leiden`               | {func}`ehrapy.tools.leiden` clustering through `igraph` (GPL licensed) |
+| `rapids12`, `rapids13` | GPU acceleration through rapids-singlecell for CUDA 12 or 13           |
 
 Install one or several extras at once:
 
