@@ -2,6 +2,8 @@
     "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
     "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
     "formatter": { "useEditorconfig": true },
+    // without this, biome reads front matter as a thematic break and a heading and mangles it
+    "markdown": { "parser": { "frontmatter": true } },
     "overrides": [
         {
             "includes": ["./.vscode/*.json", "**/*.jsonc"],
