@@ -391,7 +391,6 @@ def embedding_density(
     return edata if copy else None
 
 
-@singledispatch
 def famd(
     edata: EHRData | np.ndarray,
     *,
@@ -444,11 +443,15 @@ def famd(
         `{key_added}` : `dict` (`edata.uns`)
         `loadings` of all quantitative variables and categories labelled by `feature_names` and mapped to variable positions by `feature_to_original`, together with `variance`, `variance_ratio`, `quant_mask` and `params`.
     """
-    _raise_array_type_not_implemented(famd, type(edata))
-    return None
+    return _famd(edata, layer=layer, n_components=n_components, key_added=key_added, var_names=var_names, copy=copy)
 
 
-@famd.register(EHRData)
+@singledispatch
+def _famd(edata, /, **kwargs):
+    _raise_array_type_not_implemented(_famd, type(edata))
+
+
+@_famd.register(EHRData)
 def _(
     edata: EHRData,
     /,
@@ -465,7 +468,7 @@ def _(
     edata = edata.copy() if copy else edata
 
     arr = edata.X if layer is None else edata.layers[layer]
-    factor_scores, loadings, metadata = famd(arr, n_components=n_components, var_names=edata.var_names)
+    factor_scores, loadings, metadata = _famd(arr, n_components=n_components, var_names=edata.var_names)
 
     quant_mask = metadata["quant_mask"]
     n_timepoints = arr.shape[2] if arr.ndim == 3 else 1
@@ -490,13 +493,13 @@ def _(
     return edata if copy else None
 
 
-@famd.register(CSBase)
-@famd.register(DaskArray)
+@_famd.register(CSBase)
+@_famd.register(DaskArray)
 def _(arr: CSBase | DaskArray, /, **kwargs) -> tuple[np.ndarray, np.ndarray, dict]:
-    return famd(_materialize(to_dense(arr))[0], **kwargs)
+    return _famd(_materialize(to_dense(arr))[0], **kwargs)
 
 
-@famd.register(np.ndarray)
+@_famd.register(np.ndarray)
 def _(
     arr: np.ndarray, /, *, n_components: int = 2, var_names: Sequence[str] | None = None, **kwargs
 ) -> tuple[np.ndarray, np.ndarray, dict]:
