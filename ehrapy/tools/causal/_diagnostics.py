@@ -8,7 +8,6 @@ import array_api_compat
 import numpy as np
 import pandas as pd
 
-from ehrapy._compat import function_2D_only
 from ehrapy.tools.causal._design import Design, _collect_columns, assert_binary_treatment
 from ehrapy.tools.causal._models import fit_propensity
 
@@ -19,12 +18,11 @@ if TYPE_CHECKING:
     from sklearn.base import BaseEstimator
 
 
-@function_2D_only()
 def covariate_balance(
     edata: EHRData,
     treatment: str,
-    *,
     covariates: Sequence[str],
+    *,
     weights: np.ndarray | None = None,
     propensity_model: str | BaseEstimator = "logistic",
     layer: str | None = None,
@@ -58,14 +56,14 @@ def covariate_balance(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> bal = ep.tl.covariate_balance(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(bal.round(3).to_string())
                      smd_unweighted  smd_weighted  var_ratio_unweighted  var_ratio_weighted
-        age                   0.117        -0.044                 0.896               1.018
-        sofa_first            0.818        -0.220                 1.135               0.480
-        sapsi_first           0.627        -0.157                 1.112               0.781
+        age                   0.117        -0.044                 0.896               1.017
+        sofa_first            0.818        -0.215                 1.135               0.481
+        sapsi_first           0.627        -0.153                 1.112               0.782
     """
     design = _build_design_no_outcome(edata, treatment=treatment, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -98,12 +96,11 @@ def covariate_balance(
     )
 
 
-@function_2D_only()
 def positivity_check(
     edata: EHRData,
     treatment: str,
-    *,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     eps: float = 0.05,
     layer: str | None = None,
@@ -132,7 +129,7 @@ def positivity_check(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> info = ep.tl.positivity_check(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(f"support_fraction={info['support_fraction']:.3f}  n_outside_support={info['n_outside_support']}")

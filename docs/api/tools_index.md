@@ -20,6 +20,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.draw_graph
     tools.diffmap
     tools.embedding_density
+    tools.famd
 ```
 
 ## Clustering and trajectory inference
@@ -59,6 +60,8 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Survival Analysis
 
+Regression and survival models estimate how covariates relate to outcomes and to the time until an event.
+
 ```{eval-rst}
 .. autosummary::
     :toctree: tools
@@ -69,6 +72,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.kaplan_meier
     tools.test_kmf_logrank
     tools.test_nested_f_statistic
+    tools.anova_glm
     tools.cox_ph
     tools.cox_ph_adjusted_curves
     tools.weibull_aft
@@ -80,10 +84,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Causal Inference
 
-ehrapy ships a small, dependency-light set of causal inference estimators built directly on top of scikit-learn.
-ATE estimators handle binary treatments via inverse probability of treatment weighting (IPTW), parametric g-computation, the doubly-robust augmented IPW (AIPW), and propensity score matching.
-Heterogeneous treatment effects (CATE) are available via the T-, S-, and X-learner meta-learners.
-Two diagnostics — covariate balance and positivity — round out the toolkit.
+Causal estimators estimate the average and individual effects of a binary treatment from observational data, and diagnostics check their assumptions.
 
 ```{eval-rst}
 .. autosummary::
@@ -102,7 +103,9 @@ Two diagnostics — covariate balance and positivity — round out the toolkit.
     tools.CausalEstimate
 ```
 
-## Normalized Complexity Profile
+## Patterns across patients, variables and time
+
+Finds groups of patients whose variables follow a similar course over time.
 
 ```{eval-rst}
 .. autosummary::
@@ -110,6 +113,18 @@ Two diagnostics — covariate balance and positivity — round out the toolkit.
     :nosignatures:
 
     tools.ncp
+```
+
+## Comorbidity
+
+Scores the comorbidity burden of every patient from ICD-10 codes.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.comorbidity_index
 ```
 
 ## Cohort Tracking & summaries

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ehrdata as ed
 import pandas as pd
 import pytest
 from ehrdata import EHRData
@@ -94,3 +95,13 @@ def test_stratified_table_one_three_groups(edata_mini):
     res = edata_mini.uns["stratified_table_one"]
     assert set(res["groups"]) == {"A", "B", "C"}
     assert set(res["pvalues"].keys()) == {"glucose", "weight", "station"}
+
+
+def test_stratified_table_one_writes_h5ad(edata_mini, tmp_path):
+    ep.tl.stratified_table_one(edata_mini, groupby="station", columns=["glucose", "disease"])
+
+    edata_mini.write_h5ad(tmp_path / "table_one.h5ad")
+    table = ed.io.read_h5ad(tmp_path / "table_one.h5ad").uns["stratified_table_one"]["table"]
+
+    pd.testing.assert_frame_equal(table, edata_mini.uns["stratified_table_one"]["table"], check_index_type=False)
+    assert table.loc[table["variable"] == "disease, n (%)", "level"].tolist() == ["A", "B", "C"]

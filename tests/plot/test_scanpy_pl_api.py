@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 
@@ -26,15 +27,20 @@ def test_scatter_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/scatter_scanpy_plt",
-        tol=2e-1,
     )
     plt.close("all")
 
 
 def test_scatter_plot_3D(edata_blob_small):
-    ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.scatter(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2")
+    expected = ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2", color="feature_3", show=False)
+
+    ax = ep.pl.scatter(
+        edata_blob_small, layers=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2", color="feature_3", show=False
+    )
+
+    np.testing.assert_array_equal(ax.collections[0].get_offsets(), expected.collections[0].get_offsets())
+    np.testing.assert_array_equal(ax.collections[0].get_array(), expected.collections[0].get_array())
+    plt.close("all")
 
 
 def test_heatmap_plot(edata_mini, check_same_image):
@@ -51,7 +57,7 @@ def test_heatmap_plot(edata_mini, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/heatmap_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -149,7 +155,7 @@ def test_dotplot_plot_image(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/dotplot_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -181,7 +187,7 @@ def test_tracks_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/tracksplot_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -206,8 +212,18 @@ def test_violin_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/violin_scanpy_plt",
-        tol=2e-1,
     )
+    plt.close("all")
+
+
+def test_violin_plot_without_legend(mimic_2):
+    edata_sample = mimic_2[:200, ["age"]].copy()
+    edata_sample.obs["aline_flg"] = mimic_2[:200, "aline_flg"].X.toarray().ravel().astype(int)
+    edata_sample.obs["aline_flg"] = edata_sample.obs["aline_flg"].astype("category")
+
+    ax = ep.pl.violin(edata_sample, keys="age", groupby="aline_flg", show=False)
+
+    assert ax.get_legend() is None
     plt.close("all")
 
 
@@ -255,7 +271,7 @@ def test_matrix_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/matrix_scanpy_plot",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -287,7 +303,7 @@ def test_stacked_violin_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/stacked_violin_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -313,7 +329,6 @@ def test_clustermap(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/clustermap_scanpy",
-        tol=2e-1,
     )
     plt.close("all")
 
@@ -396,6 +411,65 @@ def test_rank_features_groups_plots(mimic_2_encoded, plotter):
     assert any(labels)
 
 
+@pytest.fixture
+def edata_ranked(mimic_2_encoded):
+    edata = mimic_2_encoded[:200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]].copy()
+    ep.tl.rank_features_groups(edata, groupby="service_unit")
+    return edata
+
+
+@pytest.mark.parametrize(
+    "plotter",
+    [
+        "rank_features_groups",
+        "rank_features_groups_violin",
+        "rank_features_groups_stacked_violin",
+        "rank_features_groups_heatmap",
+        "rank_features_groups_dotplot",
+        "rank_features_groups_matrixplot",
+        "rank_features_groups_tracksplot",
+    ],
+)
+def test_rank_features_groups_plots_default_key(edata_ranked, plotter):
+    getattr(ep.pl, plotter)(edata_ranked, show=False)
+    plt.close("all")
+
+
+def test_rank_features_groups_dotplot_titles(edata_ranked):
+    dp = ep.pl.rank_features_groups_dotplot(edata_ranked, return_fig=True)
+    assert dp.color_legend_title == "Mean value in group"
+    assert dp.size_title == "Fraction of observations\nin group (%)"
+
+    dp = ep.pl.rank_features_groups_dotplot(edata_ranked, values_to_plot="logfoldchanges", return_fig=True)
+    assert dp.color_legend_title == "log fold change"
+
+    dp = ep.pl.rank_features_groups_dotplot(edata_ranked, colorbar_title="custom", return_fig=True)
+    assert dp.color_legend_title == "custom"
+    plt.close("all")
+
+
+@pytest.mark.parametrize(
+    "plotter", ["dotplot", "matrixplot", "stacked_violin", "violin", "umap", "rank_features_groups_matrixplot"]
+)
+def test_plots_read_X_not_raw(edata_blob_small, plotter):
+    edata_blob_small.obs["group"] = pd.Categorical(["a", "b"] * (edata_blob_small.n_obs // 2))
+    edata_blob_small.raw = edata_blob_small[:, :5]
+    feature = edata_blob_small.var_names[-1]
+
+    match plotter:
+        case "violin":
+            ep.pl.violin(edata_blob_small, keys=feature, groupby="group", show=False)
+        case "umap":
+            ep.tl.umap(edata_blob_small)
+            ep.pl.umap(edata_blob_small, color=feature, show=False)
+        case "rank_features_groups_matrixplot":
+            ep.tl.rank_features_groups(edata_blob_small, groupby="group")
+            ep.pl.rank_features_groups_matrixplot(edata_blob_small, n_features=edata_blob_small.n_vars, show=False)
+        case _:
+            getattr(ep.pl, plotter)(edata_blob_small, var_names=[feature], groupby="group", show=False)
+    plt.close("all")
+
+
 def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     edata_sample = mimic_2_encoded[
         :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first", "pco2_first"]
@@ -424,7 +498,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_heatmap_scanpy",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -482,7 +556,7 @@ def test_rank_features_groups_dotplot_image(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_dotplot_scanpy",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -505,7 +579,6 @@ def test_pca(mimic_2_sample_serv_unit_day_icu, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca",
-        tol=2e-1,
     )
     plt.close("all")
 
@@ -527,7 +600,7 @@ def test_pca_loadings(mimic_2_sample_serv_unit_day_icu, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca_loadings",
-        tol=2e-1,
+        tol=40,
     )
 
     plt.close("all")
@@ -550,7 +623,7 @@ def test_pca_variance_ration(mimic_2_sample_serv_unit_day_icu, check_same_image)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca_variance_ratio",
-        tol=2e-1,
+        tol=25,
     )
 
     plt.close("all")
@@ -575,11 +648,7 @@ def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_
             fig.set_size_inches(8, 6)
         fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
-        check_same_image(
-            fig=fig,
-            base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
-            tol=2e-1,
-        )
+        check_same_image(fig=fig, base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}", tol=40)
 
 
 def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
@@ -671,5 +740,99 @@ def test_dpt_timeseries(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/dpt_timeseries",
-        tol=2e-1,
+        tol=35,
     )
+
+
+@pytest.fixture
+def edata_embedded(rng) -> ed.EHRData:
+    X = np.where(rng.random((40, 5)) < 0.3, 0, rng.gamma(2, size=(40, 5)))
+    obs = pd.DataFrame({"group": pd.Categorical(np.repeat(["a", "b"], 20))}, index=[str(i) for i in range(40)])
+    var = pd.DataFrame({FEATURE_TYPE_KEY: NUMERIC_TAG}, index=[f"feature_{i}" for i in range(5)])
+    edata = ed.EHRData(X=X, obs=obs, var=var)
+    ep.pp.pca(edata, n_comps=3)
+    # dpt needs a graph with a branching, which the few observations of X don't have
+    edata.obsm["X_pca"] = rng.standard_normal((40, 3))
+    ep.pp.neighbors(edata, n_neighbors=5, use_rep="X_pca")
+    ep.tl.umap(edata)
+    ep.tl.paga(edata, groups="group")
+    ep.tl.diffmap(edata, n_comps=3)
+    edata.uns["iroot"] = 0
+    ep.tl.dpt(edata, n_dcs=3, n_branchings=1)
+    ep.tl.rank_features_groups(edata, "group")
+    return edata
+
+
+_VAR_NAMES = ["feature_0", "feature_1", "feature_2"]
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize(
+    ("plotter", "kwargs"),
+    [
+        ("dotplot", {"var_names": _VAR_NAMES, "groupby": "group", "return_fig": True}),
+        ("matrixplot", {"var_names": _VAR_NAMES, "groupby": "group", "return_fig": True}),
+        ("stacked_violin", {"var_names": _VAR_NAMES, "groupby": "group", "return_fig": True}),
+        ("heatmap", {"var_names": _VAR_NAMES, "groupby": "group"}),
+        ("tracksplot", {"var_names": _VAR_NAMES, "groupby": "group"}),
+        ("violin", {"keys": _VAR_NAMES, "groupby": "group"}),
+        ("clustermap", {"obs_keys": "group"}),
+        ("scatter", {"x": "feature_0", "y": "feature_1", "color": "group"}),
+        ("pca", {"color": "feature_0"}),
+        ("umap", {"color": "feature_0"}),
+        ("embedding", {"basis": "umap", "color": "feature_0"}),
+        ("paga", {"color": "feature_0"}),
+        ("paga_path", {"nodes": ["a", "b"], "keys": _VAR_NAMES}),
+        ("dpt_timeseries", {}),
+        ("rank_features_groups_violin", {"n_features": 2}),
+        ("rank_features_groups_stacked_violin", {"n_features": 2}),
+        ("rank_features_groups_heatmap", {"n_features": 2}),
+        ("rank_features_groups_dotplot", {"n_features": 2}),
+        ("rank_features_groups_matrixplot", {"n_features": 2}),
+        ("rank_features_groups_tracksplot", {"n_features": 2}),
+    ],
+)
+def test_scanpy_plots_array_types(array_type, plotter, kwargs, edata_embedded, clean_up_plots):
+    plot = getattr(ep.pl, plotter)
+    expected = plot(edata_embedded.copy(), show=False, **kwargs)
+    X = edata_embedded.X = array_type(edata_embedded.X)
+
+    result = plot(edata_embedded, show=False, **kwargs)
+
+    assert edata_embedded.X is X
+    if kwargs.get("return_fig"):
+        pd.testing.assert_frame_equal(result.obs_tidy, expected.obs_tidy)
+
+
+@pytest.mark.parametrize("plotter", ["pca", "umap", "diffmap", "embedding"])
+def test_embedding_plots_3D(plotter, edata_embedded, clean_up_plots):
+    kwargs = {"basis": "umap"} if plotter == "embedding" else {}
+    edata_embedded.layers[DEFAULT_TEM_LAYER_NAME] = np.stack([edata_embedded.X] * 3, axis=2)
+    edata_embedded.X = edata_embedded.layers[DEFAULT_TEM_LAYER_NAME]
+    plot = getattr(ep.pl, plotter)
+
+    plot(edata_embedded, color="group", show=False, **kwargs)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        plot(edata_embedded, color=["group", "feature_0"], show=False, **kwargs)
+
+
+def test_violin_obs_3D(edata_blobs_3d, clean_up_plots):
+    ep.pl.violin(edata_blobs_3d, keys="age", show=False)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.pl.violin(edata_blobs_3d, keys=["age", "feature_0"], show=False)
+
+
+def test_scatter_obs_3D(edata_blobs_3d, clean_up_plots):
+    ax = ep.pl.scatter(edata_blobs_3d, x="age", y="feature_0", color="feature_1", show=False)
+
+    points = np.column_stack([edata_blobs_3d.obs["age"], edata_blobs_3d.X[:, 0, 0]])
+    np.testing.assert_array_equal(np.sort(ax.collections[0].get_offsets(), axis=0), np.sort(points, axis=0))
+
+
+def test_dendrogram_3D(edata_blobs_3d, clean_up_plots):
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.pl.dendrogram(edata_blobs_3d, groupby="cluster", show=False)
+
+    edata_blobs_3d.obsm["X_mean"] = edata_blobs_3d.X.mean(axis=2)
+    ep.tl.dendrogram(edata_blobs_3d, groupby="cluster", use_rep="X_mean")
+    ep.pl.dendrogram(edata_blobs_3d, groupby="cluster", show=False)

@@ -5,9 +5,9 @@ from ehrapy.preprocessing._filter import filter_features, filter_observations
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
+    gradient_boosting_impute,
     knn_impute,
     locf_impute,
-    mice_forest_impute,
     miss_forest_impute,
     simple_impute,
 )
@@ -25,7 +25,7 @@ from ehrapy.preprocessing._normalization import (
 )
 from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import mcar_test, qc_lab_measurements, qc_metrics
-from ehrapy.preprocessing._scanpy_pp_api import combat, pca, regress_out, sample, subsample
+from ehrapy.preprocessing._scanpy_pp_api import combat, pca, regress_out, sample
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
 
 __all__ = [
@@ -34,9 +34,9 @@ __all__ = [
     "neighbors",
     "highly_variable_features",
     "explicit_impute",
+    "gradient_boosting_impute",
     "knn_impute",
     "locf_impute",
-    "mice_forest_impute",
     "miss_forest_impute",
     "simple_impute",
     "log_norm",

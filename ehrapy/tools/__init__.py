@@ -1,5 +1,6 @@
+from ehrapy.tools._comorbidity import comorbidity_index
 from ehrapy.tools._ncp import ncp
-from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
+from ehrapy.tools._scanpy_tl_api import dendrogram, dpt, ingest, leiden, paga
 from ehrapy.tools._stratified_table_one import stratified_table_one
 from ehrapy.tools._survival_analysis import (
     anova_glm,
@@ -7,7 +8,6 @@ from ehrapy.tools._survival_analysis import (
     cox_ph_adjusted_curves,
     glm,
     kaplan_meier,
-    kmf,
     log_logistic_aft,
     nelson_aalen,
     ols,
@@ -37,7 +37,6 @@ __all__ = [
     "anova_glm",
     "cox_ph",
     "glm",
-    "kmf",
     "kaplan_meier",
     "log_logistic_aft",
     "nelson_aalen",
@@ -67,6 +66,12 @@ __all__ = [
     "diffmap",
     "embedding_density",
     "draw_graph",
+    "leiden",
+    "dendrogram",
+    "dpt",
+    "paga",
+    "ingest",
     "cox_ph_adjusted_curves",
     "ncp",
+    "comorbidity_index",
 ]

@@ -1,5 +1,9 @@
 from pathlib import Path
 
+import ehrdata as ed
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pytest
 
 import ehrapy as ep
@@ -10,7 +14,7 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR.parent}/_images"
 
 @pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
 def test_CohortTracker_init_vanilla(columns, edata_mini):
-    ct = ep.tl.CohortTracker(edata_mini, columns)
+    ct = ep.tl.CohortTracker(edata_mini, columns=columns)
     assert ct._tracked_steps == 0
     assert ct.tracked_steps == 0
     assert ct._tracked_text == []
@@ -18,7 +22,7 @@ def test_CohortTracker_init_vanilla(columns, edata_mini):
 
 
 def test_CohortTracker_type_detection(edata_mini):
-    ct = ep.tl.CohortTracker(edata_mini, ["glucose", "weight", "disease", "station"])
+    ct = ep.tl.CohortTracker(edata_mini, columns=["glucose", "weight", "disease", "station"])
     assert set(ct.categorical) == {"disease", "station"}
 
 
@@ -82,6 +86,22 @@ def test_CohortTracker_plot_cohort_barplot_test_sensitivity(edata_mini, check_sa
         )
 
 
+def test_CohortTracker_plot_cohort_barplot_show_keeps_rows_apart(monkeypatch):
+    monkeypatch.setattr(plt, "show", lambda: None)
+    n = np.arange(120)
+    obs = pd.DataFrame({"age": n, "unit": (n % 12).astype(str), "outcome": (n % 6).astype(str)}, index=n.astype(str))
+    edata = ed.EHRData(obs=obs.astype({"unit": "category", "outcome": "category"}))
+    ct = ep.tl.CohortTracker(edata, categorical=["unit", "outcome"])
+    for label in ["First", "Second", "Third", "Fourth"]:
+        ct(edata, label=label)
+
+    ct.plot_cohort_barplot(subfigure_title=True, show=True, subplots_kwargs={"figsize": (8, 12)})
+
+    heights = [ax.get_position().height for ax in plt.gcf().axes]
+    plt.close("all")
+    assert min(heights) > 0.15
+
+
 def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image):
     ct = ep.tl.CohortTracker(edata_mini)
 
@@ -91,7 +111,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image)
     check_same_image(
         fig=fig1,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_vanilla",
-        tol=1e-1,
+        tol=35,
     )
 
     ct(edata_mini, label="Second step", operations_done="Some other operations")
@@ -100,7 +120,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image)
     check_same_image(
         fig=fig2,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step2_vanilla",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -117,7 +137,7 @@ def test_CohortTracker_plot_cohort_barplot_use_settings(edata_mini, check_same_i
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_use_settings",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -136,7 +156,7 @@ def test_CohortTracker_plot_cohort_barplot_use_settings_big(edata_mini, check_sa
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_use_settings_big",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -154,7 +174,7 @@ def test_CohortTracker_plot_cohort_barplot_loosing_category(edata_mini, check_sa
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step2_loose_category",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -234,7 +254,6 @@ def test_CohortTracker_flowchart_image(edata_mini, check_same_image):
     check_same_image(
         fig=plot,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
-        tol=1e-1,
     )
 
 

@@ -27,6 +27,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.dendrogram
     plot.catplot
     plot.timeseries
+    plot.trajectories
     plot.sankey_diagram
     plot.sankey_diagram_time
     plot.stratified_table_one
@@ -49,11 +50,18 @@ For most tools and for some preprocessing functions, you will find a plotting fu
 
 ## Classes
 
-Please refer to [Scanpy's plotting classes documentation](https://scanpy.readthedocs.io/en/stable/api.html#classes).
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.Colormaps
+```
 
 ## Tools
 
-Methods that extract and visualize tool-specific annotation in an AnnData object. For any method in module `tl`, there is a method with the same name in `pl`.
+Methods that extract and visualize tool-specific annotation in an EHRData object.
+For any method in module `tl`, there is a method with the same name in `pl`.
 
 ```{eval-rst}
 .. autosummary::
@@ -125,7 +133,20 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.cox_ph_adjusted_curves
 ```
 
-## Normalized Complexity Profile
+## Prediction
+
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.prediction_performance
+    plot.subgroup_performance
+```
+
+## Patterns across patients, variables and time
+
+Finds groups of patients whose variables follow a similar course over time.
 
 ```{eval-rst}
 .. autosummary::

@@ -4,12 +4,17 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+import scanpy as sc
+import scipy.sparse as sp
+from ehrdata._logger import logger
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
+from scipy.stats import chi2_contingency
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
-from tests.conftest import TEST_DATA_PATH
+from tests.conftest import TEST_DATA_PATH, forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -112,7 +117,6 @@ class TestHelperFunctions:
         assert "scores" in edata_only_required.uns["rank_features_groups"]
         assert "log2foldchanges" not in edata_only_required.uns["rank_features_groups"]
         assert "pvals_adj" not in edata_only_required.uns["rank_features_groups"]
-        assert "pts" not in edata_only_required.uns["rank_features_groups"]
         assert edata_only_required.uns["rank_features_groups"]["names"].dtype.names == groups
         assert (
             len(edata_only_required.uns["rank_features_groups"]["names"]) == 4
@@ -143,7 +147,6 @@ class TestHelperFunctions:
             scores=scores,
             pvals=pvals,
             pvals_adj=pvals.copy(),
-            pts=pvals.copy(),
             logfoldchanges=logfoldchanges,
         )
 
@@ -152,14 +155,12 @@ class TestHelperFunctions:
         assert "scores" in edata_all_keys.uns["rank_features_groups"]
         assert "logfoldchanges" in edata_all_keys.uns["rank_features_groups"]
         assert "pvals_adj" in edata_all_keys.uns["rank_features_groups"]
-        assert "pts" in edata_all_keys.uns["rank_features_groups"]
         assert edata_all_keys.uns["rank_features_groups"]["names"].dtype.names == groups
         assert len(edata_all_keys.uns["rank_features_groups"]["names"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["pvals"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["pvals_adj"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["logfoldchanges"]) == 4
         assert len(edata_all_keys.uns["rank_features_groups"]["scores"]) == 4
-        assert len(edata_all_keys.uns["rank_features_groups"]["pts"]) == 4
 
         # Check that passing empty objects doesn't add keys
         _utils._save_rank_features_result(
@@ -170,7 +171,6 @@ class TestHelperFunctions:
             scores=scores,
             pvals=pvals,
             pvals_adj=[],
-            pts=np.array([]),
             logfoldchanges=pd.DataFrame([]),
         )
         assert "names" in edata.uns["rank_features_groups"]
@@ -178,7 +178,6 @@ class TestHelperFunctions:
         assert "scores" in edata.uns["rank_features_groups"]
         assert "logfoldchanges" not in edata.uns["rank_features_groups"]
         assert "pvals_adj" not in edata.uns["rank_features_groups"]
-        assert "pts" not in edata.uns["rank_features_groups"]
 
     def test_get_groups_order(self):
         assert _utils._get_groups_order(groups_subset="all", group_names=("A", "B", "C"), reference="B") == (
@@ -447,13 +446,278 @@ def test_rank_features_group_column_to_rank():
     assert len(edata.uns["rank_features_groups"]["names"]) == 2
 
 
+def test_rank_features_groups_n_features(mimic_2_encoded):
+    edata_all = ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", copy=True)
+    ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", n_features=3)
+
+    result, result_all = mimic_2_encoded.uns["rank_features_groups"], edata_all.uns["rank_features_groups"]
+    for key in ("names", "scores", "pvals", "pvals_adj", "logfoldchanges"):
+        assert len(result[key]) == 3
+        for group in result[key].dtype.names:
+            np.testing.assert_array_equal(result[key][group], result_all[key][group][:3])
+
+
+def test_rank_features_groups_pts(mimic_2_encoded):
+    ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", pts=True)
+    result = mimic_2_encoded.uns["rank_features_groups"]
+
+    ranked_features = set(pd.DataFrame(result["names"]).to_numpy().ravel())
+    for key in ("pts", "pts_rest"):
+        assert set(result[key].index) == ranked_features
+        assert ((result[key] >= 0) & (result[key] <= 1)).all().all()
+
+    feature, group = "aline_flg", "MICU"
+    assert mimic_2_encoded.var.loc[feature, FEATURE_TYPE_KEY] == CATEGORICAL_TAG
+    in_group = (mimic_2_encoded.obs["service_unit"] == group).to_numpy()
+    values = mimic_2_encoded[:, feature].X.ravel()
+    assert result["pts"].loc[feature, group] == pytest.approx(np.mean(values[in_group] != 0))
+    assert result["pts_rest"].loc[feature, group] == pytest.approx(np.mean(values[~in_group] != 0))
+
+    df = ep.get.rank_features_groups_df(mimic_2_encoded, group=group)
+    assert len(df) == len(ranked_features)
+    assert df["pct_nz_group"].notna().all()
+
+    edata_without_pts = ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit", copy=True)
+    filtered = ep.tl.filter_rank_features_groups(mimic_2_encoded, copy=True)
+    filtered_without_pts = ep.tl.filter_rank_features_groups(edata_without_pts, copy=True)
+    pd.testing.assert_frame_equal(
+        pd.DataFrame(filtered.uns["rank_features_groups_filtered"]["names"]),
+        pd.DataFrame(filtered_without_pts.uns["rank_features_groups_filtered"]["names"]),
+    )
+
+
 def test_rank_features_groups_3D_edata(edata_blob_small):
     ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
+    with pytest.raises(ValueError, match=r"only supports 2D data.*summarize_measurements"):
         ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer=DEFAULT_TEM_LAYER_NAME)
+
+    edata_3d = ed.EHRData(X=edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME], obs=edata_blob_small.obs)
+    edata_3d.obs["age"] = np.arange(edata_3d.n_obs, dtype=float)
+    ep.tl.rank_features_groups(edata_3d, groupby="cluster", field_to_rank="obs", columns_to_rank={"obs_names": ["age"]})
+    assert set(pd.DataFrame(edata_3d.uns["rank_features_groups"]["names"]).to_numpy().ravel()) == {"age"}
+
+
+def _ranking_edata(X: np.ndarray, *, categorical: bool = True) -> ed.EHRData:
+    obs = pd.DataFrame(
+        {"group": pd.Categorical(np.repeat(["a", "b", "c", "d"], 10))}, index=[str(i) for i in range(40)]
+    )
+    feature_types = [NUMERIC_TAG] * 3 + [CATEGORICAL_TAG if categorical else NUMERIC_TAG]
+    return ed.EHRData(X=X, obs=obs, var=pd.DataFrame({FEATURE_TYPE_KEY: feature_types}, index=["n0", "n1", "n2", "c"]))
+
+
+def _ranking_data(rng: np.random.Generator) -> np.ndarray:
+    return np.column_stack([np.where(rng.random((40, 3)) < 0.3, 0, rng.gamma(2, size=(40, 3))), rng.integers(0, 3, 40)])
+
+
+def _assert_rankings_equal(result: dict, expected: dict) -> None:
+    assert result.keys() == expected.keys()
+    for key in expected.keys() - {"params"}:
+        pd.testing.assert_frame_equal(pd.DataFrame(result[key]), pd.DataFrame(expected[key]))
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("method", ["t-test", "wilcoxon", "logreg"])
+@pytest.mark.parametrize("pts", [False, True])
+def test_rank_features_groups_array_types(array_type, method, pts, rng):
+    X = _ranking_data(rng)
+    kwargs = {"num_cols_method": method, "pts": pts, "copy": True}
+    categorical = method != "logreg"
+    expected = ep.tl.rank_features_groups(_ranking_edata(X, categorical=categorical), "group", **kwargs)
+    edata = _ranking_edata(array_type(X), categorical=categorical)
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.rank_features_groups(edata, "group", **kwargs)
+
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.X._meta)
+    _assert_rankings_equal(result.uns["rank_features_groups"], expected.uns["rank_features_groups"])
+
+
+def test_rank_features_groups_single_timepoint(rng):
+    X = _ranking_data(rng)
+    expected = ep.tl.rank_features_groups(_ranking_edata(X), "group", pts=True, copy=True)
+    result = ep.tl.rank_features_groups(_ranking_edata(X[:, :, None]), "group", pts=True, copy=True)
+
+    _assert_rankings_equal(result.uns["rank_features_groups"], expected.uns["rank_features_groups"])
+
+
+def test_rank_features_groups_logreg_with_categorical_raises(rng):
+    with pytest.raises(ValueError, match="cannot be combined with categorical features"):
+        ep.tl.rank_features_groups(_ranking_edata(_ranking_data(rng)), "group", num_cols_method="logreg")
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "compared_groups"),
+    [
+        ({"reference": "b"}, ("a", "c", "d")),
+        ({"groups": ["a"], "reference": "b"}, ("a",)),
+        ({"groups": ["c", "a"], "reference": "b"}, ("c", "a")),
+        ({"groups": ["c", "a"], "reference": "rest"}, ("c", "a")),
+    ],
+)
+def test_rank_features_groups_compared_groups(kwargs, compared_groups, rng):
+    edata = _ranking_edata(_ranking_data(rng))
+    numeric = edata[:, edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].copy()
+
+    ep.tl.rank_features_groups(edata, "group", **kwargs)
+    sc.tl.rank_genes_groups(numeric, "group", **kwargs)
+
+    result, expected = edata.uns["rank_features_groups"], numeric.uns["rank_genes_groups"]
+    for key in ("names", "scores", "pvals", "pvals_adj", "logfoldchanges"):
+        assert result[key].dtype.names == compared_groups
+    for group in compared_groups:
+        assert set(result["names"][group]) == set(edata.var_names)
+        scores = pd.Series(result["scores"][group], index=result["names"][group])
+        np.testing.assert_allclose(scores[expected["names"][group]], expected["scores"][group])
+
+
+def test_rank_features_groups_categorical_rest_with_groups_subset(rng):
+    edata = _ranking_edata(_ranking_data(rng))
+    ep.tl.rank_features_groups(edata, "group", groups=["c", "a"], reference="rest")
+
+    result = edata.uns["rank_features_groups"]
+    groups, values = edata.obs["group"].to_numpy(), edata[:, "c"].X.ravel()
+    for group in ("c", "a"):
+        scores = pd.Series(result["scores"][group], index=result["names"][group])
+        assert scores["c"] == pytest.approx(chi2_contingency(pd.crosstab(values, groups != group), lambda_=0)[0])
+
+
+@pytest.mark.filterwarnings("error::RuntimeWarning")
+@pytest.mark.parametrize("method", ["t-test", "wilcoxon"])
+@pytest.mark.parametrize("reference", ["rest", "b"])
+@pytest.mark.parametrize("standardize", [False, True])
+def test_rank_features_groups_logfoldchanges(method, reference, standardize, rng):
+    X = _ranking_data(rng)
+    if standardize:
+        X[:, :3] = (X[:, :3] - X[:, :3].mean(axis=0)) / X[:, :3].std(axis=0)
+    edata = _ranking_edata(X)
+    ep.tl.rank_features_groups(edata, "group", reference=reference, num_cols_method=method)
+
+    result = edata.uns["rank_features_groups"]
+    groups = edata.obs["group"].to_numpy()
+    logfoldchanges, expected = [], []
+    for group in result["names"].dtype.names:
+        rest = groups != group if reference == "rest" else groups == reference
+        for feature in ("n0", "n1", "n2"):
+            values = edata[:, feature].X.ravel()
+            mean, mean_rest = values[groups == group].mean(), values[rest].mean()
+            expected.append(np.log2(mean / mean_rest) if mean > 0 and mean_rest > 0 else np.nan)
+            logfoldchanges.append(pd.Series(result["logfoldchanges"][group], index=result["names"][group])[feature])
+
+    np.testing.assert_allclose(logfoldchanges, expected)
+    assert np.isnan(expected).any() == standardize
+
+
+@pytest.mark.parametrize("reference", ["rest", "b"])
+def test_rank_features_groups_categorical_logfoldchanges(reference, rng):
+    flag = (rng.random(40) < np.repeat([0.9, 0.3, 0.1, 0.6], 10)).astype(float)
+    edata = ed.EHRData(
+        X=np.column_stack([_ranking_data(rng), flag]),
+        obs=_ranking_edata(_ranking_data(rng)).obs,
+        var=pd.DataFrame(
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG] * 3 + [CATEGORICAL_TAG] * 2}, index=["n0", "n1", "n2", "c", "flag"]
+        ),
+    )
+    ep.tl.rank_features_groups(edata, "group", reference=reference)
+
+    result = edata.uns["rank_features_groups"]
+    groups = edata.obs["group"].to_numpy()
+    logfoldchanges = {
+        group: pd.Series(result["logfoldchanges"][group], index=result["names"][group])
+        for group in result["names"].dtype.names
+    }
+    for group, values in logfoldchanges.items():
+        rest = groups != group if reference == "rest" else groups == reference
+        assert values["flag"] == pytest.approx(np.log2(flag[groups == group].mean() / flag[rest].mean()))
+        assert np.isnan(values["c"])
+    assert logfoldchanges["a"]["flag"] > 0 > logfoldchanges["c"]["flag"]
+
+
+def test_rank_features_groups_df_orders_by_pvals(mimic_2_encoded):
+    ep.tl.rank_features_groups(mimic_2_encoded, groupby="service_unit")
+
+    for group, df in ep.get.rank_features_groups_df(mimic_2_encoded, group=None).groupby("group", observed=True):
+        order = df.sort_values(["pvals_adj", "pvals"], kind="stable")
+        assert df.index.equals(order.index), group
+
+
+@pytest.mark.parametrize(
+    ("method", "tie_correct"),
+    [("t-test", False), ("t-test_overestim_var", False), ("wilcoxon", False), ("wilcoxon", True)],
+)
+@pytest.mark.parametrize("reference", ["rest", "b"])
+def test_rank_features_groups_missing_values(method, tie_correct, reference, rng):
+    X = _ranking_data(rng)
+    X[[0, 1, 12, 25, 38], 0] = np.nan
+    kwargs = {"reference": reference, "num_cols_method": method, "tie_correct": tie_correct, "copy": True}
+
+    edata = _ranking_edata(X)
+    result = ep.tl.rank_features_groups(edata, "group", **kwargs).uns["rank_features_groups"]
+    observed = edata[~np.isnan(X[:, 0])].copy()
+    expected = ep.tl.rank_features_groups(observed, "group", **kwargs).uns["rank_features_groups"]
+
+    for group in result["names"].dtype.names:
+        for key in ("scores", "pvals", "logfoldchanges"):
+            value = pd.Series(result[key][group], index=result["names"][group])["n0"]
+            assert value == pytest.approx(pd.Series(expected[key][group], index=expected["names"][group])["n0"])
+            assert np.isfinite(value)
+
+
+def test_rank_features_groups_warns_for_untestable_variables(rng, monkeypatch):
+    messages = []
+    monkeypatch.setattr(logger, "warning", lambda msg, **kwargs: messages.append(msg))
+    X = _ranking_data(rng)
+    X[:10, 0] = np.nan
+
+    ep.tl.rank_features_groups(edata := _ranking_edata(X), "group")
+
+    result = edata.uns["rank_features_groups"]
+    assert pd.Series(result["pvals"]["a"], index=result["names"]["a"])["n0"] == 1
+    assert any("['n0'] have fewer than 2 observed values" in message for message in messages)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_filter_rank_features_groups_array_types(array_type, rng):
+    X = _ranking_data(rng)
+    ranked = ep.tl.rank_features_groups(_ranking_edata(X), "group", copy=True)
+    expected = ep.tl.filter_rank_features_groups(ranked, min_in_group_fraction=0.7, copy=True)
+    edata = _ranking_edata(array_type(X))
+    edata.uns["rank_features_groups"] = ranked.uns["rank_features_groups"]
+
+    with forbid_dask_compute(allowed=1):
+        ep.tl.filter_rank_features_groups(edata, min_in_group_fraction=0.7)
+
+    assert "pts" not in edata.uns["rank_features_groups"]
+    pd.testing.assert_frame_equal(
+        pd.DataFrame(edata.uns["rank_features_groups_filtered"]["names"]),
+        pd.DataFrame(expected.uns["rank_features_groups_filtered"]["names"]),
+    )
+
+
+def test_rank_features_groups_sparse_categorical(rng):
+    X = np.column_stack([rng.standard_normal(40), rng.integers(0, 3, 40)])
+    obs = pd.DataFrame({"group": pd.Categorical(rng.choice(["a", "b"], 40))}, index=[str(i) for i in range(40)])
+    var = pd.DataFrame({FEATURE_TYPE_KEY: [NUMERIC_TAG, CATEGORICAL_TAG]}, index=["num", "cat"])
+    edata_dense = ed.EHRData(X=X, obs=obs, var=var)
+    edata_sparse = ed.EHRData(X=sp.csr_array(X), obs=obs, var=var)
+
+    ep.tl.rank_features_groups(edata_dense, "group")
+    ep.tl.rank_features_groups(edata_sparse, "group")
+
+    for field in ("names", "scores", "pvals"):
+        np.testing.assert_array_equal(
+            edata_sparse.uns["rank_features_groups"][field], edata_dense.uns["rank_features_groups"][field]
+        )
 
 
 def test_filter_rank_features_groups_edata(mimic_2):
     mimic_2 = ed.move_to_obs(mimic_2, ["service_unit"], copy=True)
-    ep.tl.rank_features_groups(mimic_2, "service_unit")
-    ep.tl.rank_features_groups(mimic_2, "service_unit")
+    ep.tl.rank_features_groups(mimic_2, groupby="service_unit")
+
+    edata_copy = ep.tl.filter_rank_features_groups(mimic_2, copy=True)
+    assert "rank_features_groups_filtered" in edata_copy.uns
+    assert "rank_features_groups_filtered" not in mimic_2.uns
+
+    assert ep.tl.filter_rank_features_groups(mimic_2) is None
+    assert "rank_features_groups_filtered" in mimic_2.uns

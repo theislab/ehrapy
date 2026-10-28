@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import os
 from collections import OrderedDict
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import dask
 import ehrdata as ed
 import holoviews as hv
 import matplotlib.pyplot as plt
@@ -15,18 +17,32 @@ from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEAT
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
-from ehrapy._types import (
-    ARRAY_TYPES_NONNUMERIC,
-    ARRAY_TYPES_NUMERIC,
-    ARRAY_TYPES_NUMERIC_3D_ABLE,
-    as_dense_dask_array,
-    asarray,
-)
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
+
+
+@contextmanager
+def forbid_dask_compute(allowed: int = 0):
+    """Fail if dask arrays are computed more than `allowed` times inside the block."""
+    computes = 0
+
+    def scheduler(dsk, keys, **kwargs):
+        nonlocal computes
+        computes += 1
+        if computes > allowed:
+            raise AssertionError(f"Dask computed {computes} times, expected at most {allowed}.")
+        return dask.get(dsk, keys, **kwargs)
+
+    with dask.config.set(scheduler=scheduler):
+        yield
+
+
+def curve_values(plot: hv.Layout | hv.Overlay) -> list[np.ndarray]:
+    """The y values of every curve in a holoviews plot."""
+    return plot.traverse(lambda curve: curve.dimension_values(1), [hv.Curve])
 
 
 def pytest_configure():
@@ -411,7 +427,10 @@ def edata_small_bias() -> ed.EHRData:
 
 @pytest.fixture
 def edata_blob_small() -> ed.EHRData:
-    edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=2, n_observations=50, base_timepoints=10)
+    edata = ed.dt.ehrdata_blobs(
+        n_variables=10, n_centers=2, n_observations=50, base_timepoints=10, layer=DEFAULT_TEM_LAYER_NAME
+    )
+    edata.X = np.asarray(edata.layers[DEFAULT_TEM_LAYER_NAME])[:, :, 0].copy()
     edata.layers["layer_2"] = edata.X.copy()
     ep.pp.neighbors(edata)
     return edata
@@ -429,8 +448,18 @@ def edata_blobs_timeseries_small() -> ed.EHRData:
         variable_length=False,
         layer=DEFAULT_TEM_LAYER_NAME,
     )
-    edata.layers["layer_2"] = edata.X.copy()
+    edata.layers["layer_2"] = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
 
+    return edata
+
+
+@pytest.fixture
+def edata_blobs_3d(rng) -> ed.EHRData:
+    """Longitudinal data in a 3D `.X` with numeric `obs` columns."""
+    edata = ed.dt.ehrdata_blobs(n_observations=30, n_variables=4, base_timepoints=5)
+    edata.obs["age"] = rng.normal(60, 10, edata.n_obs)
+    edata.obs["treated"] = np.tile([0.0, 1.0], edata.n_obs // 2)
+    edata.obs["y"] = rng.normal(size=edata.n_obs)
     return edata
 
 
@@ -486,7 +515,8 @@ def check_same_image(tmp_path: Path):
         fig: Figure | hv.core.overlay.Overlay | hv.element.chart.Scatter | hv.Element,
         base_path: Path | os.PathLike,
         *,
-        tol: float,
+        # default mirrors scanpy's most common image-comparison tolerance 15 (RMS on a 0-255 scale). https://github.com/scverse/scanpy/blob/ee7707bc208132cca8387e542d0532f6967f68cc/tests/test_plotting.py#L567. Individual tests bump this where rendering legitimately differs more.
+        tol: float = 15,
     ) -> None:
         expected = Path(base_path).parent / (Path(base_path).name + "_expected.png")
         if not Path(expected).is_file():

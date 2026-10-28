@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import ehrapy as ep
+from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -14,10 +15,11 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@load_hv_extensions()
 def variable_correlations(
     edata: EHRData,
     *,
-    layer: str,
+    layer: str | None = None,
     var_names: Sequence[str] | None = None,
     method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
@@ -39,6 +41,7 @@ def variable_correlations(
     Args:
         edata: Central data object.
         layer: Layer to extract data from.
+            If `None`, `edata.X` is used.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
         method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
@@ -62,9 +65,7 @@ def variable_correlations(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> ep.pl.variable_correlations(
-        ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", width=700
-        ... )
+        >>> ep.pl.variable_correlations(edata, method="pearson", agg="mean", correction_method="fdr_bh", width=700)
 
         .. image:: /_static/docstring_previews/variable_correlations_heatmap.png
     """
@@ -127,10 +128,11 @@ def variable_correlations(
     return heatmap
 
 
+@load_hv_extensions()
 def variable_dependencies(
     edata: EHRData,
     *,
-    layer: str,
+    layer: str | None = None,
     var_names: Sequence[str] | None = None,
     method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
@@ -151,6 +153,7 @@ def variable_dependencies(
     Args:
         edata: Central data object.
         layer: Layer to extract data from.
+            If `None`, `edata.X` is used.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
         method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
@@ -175,9 +178,7 @@ def variable_dependencies(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> ep.pl.variable_dependencies(
-        ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh"
-        ... )
+        >>> ep.pl.variable_dependencies(edata, method="pearson", agg="mean", correction_method="fdr_bh")
 
         .. image:: /_static/docstring_previews/variable_dependencies_chord.png
     """

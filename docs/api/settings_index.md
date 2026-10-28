@@ -1,5 +1,7 @@
 # Settings
 
+Global settings control the verbosity of ehrapy and the number of parallel jobs.
+
 ```{eval-rst}
 .. module:: ehrapy
     :no-index:

@@ -85,7 +85,7 @@ def _nonneg_cp(
 def ncp(
     edata: EHRData,
     *,
-    layer: str,
+    layer: str | None = None,
     rank: int = 4,
     n_iter_max: int = 300,
     sigmoid_transform: bool = False,
@@ -93,7 +93,7 @@ def ncp(
     random_state: int = 0,
     copy: bool = False,
 ) -> EHRData | None:
-    r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal EHR layer.
+    r"""Find groups of patients whose variables follow a similar course over time.
 
     CP (CANDECOMP/PARAFAC) decomposition factorises a 3-way tensor
     :math:`X \in \mathbb{R}^{I \times J \times K}` into a sum of ``rank``
@@ -127,7 +127,9 @@ def ncp(
     Args:
         edata: Central data object.
         layer: Key of the 3D layer to decompose (shape ``n_obs × n_vars × n_time``).
+            If `None`, `edata.X` is used.
             All values must be non-negative (use ``sigmoid_transform=True`` for logit layers, or ``np.abs`` / clipping beforehand).
+            Missing values are not supported and must be imputed beforehand.
         rank: Number of components (rank of the decomposition).
             Each component describes one co-occurring patient sub-group, variable signature, and temporal trajectory.
         n_iter_max: Maximum number of multiplicative-update iterations.
@@ -148,7 +150,7 @@ def ncp(
     Examples:
         >>> import ehrdata as ed, ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
-        >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)
+        >>> ep.tl.ncp(edata, rank=3, sigmoid_transform=True)
         >>> edata.obsm["X_ncp"].shape
         (30, 3)
         >>> edata.varm["ncp_loadings"].shape
@@ -156,17 +158,27 @@ def ncp(
         >>> edata.uns["ncp"]["temporal_factors"].shape
         (12, 3)
     """
-    if layer not in edata.layers:
+    if layer is not None and layer not in edata.layers:
         raise KeyError(f"Layer {layer!r} not found in edata.layers. Available: {list(edata.layers)}")
 
-    tensor = np.asarray(edata.layers[layer], dtype=np.float64)
-    if tensor.ndim != 3:
-        raise ValueError(f"Layer {layer!r} must be 3D (n_obs × n_vars × n_time), got shape {tensor.shape}.")
+    source = "edata.X" if layer is None else f"Layer {layer!r}"
+    X = edata.X if layer is None else edata.layers[layer]
+    if X.ndim != 3:
+        raise ValueError(f"{source} must be 3D (n_obs × n_vars × n_time), got shape {X.shape}.")
+    tensor = np.asarray(X, dtype=np.float64)
 
     if sigmoid_transform:
         from scipy.special import expit
 
         tensor = expit(tensor)
+
+    if np.isnan(tensor).any():
+        raise ValueError(f"{source} contains NaN values. Impute them first, e.g. with `ep.pp.simple_impute`.")
+    if (tensor < 0).any():
+        raise ValueError(
+            f"{source} contains negative values, but NCP requires non-negative input. "
+            "Use `sigmoid_transform=True` for logits or shift the data to be non-negative first."
+        )
 
     edata = edata.copy() if copy else edata
 

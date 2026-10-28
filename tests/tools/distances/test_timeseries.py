@@ -3,6 +3,7 @@ from functools import partial
 import ehrdata as ed
 import numpy as np
 import pytest
+import scipy.sparse as sp
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 from ehrapy.tools.distances.timeseries import timeseries_distance
@@ -51,7 +52,8 @@ def test_patient_timeseries_distance_insufficient_overlap(metric):
     patient_0 = np.array([0])
     patient_1 = np.array([1])
     distance = timeseries_distance(patient_0, patient_1, time_series_data, metric=metric)
-    assert np.isclose(distance, 0.0)
+    assert distance == np.inf
+    assert timeseries_distance(patient_0, patient_0, time_series_data, metric=metric) == 0.0
 
 
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
@@ -108,4 +110,11 @@ def test_patient_timeseries_distance_edge_cases(metric):
     )
 
     distance_nan = timeseries_distance(patient_0, patient_1, time_series_data_nan, metric=metric)
-    assert np.isclose(distance_nan, 0.0)
+    assert distance_nan == np.inf
+
+
+def test_patient_timeseries_distance_unsupported_array_type():
+    arr = sp.coo_array(np.ones((2, 5)))
+
+    with pytest.raises(NotImplementedError, match="does not support array type"):
+        timeseries_distance(np.array([0]), np.array([1]), arr)

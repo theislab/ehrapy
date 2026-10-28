@@ -10,28 +10,31 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
     run:
         runs-on: ubuntu-latest
         strategy:
             matrix:
                 notebook: [
-                        "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_fate.ipynb",
-                        "docs/tutorials/notebooks/cohort_tracking.ipynb",
-                        "docs/tutorials/notebooks/longitudinal_with_ehrapy.ipynb",
-                        "docs/tutorials/notebooks/bias.ipynb",
-                        # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
+                        "docs/tutorials/notebooks/data.ipynb",
+                        "docs/tutorials/notebooks/subgroups.ipynb",
+                        "docs/tutorials/notebooks/survival.ipynb",
+                        "docs/tutorials/notebooks/trajectories.ipynb",
+                        "docs/tutorials/notebooks/cohort.ipynb",
+                        "docs/tutorials/notebooks/causal.ipynb",
+                        "docs/tutorials/notebooks/prediction.ipynb",
                     ]
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   submodules: "true"
+                  persist-credentials: false
 
             - name: Set up uv
-              uses: astral-sh/setup-uv@v7
+              uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
               with:
                   python-version: "3.14"
                   cache-dependency-glob: pyproject.toml
@@ -43,10 +46,27 @@ jobs:
               run: sudo apt-get install -y libopenblas-dev
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install '.[leiden]' 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn
+              run: uv pip install '.[leiden,ml]' 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots sparse
 
             - name: Install ehrdata from submodule
               run: uv pip install --reinstall --no-deps -e submodules/ehrdata
 
+            - name: Restore datasets cache
+              id: data-cache
+              uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: docs/tutorials/notebooks/ehrapy_data
+                  key: ehrapy-data-notebook-${{ matrix.notebook }}-v1
+
             - name: Run ${{ matrix.notebook }} Notebook
-              run: uv run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+              env:
+                  EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
+                  EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
+              run: uv run --no-sync jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+
+            - name: Save datasets cache
+              if: steps.data-cache.outputs.cache-hit != 'true' && success()
+              uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: docs/tutorials/notebooks/ehrapy_data
+                  key: ehrapy-data-notebook-${{ matrix.notebook }}-v1

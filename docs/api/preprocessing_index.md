@@ -51,6 +51,8 @@ Preprocessing steps usually perform a basic transformation on the data array in 
 
 ## Imputation
 
+Imputation fills missing values of static and longitudinal variables.
+
 ```{eval-rst}
 .. autosummary::
     :toctree: preprocessing
@@ -62,7 +64,7 @@ Preprocessing steps usually perform a basic transformation on the data array in 
     preprocessing.locf_impute
     preprocessing.knn_impute
     preprocessing.miss_forest_impute
-    preprocessing.mice_forest_impute
+    preprocessing.gradient_boosting_impute
 ```
 
 ## Normalization

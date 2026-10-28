@@ -11,8 +11,13 @@ def test_neighbors_simple(edata_blob_small):
     ep.pp.neighbors(edata_blob_small, n_neighbors=5)
 
 
+def test_neighbors_jaccard(edata_blob_small):
+    ep.pp.neighbors(edata_blob_small, n_neighbors=5, method="jaccard")
+    assert edata_blob_small.uns["neighbors"]["params"]["method"] == "jaccard"
+
+
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
-def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
+def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric, tmp_path):
     """Test neighbors computation with timeseries metrics."""
     edata, _ = edata_and_distances_dtw
 
@@ -24,6 +29,10 @@ def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
     assert edata.obsp["distances"].shape == (5, 5)
     assert edata.obsp["connectivities"].shape == (5, 5)
     assert TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY not in edata.obsm
+    assert edata.uns["neighbors"]["params"]["metric"] == metric
+
+    ed.io.write_h5ed(edata, tmp_path / "neighbors.h5ed")
+    assert ed.io.read_h5ed(tmp_path / "neighbors.h5ed").uns["neighbors"]["params"]["metric"] == metric
 
 
 def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw):
@@ -34,9 +43,25 @@ def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw
 
 
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
+def test_neighbors_with_timeseries_sparse_patient(rng, metric):
+    layer = rng.standard_normal((12, 2, 10))
+    layer[0, :, 2:] = np.nan
+    edata = ed.EHRData(shape=(12, 2), layers={DEFAULT_TEM_LAYER_NAME: layer})
+
+    ep.pp.neighbors(edata, n_neighbors=4, metric=metric, use_rep=DEFAULT_TEM_LAYER_NAME)
+
+    distances, connectivities = edata.obsp["distances"], edata.obsp["connectivities"]
+    assert np.isfinite(distances.data).all()
+    assert np.isfinite(connectivities.data).all()
+    assert distances[0].nnz == distances[:, 0].nnz == 0
+    assert connectivities[0].nnz == connectivities[:, 0].nnz == 0
+    assert (distances[1:].getnnz(axis=1) == 3).all()
+
+
+@pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
 def test_neighbors_with_timeseries_illegal_arguments(edata_and_distances_dtw, metric):
     edata, _ = edata_and_distances_dtw
-    with pytest.raises(ValueError, match=rf"use_rep must be specified if metric is {metric}"):
+    with pytest.raises(ValueError, match=rf"If metric is {metric}, use_rep must be a 3D array"):
         ep.pp.neighbors(edata, n_neighbors=5, metric=metric)
 
     wrong_use_rep_key = "nonexisting_layer_or_obsm_key"
@@ -44,8 +69,13 @@ def test_neighbors_with_timeseries_illegal_arguments(edata_and_distances_dtw, me
         ep.pp.neighbors(edata, n_neighbors=5, metric=metric, use_rep=wrong_use_rep_key)
 
 
-# TODO: neighbors does not have layer support. Once X can be 3D (https://github.com/scverse/anndata/pull/1707), this function could however encounter a 3D object in X; then test this
-# def test_neighbors_3D_edata(edata_blob_small):
-#     ep.pp.neighbors(edata_blob_small, n_neighbors=5)
-#     with pytest.raises(ValueError, match=r"only supports 2D data"):
-#         ep.pp.neighbors(edata_blob_small, n_neighbors=5)
+@pytest.mark.parametrize("use_rep", [None, "X"])
+def test_neighbors_3D_X(edata_and_distances_dtw, use_rep):
+    edata, distances = edata_and_distances_dtw
+    edata.X = edata.layers[DEFAULT_TEM_LAYER_NAME]
+
+    ep.pp.neighbors(edata, n_neighbors=5, metric="dtw", use_rep=use_rep)
+    assert np.allclose(edata.obsp["distances"].toarray(), distances)
+
+    with pytest.raises(ValueError, match=r"neighbors\(\) only supports 2D data"):
+        ep.pp.neighbors(edata, n_neighbors=5, use_rep=use_rep)

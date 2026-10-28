@@ -6,12 +6,11 @@ They share a common interface: a ``treatment`` and ``outcome`` column name plus 
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import array_api_compat
 import numpy as np
 
-from ehrapy._compat import function_2D_only
 from ehrapy.tools.causal._design import assert_binary_treatment, build_design
 from ehrapy.tools.causal._estimate import CausalEstimate
 from ehrapy.tools.causal._models import fit_propensity, predict_mean, resolve_outcome_model
@@ -47,13 +46,12 @@ def _bootstrap_ate(
     return se, ci_lower, ci_upper
 
 
-@function_2D_only()
 def iptw(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     stabilized: bool = True,
     clip: tuple[float, float] | None = _DEFAULT_CLIP,
@@ -80,7 +78,7 @@ def iptw(
             Use ``None`` to disable clipping.
         n_bootstrap: Number of bootstrap resamples used for the SE and 95% percentile confidence interval.
             Set to ``0`` to skip uncertainty estimation.
-        random_state: Seed for the bootstrap resampler.
+        random_state: Seed for the bootstrap resampler and the built-in gradient boosting and random forest models.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
@@ -93,23 +91,23 @@ def iptw(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.iptw(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ...     random_state=0,
         ... )
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: iptw_stabilized
-          ATE:    -0.0644
-          SE:     0.0332
-          95% CI: [-0.1313, -0.0089]
+          ATE:    -0.0639
+          SE:     0.0330
+          95% CI: [-0.1303, -0.0087]
           n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
 
-    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=clip)
+    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=clip, random_state=random_state)
     weights = _iptw_weights(design.T, ps, stabilized=stabilized)
     ate = _weighted_diff_in_means(design.Y, design.T, weights)
 
@@ -122,7 +120,7 @@ def iptw(
             X_b, T_b, Y_b = design.X[idx], design.T[idx], design.Y[idx]
             if len(np.unique(T_b)) < 2:
                 return np.nan
-            ps_b, _ = fit_propensity(propensity_model, X_b, T_b, clip=clip)
+            ps_b, _ = fit_propensity(propensity_model, X_b, T_b, clip=clip, random_state=random_state)
             w_b = _iptw_weights(T_b, ps_b, stabilized=stabilized)
             return _weighted_diff_in_means(Y_b, T_b, w_b)
 
@@ -148,13 +146,12 @@ def iptw(
     )
 
 
-@function_2D_only()
 def g_computation(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     n_bootstrap: int = 200,
     random_state: int | None = None,
@@ -176,7 +173,7 @@ def g_computation(
             ``'auto'`` picks logistic regression when the outcome is binary 0/1 and linear regression otherwise.
         n_bootstrap: Number of bootstrap resamples used for the SE and 95% percentile confidence interval.
             Set to ``0`` to skip uncertainty estimation.
-        random_state: Seed for the bootstrap resampler.
+        random_state: Seed for the bootstrap resampler and the built-in gradient boosting and random forest models.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
@@ -189,8 +186,8 @@ def g_computation(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.g_computation(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ...     random_state=0,
         ... )
@@ -205,7 +202,7 @@ def g_computation(
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
 
-    mu1, mu0 = _g_predict(design.X, design.T, design.Y, outcome_model)
+    mu1, mu0 = _g_predict(design.X, design.T, design.Y, outcome_model, random_state=random_state)
     ate = float(np.mean(mu1) - np.mean(mu0))
 
     se: float | None = None
@@ -217,7 +214,7 @@ def g_computation(
             X_b, T_b, Y_b = design.X[idx], design.T[idx], design.Y[idx]
             if len(np.unique(T_b)) < 2:
                 return np.nan
-            mu1_b, mu0_b = _g_predict(X_b, T_b, Y_b, outcome_model)
+            mu1_b, mu0_b = _g_predict(X_b, T_b, Y_b, outcome_model, random_state=random_state)
             return float(np.mean(mu1_b) - np.mean(mu0_b))
 
         se, ci_lower, ci_upper = _bootstrap_ate(
@@ -237,18 +234,18 @@ def g_computation(
     )
 
 
-@function_2D_only()
 def aipw(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     outcome_model: str | BaseEstimator = "auto",
     clip: tuple[float, float] | None = _DEFAULT_CLIP,
+    n_folds: int = 5,
     n_bootstrap: int = 0,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     layer: str | None = None,
 ) -> CausalEstimate:
     """Estimate the ATE by the augmented inverse-probability-weighted (AIPW) doubly robust estimator.
@@ -260,6 +257,7 @@ def aipw(
               + (T_i / e_i) (Y_i − μ_1(X_i))
               − ((1 − T_i) / (1 − e_i)) (Y_i − μ_0(X_i))
 
+    The propensity and outcome models are cross-fitted: each observation's ``e_i``, ``μ_1(X_i)`` and ``μ_0(X_i)`` come from models fitted on the other ``n_folds − 1`` folds, which keeps the standard error valid for flexible models such as gradient boosting.
     By default the standard error is computed analytically from the empirical variance of ψ; setting ``n_bootstrap > 0`` switches to a bootstrap SE/CI instead.
 
     Args:
@@ -272,9 +270,10 @@ def aipw(
         outcome_model: Outcome model specification (see :func:`g_computation` for the accepted values).
         clip: ``(lo, hi)`` propensity-score clipping range applied before forming the influence function.
             Use ``None`` to disable clipping.
+        n_folds: Number of folds, stratified by treatment, for cross-fitting the propensity and outcome models.
         n_bootstrap: If positive, use a bootstrap SE/CI instead of the analytic influence-function SE.
             Set to ``0`` (the default) to use the influence-function SE.
-        random_state: Seed for the bootstrap resampler.
+        random_state: Seed for the assignment of observations to folds, the bootstrap resampler and the built-in gradient boosting and random forest models.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
@@ -287,23 +286,31 @@ def aipw(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.aipw(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: aipw
-          ATE:    -0.0349
-          SE:     0.0365
-          95% CI: [-0.1065, 0.0367]
+          ATE:    -0.0313
+          SE:     0.0345
+          95% CI: [-0.0988, 0.0363]
           n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
 
-    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=clip)
-    mu1, mu0 = _g_predict(design.X, design.T, design.Y, outcome_model)
+    ps, mu1, mu0 = _cross_fit_nuisances(
+        design.X,
+        design.T,
+        design.Y,
+        propensity_model,
+        outcome_model,
+        clip=clip,
+        n_folds=n_folds,
+        random_state=random_state,
+    )
     psi = _aipw_influence(design.T, design.Y, ps, mu1, mu0)
     ate = float(np.mean(psi))
 
@@ -316,8 +323,16 @@ def aipw(
             X_b, T_b, Y_b = design.X[idx], design.T[idx], design.Y[idx]
             if len(np.unique(T_b)) < 2:
                 return np.nan
-            ps_b, _ = fit_propensity(propensity_model, X_b, T_b, clip=clip)
-            mu1_b, mu0_b = _g_predict(X_b, T_b, Y_b, outcome_model)
+            ps_b, mu1_b, mu0_b = _cross_fit_nuisances(
+                X_b,
+                T_b,
+                Y_b,
+                propensity_model,
+                outcome_model,
+                clip=clip,
+                n_folds=n_folds,
+                random_state=random_state,
+            )
             psi_b = _aipw_influence(T_b, Y_b, ps_b, mu1_b, mu0_b)
             return float(np.mean(psi_b))
 
@@ -349,18 +364,17 @@ def aipw(
     )
 
 
-@function_2D_only()
 def propensity_score_matching(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     k: int = 1,
     caliper: float | None = 0.2,
     replacement: bool = True,
-    target: str = "att",
+    target: Literal["att", "ate"] = "att",
     n_bootstrap: int = 200,
     random_state: int | None = None,
     layer: str | None = None,
@@ -384,7 +398,7 @@ def propensity_score_matching(
         target: ``'att'`` for the average treatment effect on the treated, or ``'ate'`` for the average treatment effect.
         n_bootstrap: Number of bootstrap resamples used for the SE and 95% percentile confidence interval.
             Set to ``0`` to skip uncertainty estimation.
-        random_state: Seed for the bootstrap resampler.
+        random_state: Seed for the bootstrap resampler and the built-in gradient boosting and random forest models.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
@@ -397,17 +411,17 @@ def propensity_score_matching(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.propensity_score_matching(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ...     random_state=0,
         ... )
         >>> print(est.summary())
         Causal effect of 'aline_flg' on 'day_28_flg'
           method: propensity_score_matching_att
-          ATE:    -0.0511
-          SE:     0.0337
-          95% CI: [-0.1209, 0.0051]
+          ATT:    -0.0450
+          SE:     0.0341
+          95% CI: [-0.1250, 0.0020]
           n:      1776
     """
     if target not in {"att", "ate"}:
@@ -416,7 +430,7 @@ def propensity_score_matching(
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
 
-    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=(1e-6, 1 - 1e-6))
+    ps, _ = fit_propensity(propensity_model, design.X, design.T, clip=(1e-6, 1 - 1e-6), random_state=random_state)
     ate, match_info = _ps_match_effect(
         design.T, design.Y, ps, k=k, caliper=caliper, replacement=replacement, target=target
     )
@@ -430,7 +444,7 @@ def propensity_score_matching(
             X_b, T_b, Y_b = design.X[idx], design.T[idx], design.Y[idx]
             if len(np.unique(T_b)) < 2:
                 return np.nan
-            ps_b, _ = fit_propensity(propensity_model, X_b, T_b, clip=(1e-6, 1 - 1e-6))
+            ps_b, _ = fit_propensity(propensity_model, X_b, T_b, clip=(1e-6, 1 - 1e-6), random_state=random_state)
             ate_b, _ = _ps_match_effect(T_b, Y_b, ps_b, k=k, caliper=caliper, replacement=replacement, target=target)
             return float(ate_b)
 
@@ -447,6 +461,7 @@ def propensity_score_matching(
         ci_lower=ci_lower,
         ci_upper=ci_upper,
         n=int(len(design.T)),
+        estimand="ATT" if target == "att" else "ATE",
         params={
             "propensity_scores": ps,
             "matches": match_info,
@@ -480,17 +495,52 @@ def _aipw_influence(T, Y, ps, mu1, mu0):
     return mu1 - mu0 + (T / ps) * (Y - mu1) - ((1 - T) / (1 - ps)) * (Y - mu0)
 
 
-def _g_predict(X: np.ndarray, T: np.ndarray, Y: np.ndarray, outcome_model_spec) -> tuple[np.ndarray, np.ndarray]:
-    """Fit μ(T, X) and return (μ(1, X), μ(0, X)) for every row of X.
+def _g_predict(
+    X: np.ndarray,
+    T: np.ndarray,
+    Y: np.ndarray,
+    outcome_model_spec,
+    *,
+    random_state: int | None,
+    X_new: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Fit μ(T, X) and return (μ(1, X), μ(0, X)) for every row of ``X_new``, by default ``X``.
 
     sklearn currently mandates numpy at the fit boundary, so this helper materialises to numpy.
     """
-    model = resolve_outcome_model(outcome_model_spec, y=Y)
+    model = resolve_outcome_model(outcome_model_spec, y=Y, random_state=random_state)
     XT = np.column_stack([T, X])
     model.fit(XT, Y if not hasattr(model, "predict_proba") else Y.astype(int))
-    X1 = np.column_stack([np.ones_like(T), X])
-    X0 = np.column_stack([np.zeros_like(T), X])
+    X_new = X if X_new is None else X_new
+    X1 = np.column_stack([np.ones(len(X_new)), X_new])
+    X0 = np.column_stack([np.zeros(len(X_new)), X_new])
     return predict_mean(model, X1), predict_mean(model, X0)
+
+
+def _cross_fit_nuisances(
+    X: np.ndarray,
+    T: np.ndarray,
+    Y: np.ndarray,
+    propensity_model,
+    outcome_model,
+    *,
+    clip: tuple[float, float] | None,
+    n_folds: int,
+    random_state: int | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return the propensity scores and (μ(1, X), μ(0, X)) of every row from models fitted on the other folds."""
+    from sklearn.model_selection import StratifiedKFold
+
+    ps, mu1, mu0 = np.empty(len(T)), np.empty(len(T)), np.empty(len(T))
+    for train, test in StratifiedKFold(n_folds, shuffle=True, random_state=random_state).split(T, T):
+        _, model = fit_propensity(propensity_model, X[train], T[train], clip=None, random_state=random_state)
+        ps[test] = predict_mean(model, X[test])
+        mu1[test], mu0[test] = _g_predict(
+            X[train], T[train], Y[train], outcome_model, random_state=random_state, X_new=X[test]
+        )
+    if clip is not None:
+        ps = np.clip(ps, *clip)
+    return ps, mu1, mu0
 
 
 def _logit(p):

@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 import holoviews as hv
 import numpy as np
 
+from ehrapy.plot._holoviews import load_hv_extensions
+
 if TYPE_CHECKING:
     import pandas as pd
 
@@ -18,6 +20,7 @@ _WEIGHTED_COLOR = "#d62728"
 _GUIDE_COLOR = "#404040"
 
 
+@load_hv_extensions()
 def love_plot(
     balance: pd.DataFrame,
     *,
@@ -48,7 +51,7 @@ def love_plot(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> bal = ep.tl.covariate_balance(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> ep.pl.love_plot(bal)
@@ -92,6 +95,7 @@ def love_plot(
     return overlay
 
 
+@load_hv_extensions()
 def propensity_overlap(
     positivity: dict,
     *,
@@ -122,7 +126,7 @@ def propensity_overlap(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> info = ep.tl.positivity_check(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> ep.pl.propensity_overlap(info)
@@ -156,6 +160,7 @@ def propensity_overlap(
     )
 
 
+@load_hv_extensions()
 def causal_effect(
     estimate: CausalEstimate,
     *,
@@ -185,8 +190,8 @@ def causal_effect(
         >>> import ehrdata as ed
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> covs = ["age", "sofa_first", "sapsi_first"]
-        >>> est_iptw = ep.tl.iptw(edata, "aline_flg", "day_28_flg", covariates=covs, random_state=0)
-        >>> est_aipw = ep.tl.aipw(edata, "aline_flg", "day_28_flg", covariates=covs)
+        >>> est_iptw = ep.tl.iptw(edata, treatment="aline_flg", outcome="day_28_flg", covariates=covs, random_state=0)
+        >>> est_aipw = ep.tl.aipw(edata, treatment="aline_flg", outcome="day_28_flg", covariates=covs)
         >>> ep.pl.causal_effect(est_aipw, other={"iptw": est_iptw})
 
     Preview:

@@ -10,10 +10,13 @@ on:
             - opened
             - reopened
             - synchronize
+permissions:
+    contents: write
+    pull-requests: write
 jobs:
     update_release_draft:
         runs-on: ubuntu-latest
         steps:
-            - uses: release-drafter/release-drafter@v5
+            - uses: release-drafter/release-drafter@72967cdc98ddd3160f1fc3dff619de365e137dd0 # v7.9.0
               env:
                   GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

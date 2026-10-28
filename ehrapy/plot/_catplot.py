@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import seaborn as sns
+
+from ehrapy.get import obs_df
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
@@ -11,10 +13,11 @@ if TYPE_CHECKING:
 
 def catplot(
     edata: EHRData,
-    x: str = None,
-    y: str = None,
-    hue: str = None,
-    kind: str = "strip",
+    *,
+    x: str | None = None,
+    y: str | None = None,
+    hue: str | None = None,
+    kind: Literal["strip", "swarm", "box", "violin", "boxen", "point", "bar", "count"] = "strip",
     **kwargs,
 ) -> FacetGrid:
     """Plot categorical data.
@@ -22,7 +25,7 @@ def catplot(
     Wrapper around `seaborn.catplot <https://seaborn.pydata.org/generated/seaborn.catplot.html>`_. Typically used to show
     the behaviour of one numerical variable with respect to one or several categorical variables.
 
-    Considers edata.obs only.
+    Columns of `edata.obs` and variables can be plotted, with variables of 3D data at their first non-missing value, see :func:`~ehrapy.get.obs_df`.
 
     Args:
         edata: Central data object.
@@ -52,4 +55,6 @@ def catplot(
 
         .. image:: /_static/docstring_previews/catplot.png
     """
-    return sns.catplot(data=edata.obs, x=x, y=y, hue=hue, kind=kind, **kwargs)
+    var_names = [key for key in (x, y, hue) if key in edata.var_names and key not in edata.obs]
+    data = edata.obs.join(obs_df(edata, keys=var_names)) if var_names else edata.obs
+    return sns.catplot(data=data, x=x, y=y, hue=hue, kind=kind, **kwargs)
