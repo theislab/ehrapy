@@ -1,124 +1,124 @@
 name: CPU tests
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: "0 5 1,15 * *"
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    schedule:
+        - cron: "0 5 1,15 * *"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  get-environments:
-    runs-on: ubuntu-slim
-    outputs:
-      envs: ${{ steps.get-envs.outputs.envs }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          filter: blob:none
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-      - name: Get test environments
-        id: get-envs
-        run: |
-          ENVS_JSON=$(uvx hatch env show --json | jq -c 'to_entries
-            | map(
-                select(.key | startswith("hatch-test."))
-                | {
-                    name: .key,
-                    label: (if (.key | contains("pre")) then .key + " (PRE-RELEASE DEPENDENCIES)" else .key end),
-                    python: .value.python
-                  }
-              )')
-          echo "envs=${ENVS_JSON}" | tee $GITHUB_OUTPUT
+    get-environments:
+        runs-on: ubuntu-slim
+        outputs:
+            envs: ${{ steps.get-envs.outputs.envs }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  filter: blob:none
+                  fetch-depth: 0
+                  persist-credentials: false
+            - name: Install uv
+              uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+            - name: Get test environments
+              id: get-envs
+              run: |
+                  ENVS_JSON=$(uvx hatch env show --json | jq -c 'to_entries
+                    | map(
+                        select(.key | startswith("hatch-test."))
+                        | {
+                            name: .key,
+                            label: (if (.key | contains("pre")) then .key + " (PRE-RELEASE DEPENDENCIES)" else .key end),
+                            python: .value.python
+                          }
+                      )')
+                  echo "envs=${ENVS_JSON}" | tee $GITHUB_OUTPUT
 
-  test:
-    needs: get-environments
-    permissions:
-       id-token: write  # for codecov OIDC
-       contents: read
+    test:
+        needs: get-environments
+        permissions:
+            id-token: write # for codecov OIDC
+            contents: read
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        env: ${{ fromJSON(needs.get-environments.outputs.envs) }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest]
+                env: ${{ fromJSON(needs.get-environments.outputs.envs) }}
 
-    name: ${{ matrix.env.label }}
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ contains(matrix.env.name, 'pre') }}  # make "all-green" pass even if pre-release job fails
-    env:
-      UV_TORCH_BACKEND: cpu
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          filter: blob:none
-          fetch-depth: 0
-          submodules: true
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-        with:
-          python-version: ${{ matrix.env.python }}
-
-      - name: Restore datasets cache
-        id: data-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ehrapy_data
-          key: ehrapy-data-tests-v2
-
-      - name: create hatch environment
-        run: uvx hatch env create ${{ matrix.env.name }}
-      - name: Show installed packages
-        run: uvx hatch run ${{ matrix.env.name }}:uv pip freeze
-
-      - name: run tests using hatch
+        name: ${{ matrix.env.label }}
+        runs-on: ${{ matrix.os }}
+        continue-on-error: ${{ contains(matrix.env.name, 'pre') }} # make "all-green" pass even if pre-release job fails
         env:
-          MPLBACKEND: agg
-          PLATFORM: ${{ matrix.os }}
-          DISPLAY: :42
-          EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
-          EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
-        run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
-      - name: Save datasets cache
-        if: steps.data-cache.outputs.cache-hit != 'true' && success()
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ehrapy_data
-          key: ehrapy-data-tests-v2
-      - name: generate coverage report
-        run: |
-          # See https://coverage.readthedocs.io/page/config.html#run-patch
-          test -f .coverage || uvx hatch run ${{ matrix.env.name }}:cov-combine
-          uvx hatch run ${{ matrix.env.name }}:cov-report   # report visibly
-          uvx hatch run ${{ matrix.env.name }}:coverage xml # create report for upload
-      - name: Upload coverage
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          fail_ci_if_error: true
-          use_oidc: true
+            UV_TORCH_BACKEND: cpu
 
-  check:
-    name: Tests pass in all hatch environments
-    if: always()
-    needs:
-      - get-environments
-      - test
-    runs-on: ubuntu-latest
-    steps:
-        - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
-          with:
-            jobs: ${{ toJSON(needs) }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  filter: blob:none
+                  fetch-depth: 0
+                  submodules: true
+                  persist-credentials: false
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+              with:
+                  python-version: ${{ matrix.env.python }}
+
+            - name: Restore datasets cache
+              id: data-cache
+              uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: ehrapy_data
+                  key: ehrapy-data-tests-v2
+
+            - name: create hatch environment
+              run: uvx hatch env create ${{ matrix.env.name }}
+            - name: Show installed packages
+              run: uvx hatch run ${{ matrix.env.name }}:uv pip freeze
+
+            - name: run tests using hatch
+              env:
+                  MPLBACKEND: agg
+                  PLATFORM: ${{ matrix.os }}
+                  DISPLAY: :42
+                  EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
+                  EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
+              run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
+            - name: Save datasets cache
+              if: steps.data-cache.outputs.cache-hit != 'true' && success()
+              uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: ehrapy_data
+                  key: ehrapy-data-tests-v2
+            - name: generate coverage report
+              run: |
+                  # See https://coverage.readthedocs.io/page/config.html#run-patch
+                  test -f .coverage || uvx hatch run ${{ matrix.env.name }}:cov-combine
+                  uvx hatch run ${{ matrix.env.name }}:cov-report   # report visibly
+                  uvx hatch run ${{ matrix.env.name }}:coverage xml # create report for upload
+            - name: Upload coverage
+              uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+              with:
+                  fail_ci_if_error: true
+                  use_oidc: true
+
+    check:
+        name: Tests pass in all hatch environments
+        if: always()
+        needs:
+            - get-environments
+            - test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
+              with:
+                  jobs: ${{ toJSON(needs) }}

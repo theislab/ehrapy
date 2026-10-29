@@ -29,5 +29,6 @@ The package seamlessly integrates with external libraries for machine learning, 
 This extensibility enables ehrapy to address new challenges, such as developing foundation models for biomedical research, without requiring significant architectural changes.
 
 ## Why is it called "ehrapy"?
+
 The name ehrapy combines **EHR** (Electronic Health Records) with **py** (Python), reflecting its purpose as a Python framework for comprehensive EHR analysis.
 It provides a standardized approach to process, analyze, and derive insights from complex healthcare data in a computationally efficient and reproducible manner.
