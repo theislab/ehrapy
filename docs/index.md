@@ -1,8 +1,8 @@
 ---
 og:description: &description ehrapy is an open-source Python framework for exploratory and statistical analysis of electronic health records (EHR), from OMOP databases, public datasets such as MIMIC and PhysioNet, or your own tables to quality control, imputation, clustering, trajectories, statistical tests, survival analysis, causal inference and prediction models.
 myst:
-  html_meta:
-    description: *description
+    html_meta:
+        description: *description
 ---
 
 # ehrapy: electronic health record (EHR) analysis in Python
