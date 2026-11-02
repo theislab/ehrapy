@@ -68,7 +68,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "ehrdata>=0.3.0",
+    "ehrdata>=0.5.0",
     "pooch",  # required by the ehrdata submodule, which is installed with --no-deps
     "scanpy>=1.12",
     "pynndescent<0.7",  # temporary pin: https://github.com/scverse/scanpy/issues/4444
