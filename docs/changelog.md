@@ -179,6 +179,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🧰 Maintenance
 
+- Require `ehrdata>=0.5.0` ([#1212](https://github.com/theislab/ehrapy/pull/1212)) [@eroell](https://github.com/eroell)
 - Run the imputation, causal inference and effect estimation tutorials in the notebook CI ([#1120](https://github.com/theislab/ehrapy/pull/1120)) [@sueoglu](https://github.com/sueoglu)
 - Update to cookiecutter-scverse v0.8.0, derive the version from git tags via hatch-vcs, and move the `dev` extra to a `dev` dependency group ([#1125](https://github.com/theislab/ehrapy/pull/1125)) [@Zethson](https://github.com/Zethson)
 - `import ehrapy` no longer loads the holoviews extensions, which now load on the first holoviews-backed plot, and no longer installs a global `SyntaxWarning` filter ([#1129](https://github.com/theislab/ehrapy/pull/1129)) [@Zethson](https://github.com/Zethson)
