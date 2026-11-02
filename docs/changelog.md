@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+## v0.16.0
+
 ### 🚀 Features
 
 - {func}`ep.tl.comorbidity_index <ehrapy.tools.comorbidity_index>` scores every patient with the Charlson or Elixhauser comorbidity index from ICD-9-CM and ICD-10 codes, and from SNOMED codes through the ICD codes mapped to them, using the coding algorithms of Quan et al. 2005 with the Charlson, Quan 2011 or van Walraven weights, and stores the score and every comorbidity in `obs` ([#1161](https://github.com/theislab/ehrapy/pull/1161)) [@Zethson](https://github.com/Zethson)
