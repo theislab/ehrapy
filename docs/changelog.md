@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+### 🐛 Bug Fixes
+
+- {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` applies criteria in `query` on `obs` columns also when `X`, or the given `layer`, is `None`, so that a cohort can be defined before any variables are set up; criteria on variables, `min_vars`, `max_vars` and `tem_names` need data and raise a `ValueError` without it, as does {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` ([#PR](https://github.com/theislab/ehrapy/pull/PR)) [@eroell](https://github.com/eroell)
+
 ## v0.16.0
 
 ### 🚀 Features
