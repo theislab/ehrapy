@@ -271,3 +271,38 @@ def test_filter_obs_query_array_types(array_type, ndim, cohort_edata):
     assert list(result.obs_names) == [f"patient_{i}" for i in expected]
     assert isinstance(result.X, array_type.cls)
     np.testing.assert_array_equal(to_dense(result.X, to_cpu_memory=True), X[expected])
+
+
+def test_filter_obs_query_without_data(cohort_edata):
+    """A cohort can be defined by criteria on obs columns before any variables are set up."""
+    edata = ed.EHRData(obs=cohort_edata.obs.copy())
+    tracker = ep.tl.CohortTracker(edata, columns=["age"])
+
+    filtered = ep.pp.filter_observations(edata, query="age >= 18", copy=True)
+    ep.pp.filter_observations(edata, query=["age >= 18", "sex == 'm'"], tracker=tracker)
+
+    assert list(filtered.obs_names) == list(cohort_edata.obs_names[cohort_edata.obs["age"] >= 18])
+    assert filtered.X is None
+    assert list(edata.obs_names) == ["patient_3", "patient_4"]
+    assert tracker._tracked_text == ["Cohort 0\n (n=5)", "age >= 18\n (n=4)", "sex == 'm'\n (n=2)"]
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        ({"min_vars": 1}, "min_vars and max_vars need data"),
+        ({"max_vars": 1}, "min_vars and max_vars need data"),
+        ({"query": "age >= 18", "tem_names": ["0"]}, "tem_names needs data"),
+        ({"query": "glucose > 5"}, r"Criteria on the variables \['glucose'\] need data"),
+    ],
+)
+def test_filter_obs_without_data_raises(cohort_edata, kwargs, match):
+    edata = ed.EHRData(obs=cohort_edata.obs.copy(), var=pd.DataFrame(index=["glucose"]))
+    with pytest.raises(ValueError, match=match):
+        ep.pp.filter_observations(edata, **kwargs)
+
+
+def test_filter_features_without_data_raises(cohort_edata):
+    edata = ed.EHRData(obs=cohort_edata.obs.copy(), var=pd.DataFrame(index=["glucose"]))
+    with pytest.raises(ValueError, match="min_obs and max_obs need data"):
+        ep.pp.filter_features(edata, min_obs=1)

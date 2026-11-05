@@ -88,6 +88,8 @@ def filter_features(
         raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
 
     arr = edata.X if layer is None else edata.layers[layer]
+    if arr is None:
+        raise ValueError("min_obs and max_obs need data in X or in the given layer.")
     is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     (missing_counts,) = _materialize(_compute_missing_values(arr, axis=0))
@@ -159,6 +161,7 @@ def filter_observations(
         prop: Proportion of time points in which the observation must pass the filtering criteria. Only relevant if `time_mode='proportion'`.
         query: One or several inclusion criteria on `obs` columns and variables, which are applied in order.
             Names that are not valid Python identifiers are enclosed in backticks.
+            Criteria on `obs` columns also work when `X`, or the given `layer`, is `None`, for instance before any variables are set up.
         tem_names: Labels of `edata.tem.index` or a positional slice that select the timepoints of 3D data that the missing data thresholds and criteria consider.
             If `None` (default), all timepoints are used.
         agg: How variables in `query` are reduced over the selected timepoints of 3D data, one of the statistics of :func:`~ehrapy.preprocessing.summarize_measurements`.
@@ -199,15 +202,25 @@ def filter_observations(
         raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
 
     arr = edata.X if layer is None else edata.layers[layer]
-    is_3d = arr.ndim == 3 and arr.shape[2] > 1
-    if arr.ndim == 3:
-        tem_pos, _ = _resolve_axis(pd.Index(edata.tem.index), tem_names, "tem_names")
-        arr = arr[:, :, tem_pos]
-    elif tem_names is not None:
-        raise ValueError("tem_names needs 3D data with a time axis.")
+    if arr is None:
+        # Criteria on obs columns need no data, so a cohort can be defined before any variables are set up.
+        if has_threshold:
+            raise ValueError("min_vars and max_vars need data in X or in the given layer.")
+        if tem_names is not None:
+            raise ValueError("tem_names needs data in X or in the given layer.")
+        is_3d = False
+    else:
+        is_3d = arr.ndim == 3 and arr.shape[2] > 1
+        if arr.ndim == 3:
+            tem_pos, _ = _resolve_axis(pd.Index(edata.tem.index), tem_names, "tem_names")
+            arr = arr[:, :, tem_pos]
+        elif tem_names is not None:
+            raise ValueError("tem_names needs 3D data with a time axis.")
 
     criteria = [query] if isinstance(query, str) else list(query or ())
     var_names = _referenced_var_names(edata, criteria)
+    if arr is None and var_names:
+        raise ValueError(f"Criteria on the variables {var_names} need data in X or in the given layer.")
     lazy = [_compute_missing_values(arr, axis=1)] if has_threshold else []
     if var_names:
         lazy.append(_variable_values(arr, _var_indices(edata, var_names), agg))
