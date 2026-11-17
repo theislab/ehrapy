@@ -33,7 +33,6 @@ from ehrapy._compat import (
     _sparse_columns,
     _sparse_rows,
     _var_axes,
-    nanmean,
     nanquantile,
     nanstd,
     sparse_nan_min_max,
@@ -256,7 +255,7 @@ def _var_stats(mtx: Array) -> dict[str, Array]:
     quartiles = nanquantile(mtx, [0.25, 0.5, 0.75], axis=axes)
     lower, upper = (_broadcast_var_stat(fence, mtx) for fence in _tukey_fences(quartiles[0], quartiles[2]))
     return {
-        "mean": nanmean(mtx, axis=axes),
+        "mean": xpx.nanmean(mtx, axis=axes),
         "median": quartiles[1],
         "standard_deviation": nanstd(mtx, axis=axes),
         "min": xpx.nanmin(mtx, axis=axes),
@@ -639,7 +638,7 @@ def _reference_range(X: Array, method: str) -> tuple[Array, Array]:
             limits = nanquantile(X, [0.025, 0.975], axis=axes)
             return limits[0], limits[1]
         case "zscore":
-            mean, std = nanmean(X, axis=axes), nanstd(X, axis=axes)
+            mean, std = xpx.nanmean(X, axis=axes), nanstd(X, axis=axes)
             return mean - 3 * std, mean + 3 * std
         case "modified_zscore":
             median = nanquantile(X, 0.5, axis=axes)
@@ -655,7 +654,7 @@ def _score_location_scale(X: Array, score_type: str) -> tuple[Array, Array]:
     axes = _obs_axes(X)
     match score_type:
         case "zscore":
-            center, scale = nanmean(X, axis=axes), nanstd(X, axis=axes)
+            center, scale = xpx.nanmean(X, axis=axes), nanstd(X, axis=axes)
         case "iqr_distance":
             quartiles = nanquantile(X, [0.25, 0.5, 0.75], axis=axes)
             center, scale = quartiles[1], quartiles[2] - quartiles[0]
@@ -714,7 +713,7 @@ def _anomaly_scores(X: Array, groups: np.ndarray | None, score_type: str) -> Arr
     else:
         center, scale = _by_group(X, groups, partial(_score_location_scale, score_type=score_type))
         scores = (X - center) / scale
-    return nanmean(scores, axis=2) if X.ndim == 3 else scores
+    return xpx.nanmean(scores, axis=2) if X.ndim == 3 else scores
 
 
 def mcar_test(

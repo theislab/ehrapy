@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from functools import singledispatch, wraps
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
+import array_api_extra as xpx
 import ehrdata as ed
 import numpy as np
 import scipy.sparse as sp
@@ -130,28 +131,14 @@ def _broadcast_var_stat(stat, X):
     return xp.reshape(stat, (*stat.shape, *(1,) * (X.ndim - 2)))
 
 
-def _divide_or_nan(numerator, count):
-    """`numerator / count`, NaN where `count` is 0, without dividing by zero (also for lazy arrays)."""
-    xp = array_namespace(numerator, count)
-    has_values = count > 0
-    quotient = numerator / xp.where(has_values, count, xp.ones_like(count))
-    return xp.where(has_values, quotient, xp.full_like(quotient, xp.nan))
-
-
-def nanmean(X, /, *, axis: int | tuple[int, ...], keepdims: bool = False):
-    """Mean ignoring NaNs, NaN without a warning where there are no values."""
-    xp = array_namespace(X)
-    nan_mask = xp.isnan(X)
-    total = xp.sum(xp.where(nan_mask, xp.zeros_like(X), X), axis=axis, keepdims=keepdims)
-    return _divide_or_nan(total, xp.sum(xp.astype(~nan_mask, total.dtype), axis=axis, keepdims=keepdims))
-
-
 def nanvar(X, /, *, axis: int | tuple[int, ...]):
-    """Population variance ignoring NaNs, NaN without a warning where there are no values."""
+    """Population variance ignoring NaNs."""
     xp = array_namespace(X)
+    axes = (axis,) if isinstance(axis, int) else axis
+    mean = xp.reshape(xpx.nanmean(X, axis=axes, xp=xp), [1 if i in axes else n for i, n in enumerate(X.shape)])
     nan_mask = xp.isnan(X)
-    squared = xp.where(nan_mask, xp.zeros_like(X), (X - nanmean(X, axis=axis, keepdims=True)) ** 2)
-    return _divide_or_nan(xp.sum(squared, axis=axis), xp.sum(xp.astype(~nan_mask, squared.dtype), axis=axis))
+    squared = xp.where(nan_mask, xp.zeros_like(X), (X - mean) ** 2)
+    return xp.sum(squared, axis=axes) / xp.sum(xp.astype(~nan_mask, X.dtype), axis=axes)
 
 
 def nanstd(X, /, *, axis: int | tuple[int, ...]):

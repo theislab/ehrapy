@@ -6,6 +6,7 @@ from functools import singledispatch
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Literal
 
+import array_api_extra as xpx
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -31,7 +32,6 @@ from ehrapy._compat import (
     _sparse_columns,
     _sparse_rows,
     _var_indices,
-    nanmean,
     nanquantile,
     sparse_nan_moments,
     sparse_nanquantile,
@@ -229,7 +229,7 @@ def _(X: CSBase) -> np.ndarray:
 def _impute_value(X: Array, strategy: Strategy) -> Array:
     """Per-variable statistic across observations (and timepoints) ignoring missing values; NaN for variables without values."""
     if strategy == "mean":
-        return nanmean(X, axis=_obs_axes(X))
+        return xpx.nanmean(X, axis=_obs_axes(X))
     if strategy == "median":
         return nanquantile(X, 0.5, axis=_obs_axes(X))
     return _most_frequent(X)
