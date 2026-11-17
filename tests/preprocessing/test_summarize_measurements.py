@@ -16,7 +16,7 @@ STATISTICS = ["min", "max", "mean", "median", "first", "last", "count", "std"]
 @pytest.fixture
 def edata_to_expand(rng):
     row_ids = ["pat1", "pat1", "pat1", "pat2", "pat2", "pat3"]
-    measurement1 = rng.choice([0, 1], size=6)
+    measurement1 = rng.choice([0.0, 1.0], size=6)
     measurement2 = rng.uniform(0, 20, size=6)
     measurement3 = rng.uniform(0, 20, size=6)
     data_dict = {"measurement1": measurement1, "measurement2": measurement2, "measurement3": measurement3}
@@ -69,6 +69,7 @@ def _slope(x: np.ndarray) -> float:
 
 
 @pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+@pytest.mark.filterwarnings("ignore:Degrees of freedom <= 0:RuntimeWarning")
 def test_summarize_measurements_3D(rng):
     X = rng.normal(size=(5, 3, 4))
     X[rng.random(X.shape) < 0.3] = np.nan

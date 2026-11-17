@@ -25,6 +25,7 @@ from ehrapy._compat import (
     _sparse_columns,
     _sparse_rows,
     _var_indices,
+    nanmean,
     nanquantile,
     nanstd,
     sparse_nan_min_max,
@@ -134,7 +135,7 @@ def _scale(X: Array, groups: np.ndarray | None, *, with_mean: bool, with_std: bo
     def params(x: Array) -> Params:
         axes = _obs_axes(x)
         return (
-            xpx.nanmean(x, axis=axes) if with_mean else None,
+            nanmean(x, axis=axes) if with_mean else None,
             _nonzero(nanstd(x, axis=axes)) if with_std else None,
         )
 

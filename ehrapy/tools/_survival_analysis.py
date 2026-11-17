@@ -1168,7 +1168,7 @@ def _bootstrap_average_survival(
     boot_means = np.zeros((n_bootstrap, len(times)))
     n = len(group_df)
     for i in range(n_bootstrap):
-        sample = group_df.sample(n=n, replace=True, random_state=int(rng.integers(1e6)))
+        sample = group_df.sample(n=n, replace=True, random_state=int(rng.integers(1e6)), ignore_index=True)
         surv_matrix = cph.predict_survival_function(sample[predict_cols], times=times)
         boot_means[i] = surv_matrix.values.mean(axis=1)
     return boot_means
