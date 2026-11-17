@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import singledispatch
+from importlib.metadata import version
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -11,6 +12,7 @@ from array_api_compat import array_namespace
 from ehrdata import EHRData
 from fast_array_utils.types import DaskArray
 from numpy.typing import NDArray
+from packaging.version import Version
 
 from ehrapy._compat import _like_obs, _raise_if_3D, _raise_if_sparse, _unfold_time, function_2D_only
 from ehrapy._types import _empty
@@ -24,6 +26,21 @@ if TYPE_CHECKING:
     from ehrapy._types import AnyRandom, CSBase, Empty, RNGLike, SeedLike
 
     type Array = np.ndarray | DaskArray
+
+_SCANPY_HAS_MASK = Version(version("scanpy")) >= Version("1.13.0rc0")
+
+
+def _pca_mask_kwargs(mask_var) -> dict:
+    """Pass `mask_var` as scanpy's `mask` from scanpy 1.13 on, where `mask_var=None` no longer means all variables."""
+    if mask_var is _empty:
+        return {}
+    if not _SCANPY_HAS_MASK:
+        return {"mask_var": mask_var}
+    if isinstance(mask_var, str):
+        from anndata.acc import A
+
+        mask_var = A.var[mask_var]
+    return {"mask": mask_var}
 
 
 def pca(
@@ -136,7 +153,7 @@ def pca(
     }
     if not isinstance(edata, EHRData):
         _raise_if_3D(edata, "pca", "the input")
-    mask_kwargs = {} if mask_var is _empty else {"mask_var": mask_var}
+    mask_kwargs = _pca_mask_kwargs(mask_var)
     if obsm is not None or getattr(X, "ndim", 2) != 3:
         return sc.pp.pca(
             data=edata,
@@ -154,7 +171,7 @@ def pca(
     var = edata.var.iloc[np.repeat(np.arange(n_vars), n_timepoints)].reset_index(drop=True)
     var.index = var.index.astype(str)
     if not (mask_var is _empty or mask_var is None or isinstance(mask_var, str)):
-        mask_kwargs["mask_var"] = np.repeat(np.asarray(mask_var, dtype=bool), n_timepoints)
+        mask_kwargs = _pca_mask_kwargs(np.repeat(np.asarray(mask_var, dtype=bool), n_timepoints))
     unfolded = EHRData(X=_unfold_time(X), obs=edata.obs[[]], var=var)
     unfolded.uns = edata.uns
     sc.pp.pca(unfolded, key_added=key_added, **params, **mask_kwargs)
