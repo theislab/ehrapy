@@ -188,7 +188,7 @@ always_use_bars_union = True
 pygments_style = "sphinx"
 pygments_dark_style = "native"
 
-html_theme = "scanpydoc"
+html_theme = "scverse"
 html_title = "ehrapy"
 html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
 html_theme_options = {
