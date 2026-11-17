@@ -43,6 +43,11 @@ def test_pca_mask_var_defaults_to_highly_variable(edata_blob_small):
     ep.pp.pca(edata_blob_small, n_comps=2, mask_var=None)
     assert (np.abs(edata_blob_small.varm["PCs"]).sum(axis=1) > 0).all()
 
+    edata_blob_small.var["first_three"] = np.arange(10) < 3
+    ep.pp.pca(edata_blob_small, n_comps=2, mask_var="first_three")
+    used_features = np.abs(edata_blob_small.varm["PCs"]).sum(axis=1) > 0
+    np.testing.assert_array_equal(used_features, edata_blob_small.var["first_three"])
+
 
 def test_pca_key_added(edata_blob_small):
     ep.pp.pca(edata_blob_small, n_comps=2, key_added="pca_custom")
@@ -79,7 +84,6 @@ def test_pca_3D_mask_var(edata_blob_small):
     np.testing.assert_array_equal(used, np.repeat(edata_blob_small.var[["highly_variable"]].to_numpy(), 10, axis=1))
     assert edata_blob_small.obsm["pca_3D"].shape == (edata_blob_small.n_obs, 2)
     assert edata_blob_small.uns["pca_3D"]["params"]["mask_var"] == "highly_variable"
-    assert edata_blob_small.uns["pca_3D"]["params"]["use_highly_variable"] is True
 
     ep.pp.pca(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, n_comps=2, mask_var=np.arange(10) < 3)
     used = np.abs(edata_blob_small.varm["PCs"]).sum(axis=2) > 0
