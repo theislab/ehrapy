@@ -15,6 +15,7 @@ This structure enables efficient storage, unified preprocessing, and consistent 
 ### Modularity
 
 A typical ehrapy workflow consists of several independent yet interconnected components:
+
 - **Data loading and preprocessing**: Importing data from various sources, mapping against ontologies, quality control, normalization, and imputation.
 - **Exploration and visualization**: Generating lower-dimensional embeddings, clustering, and visualization to obtain meaningful patient landscapes.
 - **Knowledge inference**: Statistical analysis, patient stratification, survival analysis, causal inference, and trajectory inference.

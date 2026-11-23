@@ -232,7 +232,6 @@ The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/e
 - Drop AnnData compatibility in favour of an EHRData-only API ([#1069](https://github.com/theislab/ehrapy/pull/1069)) [@Zethson](https://github.com/Zethson)
 - Drop `leidenalg` flavor from {func}`ep.tl.leiden <ehrapy.tools.leiden>` (igraph only) ([#1072](https://github.com/theislab/ehrapy/pull/1072)) [@Zethson](https://github.com/Zethson)
 
-
 ## v0.14.0
 
 ### 🚀 Features
@@ -263,14 +262,12 @@ The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/e
 - `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) [@agerardy](https://github.com/agerardy) [@eroell](https://github.com/eroell)
 - `ep.tl.rank_features_groups` can use `.obs` regardless of what is in `.X` or `.layers` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) [@agerardy](https://github.com/agerardy) [@eroell](https://github.com/eroell)
 
-
 ### ⚠️ Modified
 
 - Update `qc_lab_metrics`([#1025](https://github.com/theislab/ehrapy/pull/1025)) [@eroell](https://github.com/eroell)
 - remove deprecated `ep.ad` (moved to `ehrdata`): `infer_feature_types`, `feature_type_overview`, `replace_feature_types`, `anndata_to_df`, `df_to_anndata`, `move_to_obs`, `move_to_x` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) [@eroell](https://github.com/eroell)
 - remove deprecated `ep.dt` (moved to `ehrdata`) ([#1016](https://github.com/theislab/ehrapy/pull/1016)) [@eroell](https://github.com/eroell)
 - remove deprecated `ep.io` (moved to `ehrdata`): `df_to_anndata`, `read_csv`, `read_fhir`, `read_h5ad`, `write` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) [@eroell](https://github.com/eroell)
-
 
 ## v0.13.1
 
