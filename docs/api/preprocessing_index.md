@@ -35,7 +35,6 @@ Preprocessing steps usually perform a basic transformation on the data array in 
     preprocessing.filter_observations
 ```
 
-
 ## Quality control
 
 ```{eval-rst}

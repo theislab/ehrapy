@@ -101,7 +101,6 @@ hatch env find hatch-test.py3.14-stable
 
 and manually point it to the python binary.
 
-
 ::::
 
 ::::{tab-item} uv
