@@ -6,6 +6,8 @@ from datetime import datetime
 from importlib.metadata import metadata
 from pathlib import Path
 
+from scverse_doc.registry import intersphinx
+
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE.parent))
 
@@ -17,32 +19,24 @@ author = info["Author"]
 copyright = f"{datetime.now():%Y}, {author}"
 version = info["Version"]
 urls = dict(pu.split(", ") for pu in info.get_all("Project-URL"))
-repository_url = urls["Source"]
+source_repository = urls["Source"]
+source_code_directory = ""
 release = info["Version"]
-github_repo = "ehrapy"
 language = "en"
 master_doc = "index"
 
 extensions = [
-    "myst_nb",
-    "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",
+    "scverse_doc",
     "sphinx.ext.viewcode",
     "nbsphinx",
     "nbsphinx_link",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.napoleon",
-    "sphinx_autodoc_typehints",  # needs to be after napoleon
-    "sphinx.ext.autosummary",
-    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",  # needs to be after napoleon, which scverse_doc sets up
     "sphinx_gallery.load_style",
     "sphinx_remove_toctrees",
-    "sphinx_design",
     "sphinx_tabs.tabs",
     "sphinx_issues",
     "sphinxcontrib.bibtex",
     "IPython.sphinxext.ipython_console_highlighting",
-    "sphinxext.opengraph",
     "sphinx_sitemap",
     "sphinx_llms_txt",
     "sphinx_reredirects",
@@ -99,49 +93,31 @@ redirects = {
 }
 
 nbsphinx_execute = "never"
-nb_execution_mode = "off"
 
 templates_path = ["_templates"]
 bibtex_bibfiles = ["references.bib"]
-nitpicky = True  # Warn about broken links
 
 suppress_warnings = ["toc.not_included", "toc.excluded", "mystnb.unknown_mime_type"]
 # source_suffix = ".md"
 
-autosummary_generate = True
 autosummary_imported_members = True
 autodoc_member_order = "bysource"
 napoleon_google_docstring = True
-napoleon_include_init_with_doc = False
-napoleon_use_rtype = True
-napoleon_use_param = True
 napoleon_custom_sections = [("Params", "Parameters")]
 todo_include_todos = False
 numpydoc_show_class_members = False
 annotate_defaults = True
-myst_enable_extensions = [
-    "colon_fence",
-    "dollarmath",
-    "amsmath",
-]
 
 autodoc_mock_imports = [
     "scipy.linalg.triu",
 ]
 
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-    "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
+intersphinx_mapping = intersphinx("anndata", "cellrank", "scanpy", core=False) | {
     "ipython": ("https://ipython.readthedocs.io/en/stable/", None),
-    "matplotlib": ("https://matplotlib.org/stable/", None),
     "seaborn": ("https://seaborn.pydata.org/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "pynndescent": ("https://pynndescent.readthedocs.io/en/latest/", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
     "torch": ("https://docs.pytorch.org/docs/main", None),
-    "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
     "pytorch_lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
     "pymde": ("https://pymde.org/", None),
     "lamin": ("https://docs.lamin.ai", None),
@@ -149,7 +125,6 @@ intersphinx_mapping = {
     "statsmodels": ("https://www.statsmodels.org/stable", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
     "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
-    "cellrank": ("https://cellrank.readthedocs.io/en/latest/", None),
     "pypots": ("https://docs.pypots.com/en/latest/", None),
     "holoviews": ("https://holoviews.org/", None),
     "dask": ("https://docs.dask.org/en/stable/", None),
@@ -185,15 +160,7 @@ nitpick_ignore = [
 typehints_defaults = "comma"
 always_use_bars_union = True
 
-pygments_style = "sphinx"
-pygments_dark_style = "native"
-
-html_theme = "scverse"
-html_title = "ehrapy"
 html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
-html_theme_options = {
-    "show_toc_level": 2,
-}
 html_static_path = ["_static"]
 html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
@@ -206,11 +173,4 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/cohort": "_static/tutorials/cohort_tracking.png",
     "tutorials/notebooks/subgroups": "_static/tutorials/subgroups.png",
     "tutorials/notebooks/prediction": "_static/tutorials/machine_learning.png",
-}
-
-
-# Redirect broken parameter annotation classes
-qualname_overrides = {
-    "pandas.core.series.Series": "pandas.Series",
-    "pandas.core.frame.DataFrame": "pandas.DataFrame",
 }

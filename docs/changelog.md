@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` applies criteria in `query` on `obs` columns also when `X`, or the given `layer`, is `None`, so that a cohort can be defined before any variables are set up; criteria on variables, `min_vars`, `max_vars` and `tem_names` need data and raise a `ValueError` without it, as does {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` ([#1216](https://github.com/theislab/ehrapy/pull/1216)) [@eroell](https://github.com/eroell)
 - {func}`ep.pp.pca <ehrapy.preprocessing.pca>` with `mask_var=None` uses all variables again with scanpy 1.13 ([#1221](https://github.com/theislab/ehrapy/pull/1221)) [@eroell](https://github.com/eroell)
 
+### 📖 Documentation
+
+- Build the documentation with the configuration of [scverse-doc](https://github.com/scverse/scverse-doc), not only its theme, and link to anndata's documentation at its new address ([#1223](https://github.com/theislab/ehrapy/pull/1223)) [@eroell](https://github.com/eroell)
+
 ## v0.16.0
 
 ### 🚀 Features
