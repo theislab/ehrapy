@@ -129,7 +129,7 @@ Scores the comorbidity burden of every patient from ICD-10 codes.
 
 ## Organ failure and sepsis
 
-Scores organ failure with the SOFA score at every timepoint and finds the onset of sepsis by the Sepsis-3 definition.
+Scores organ failure with the SOFA score and stages acute kidney injury by the KDIGO criteria at every timepoint, and finds the onset of sepsis by the Sepsis-3 definition.
 
 ```{eval-rst}
 .. autosummary::
@@ -138,6 +138,7 @@ Scores organ failure with the SOFA score at every timepoint and finds the onset 
 
     tools.sofa
     tools.sepsis3
+    tools.kdigo
 ```
 
 ## Events
