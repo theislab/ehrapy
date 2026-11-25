@@ -6,8 +6,8 @@ are numbers of timepoints, and times in `obs` are positions, 0 for the first tim
 
 from __future__ import annotations
 
-from numbers import Integral
-from typing import TYPE_CHECKING
+from numbers import Integral, Real
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
@@ -15,6 +15,7 @@ from fast_array_utils.types import DaskArray
 from scipy import sparse
 
 from ehrapy._compat import _materialize
+from ehrapy.preprocessing._missing_data import _previous_observed
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -116,3 +117,59 @@ def _timeseries(edata: EHRData, names: Mapping[str, str], layer: str | None, pur
 
         return da.concatenate(blocks, axis=1)
     return np.concatenate([np.asarray(_materialize(block)[0], dtype=np.float64) for block in blocks], axis=1)
+
+
+# The helpers of the scores
+
+# The default margin of the comparisons with thresholds, far below the precision of clinical records: a rise from 1.1 to
+# 1.4 mg/dL is 0.29999999999999982 in floating point and reaches 0.3.
+TOLERANCE = 1e-9
+CLOSED = ("right", "both")
+
+
+def _tolerance(value: float) -> float:
+    """A margin of the comparisons with thresholds, a number of at least 0."""
+    if isinstance(value, bool) or not isinstance(value, Real) or not np.isfinite(value) or value < 0:
+        raise ValueError(f"tolerance must be a number of at least 0, not {value!r}.")
+    return float(value)
+
+
+def _closed(value: str) -> Literal["right", "both"]:
+    if value not in CLOSED:
+        raise ValueError(f"closed must be 'right' or 'both', not {value!r}.")
+    return value  # type: ignore[return-value]
+
+
+def _rolling(
+    x: np.ndarray,
+    window: int,
+    how: Literal["max", "min", "sum", "count"],
+    *,
+    closed: Literal["right", "both"] = "right",
+) -> np.ndarray:
+    """The statistic `how` of the non-missing values of `x` (observations x timepoints) over the trailing windows.
+
+    The window of a timepoint holds it and the `window` - 1 timepoints before it, or with `closed="both"` the `window`
+    timepoints before it.
+    """
+    size = window + 1 if closed == "both" else window
+    return getattr(pd.DataFrame(x.T).rolling(size, min_periods=1), how)().to_numpy().T
+
+
+def _locf(x: np.ndarray, within: int) -> np.ndarray:
+    """The last value of `x` (observations x timepoints) at most `within` timepoints before every timepoint."""
+    observed = ~np.isnan(x)
+    positions = np.arange(x.shape[1])
+    last = np.where(observed, positions, _previous_observed(observed))
+    values = np.take_along_axis(x, np.maximum(last, 0), axis=1)
+    return np.where((last >= 0) & (positions[None, :] - last <= within), values, np.nan)
+
+
+def _period(seen: np.ndarray, first: np.ndarray, last: np.ndarray) -> np.ndarray:
+    """Whether every timepoint lies between the first and the last one `seen`, widened to the positions `first` and `last`."""
+    n_t = seen.shape[1]
+    any_seen = seen.any(axis=1)
+    lo = np.fmin(np.where(any_seen, seen.argmax(axis=1), n_t), first)
+    hi = np.fmax(np.where(any_seen, n_t - 1 - seen[:, ::-1].argmax(axis=1), -1), last)
+    positions = np.arange(n_t)[None, :]
+    return (positions >= lo[:, None]) & (positions <= hi[:, None])
