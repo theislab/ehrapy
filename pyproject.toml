@@ -102,22 +102,16 @@ rapids12 = ["rapids-singlecell-cu12[rapids]>=0.18"]
 rapids13 = ["rapids-singlecell-cu13[rapids]>=0.18"]
 doc = [
     "docutils<0.22",  # https://github.com/vidartf/nbsphinx-link/issues/25
-    "sphinx",
-    "scverse-doc",
-    "sphinx-book-theme",
-    "myst-nb",
+    "scverse-doc[full]>=0.6",
     "myst-parser",
     "sphinxcontrib-bibtex",
     "sphinx-issues",
     "sphinx-gallery",
     "sphinx-autodoc-typehints",
-    "sphinx-copybutton",
     "sphinx-remove-toctrees",
-    "sphinx-design",
     "sphinx-tabs",
     "sphinx-last-updated-by-git",
     "sphinx-automodapi",
-    "sphinxext-opengraph",
     "sphinx-llms-txt",
     "sphinx-sitemap",
     "sphinx-reredirects",
