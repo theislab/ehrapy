@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 📖 Documentation
 
-- Build the documentation with the configuration of [scverse-doc](https://github.com/scverse/scverse-doc), not only its theme, and link to anndata's documentation at its new address ([#XXXX](https://github.com/theislab/ehrapy/pull/XXXX)) [@eroell](https://github.com/eroell)
+- Build the documentation with the configuration of [scverse-doc](https://github.com/scverse/scverse-doc), not only its theme, and link to anndata's documentation at its new address ([#1223](https://github.com/theislab/ehrapy/pull/1223)) [@eroell](https://github.com/eroell)
 
 ## v0.16.0
 
