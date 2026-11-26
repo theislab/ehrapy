@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
+- {func}`ep.tl.stratified_table_one <ehrapy.tools.stratified_table_one>` with `pval_adjust` stores the adjusted p-values in `uns`, so that {func}`ep.pl.stratified_table_one <ehrapy.plot.stratified_table_one>` shows them in the panel titles; before, it stored no p-values ([#1228](https://github.com/theislab/ehrapy/pull/1228)) [@chenyangsu](https://github.com/chenyangsu)
 - {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` applies criteria in `query` on `obs` columns also when `X`, or the given `layer`, is `None`, so that a cohort can be defined before any variables are set up; criteria on variables, `min_vars`, `max_vars` and `tem_names` need data and raise a `ValueError` without it, as does {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` ([#1216](https://github.com/theislab/ehrapy/pull/1216)) [@eroell](https://github.com/eroell)
 - {func}`ep.pp.pca <ehrapy.preprocessing.pca>` with `mask_var=None` uses all variables again with scanpy 1.13 ([#1221](https://github.com/theislab/ehrapy/pull/1221)) [@eroell](https://github.com/eroell)
 
