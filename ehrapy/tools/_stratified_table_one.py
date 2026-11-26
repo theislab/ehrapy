@@ -154,11 +154,13 @@ def stratified_table_one(
         return f"{f:.3f}"
 
     # parse p-values into a plain dict so the plot fn doesn't need to re-parse the rendered table
+    # tableone reports adjusted p-values in their own column, without the unadjusted one
+    pvalue_column = "P-Value" if pval_adjust is None else "P-Value (adjusted)"
     pvalues: dict = {}
     for src in (t1.cont_table, t1.cat_table):
-        if src is None or "P-Value" not in src.columns:
+        if src is None or pvalue_column not in src.columns:
             continue
-        for idx, val in src["P-Value"].items():
+        for idx, val in src[pvalue_column].items():
             var = idx[0] if isinstance(idx, tuple) else idx
             formatted = _format_pval(val)
             if formatted is None:
