@@ -57,6 +57,7 @@ def stratified_table_one(
     Args:
         edata: Central data object.
         groupby: Column in ``edata.obs`` to stratify by.
+            Observations with a missing value count in the `Overall` column only, not in a group or the tests.
         columns: Columns to include in the table. If `None`, all of ``edata.obs`` except ``groupby`` is used.
         categorical: Columns that contain categorical variables. If `None`, types are inferred.
         nonnormal: Continuous columns that should use a non-parametric test (Mann-Whitney U / Kruskal-Wallis) and report median [Q1, Q3] instead of mean (SD).
@@ -121,7 +122,9 @@ def stratified_table_one(
 
     # tableone chokes on pandas Categorical dtype — cast the groupby + categorical columns to plain strings
     obs_for_tableone = target.obs.copy()
-    obs_for_tableone[groupby] = obs_for_tableone[groupby].astype(str)
+    # a missing group stays missing, so that tableone leaves it out of the groups and tests instead of adding a "nan" group
+    group_values = obs_for_tableone[groupby]
+    obs_for_tableone[groupby] = group_values.astype(str).where(group_values.notna(), None)
     for col in cats:
         obs_for_tableone[col] = obs_for_tableone[col].astype(str)
 
