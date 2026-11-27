@@ -39,6 +39,14 @@ With `ep.ml`, it also trains and evaluates prediction models, from gradient boos
 ```
 
 ```{eval-rst}
+.. card:: Ecosystem :octicon:`package;1em;`
+    :link: ecosystem
+    :link-type: doc
+
+    Discover specialized packages and workflows that build on ehrapy.
+```
+
+```{eval-rst}
 .. card:: Discussion :octicon:`megaphone;1em;`
     :link: https://discourse.scverse.org/
 
@@ -61,6 +69,7 @@ With `ep.ml`, it also trains and evaluates prediction models, from gradient boos
 
 installation
 api
+ecosystem
 contributing
 changelog
 references
