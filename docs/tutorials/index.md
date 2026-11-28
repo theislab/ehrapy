@@ -23,6 +23,7 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/survival
    notebooks/causal
    notebooks/prediction
+   notebooks/icu_labels
 
 ```
 

@@ -27,6 +27,7 @@ jobs:
                         "docs/tutorials/notebooks/cohort.ipynb",
                         "docs/tutorials/notebooks/causal.ipynb",
                         "docs/tutorials/notebooks/prediction.ipynb",
+                        "docs/tutorials/notebooks/icu_labels.ipynb",
                     ]
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
