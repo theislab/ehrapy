@@ -1,4 +1,5 @@
 from ehrapy.tools._comorbidity import comorbidity_index
+from ehrapy.tools._events import mark_events, mark_paired_events, mark_sustained_events
 from ehrapy.tools._ncp import ncp
 from ehrapy.tools._scanpy_tl_api import dendrogram, dpt, ingest, leiden, paga
 from ehrapy.tools._stratified_table_one import stratified_table_one
@@ -74,4 +75,7 @@ __all__ = [
     "cox_ph_adjusted_curves",
     "ncp",
     "comorbidity_index",
+    "mark_events",
+    "mark_sustained_events",
+    "mark_paired_events",
 ]

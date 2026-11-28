@@ -127,6 +127,20 @@ Scores the comorbidity burden of every patient from ICD-10 codes.
     tools.comorbidity_index
 ```
 
+## Events
+
+Marks the timepoints at which a set of variables has values, and finds the events that go on for a duration or that another kind of event follows.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.mark_events
+    tools.mark_sustained_events
+    tools.mark_paired_events
+```
+
 ## Cohort Tracking & summaries
 
 ```{eval-rst}
