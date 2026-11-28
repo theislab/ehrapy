@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+### 🚀 Features
+
+- {func}`ep.tl.sofa <ehrapy.tools.sofa>` scores organ failure at every timepoint of longitudinal data with the SOFA score of Vincent et al. 1996, from the worst score of every organ over a window of timepoints, by default a day of hours, and stores the score and the score of every organ in `obsm` [@eroell](https://github.com/eroell)
+- {func}`ep.tl.sepsis3 <ehrapy.tools.sepsis3>` finds the onset of sepsis by the Sepsis-3 definition, a rise of the SOFA score by at least 2 points from 48 timepoints before to 24 after a suspected infection, from its lowest score, its first score or 0, and stores it in `obs` [@eroell](https://github.com/eroell)
+- {func}`ep.tl.kdigo <ehrapy.tools.kdigo>` stages acute kidney injury at every timepoint of longitudinal data by the creatinine and urine output criteria of KDIGO 2012, and stores the stage and the stages by creatinine and by urine output in `obsm`. [@eroell](https://github.com/eroell)
+- {func}`ep.tl.mark_events <ehrapy.tools.mark_events>` marks the timepoints at which any of a set of variables has a value, by presence, the number of variables or the sum or largest of their values, and stores the marker in `obsm` and the position of the first and last marked timepoint in `obs`; {func}`ep.tl.mark_sustained_events <ehrapy.tools.mark_sustained_events>` finds the marked timepoints from which events go on for a number of timepoints without a longer gap than a given one, and {func}`ep.tl.mark_paired_events <ehrapy.tools.mark_paired_events>` those of two kinds of events at which the other kind follows within a given number of timepoints; with their arguments set to `ricu`'s, these give the continuous antibiotic treatment and the suspected infection of YAIB's sepsis label [@eroell](https://github.com/eroell)
+
 ### 🐛 Bug Fixes
 
 - {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` applies criteria in `query` on `obs` columns also when `X`, or the given `layer`, is `None`, so that a cohort can be defined before any variables are set up; criteria on variables, `min_vars`, `max_vars` and `tem_names` need data and raise a `ValueError` without it, as does {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` ([#1216](https://github.com/theislab/ehrapy/pull/1216)) [@eroell](https://github.com/eroell)

@@ -127,6 +127,34 @@ Scores the comorbidity burden of every patient from ICD-10 codes.
     tools.comorbidity_index
 ```
 
+## Organ failure and sepsis
+
+Scores organ failure with the SOFA score and stages acute kidney injury by the KDIGO criteria at every timepoint, and finds the onset of sepsis by the Sepsis-3 definition.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.sofa
+    tools.sepsis3
+    tools.kdigo
+```
+
+## Events
+
+Marks the timepoints at which a set of variables has values, and finds the events that go on for a duration or that another kind of event follows.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.mark_events
+    tools.mark_sustained_events
+    tools.mark_paired_events
+```
+
 ## Cohort Tracking & summaries
 
 ```{eval-rst}
